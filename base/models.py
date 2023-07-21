@@ -6,10 +6,12 @@ class StockInfo(models.Model):
     Name = models.CharField(max_length=200)
     Report_Date = models.DateField()
     Fiscal_Date_End = models.DateField()
-    Days_To_Cover = models.FloatField()
-    Estimate = models.FloatField()
-    Implied_Move = models.FloatField()
-    Market_Cap = models.IntegerField()
+    Days_To_Cover = models.FloatField(default=0.0)
+    Estimate = models.FloatField(default=0.0)
+    Quarterly_Growth = models.FloatField(default=0.0)
+    Short_Interest = models.FloatField(default=0.0)
+    Implied_Move = models.FloatField(default=0.0)
+    Market_Cap = models.IntegerField(default=0)
     Website = models.CharField(max_length=200)
 
     def __str__(self):

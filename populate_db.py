@@ -5,20 +5,12 @@ import pandas as pd
 from django.conf import settings
 import os
 from dotenv import load_dotenv
+import django
 
-
-load_dotenv()
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'earnings_site.settings')
-
-
-import django
 django.setup()
 
-
-load_dotenv()
-
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'earnings_site.settings')
 
 api_key = 'ZUVY81MBX0E12LVI'
 
@@ -77,18 +69,14 @@ def find_nearest_option(options, stock_price):
 
 def get_implied_move(stock_symbol, stock_price):
     try:
-        # Get the stock data
         stock = yf.Ticker(stock_symbol)
 
-        # Get the option chain data
         options = stock.option_chain()
 
-        # Find nearest in-the-money call and put options
         nearest_in_call = find_nearest_option(options.calls, stock_price)
 
         nearest_in_put = find_nearest_option(options.puts, stock_price)
 
-        # Get the implied move as the sum of the absolute differences between call and put strikes
         implied_move = (nearest_in_put['lastPrice'] + nearest_in_call['lastPrice']) / stock_price
 
         return implied_move
@@ -102,22 +90,31 @@ def get_stock_info(ticker):
     stock = yf.Ticker(ticker)
     info = stock.get_info()
     price = info['currentPrice']
-    website = info['website']
-    mkt_cap = info['marketCap']
-    short_ratio = info['shortRatio']
-    return website, mkt_cap, short_ratio, price
+    website = info.get('website', 'N/A')
+    mkt_cap = info.get('marketCap', 'N/A')
+    short_interest = info.get('shortPercentOfFloat', 'N/A')
+    quarterly_growth = info.get('earningsQuarterlyGrowth', 'N/A')
+    try:
+        short_ratio = info['shortRatio']
+    except KeyError:
+        short_ratio = 'N/A'
+
+    return website, mkt_cap, short_ratio, price, short_interest, quarterly_growth
 
 
 websites = []
 market_caps = []
 short_ratios = []
 implied_moves = []
+short_interests = []
+quarterly_growths = []
 
 for symbol in df['symbol']:
     print(symbol)
-    website, mkt_cap, short_ratio, price = get_stock_info(symbol)
 
-    if mkt_cap < 500000000:
+    website, mkt_cap, short_ratio, price, short_interest, quarterly_growth = get_stock_info(symbol)
+
+    if mkt_cap < 400000000:
         df = df[~df['symbol'].str.contains(symbol)]
         continue
 
@@ -125,13 +122,15 @@ for symbol in df['symbol']:
     websites.append(website)
     market_caps.append(mkt_cap)
     short_ratios.append(short_ratio)
+    short_interests.append(short_interest)
+    quarterly_growths.append(quarterly_growth)
 
 df['Implied_Move'] = implied_moves
 df['Website'] = websites
 df['Market_Cap'] = market_caps
 df['Short_Ratio'] = short_ratios
-
-print(df)
+df['Short_Interest'] = short_interests
+df['Quarterly_Growth'] = quarterly_growths
 
 from base.models import StockInfo
 
@@ -145,7 +144,10 @@ for index, row in df.iterrows():
         Estimate=row['estimate'],
         Implied_Move=row['Implied_Move'],
         Market_Cap=row['Market_Cap'],
-        Days_To_Cover=row['Short_Ratio']
+        Website=row['Website'],
+        Days_To_Cover=row['Short_Ratio'],
+        Short_Interest=row['Short_Interest'],
+        Quarterly_Growth=row['Quarterly_Growth']
     )
 
     stock_info.save()

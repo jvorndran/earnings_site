@@ -1,28 +1,70 @@
+{% load static %}
+{% load mathfilters %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Home</title>
+
+    <link rel="stylesheet" type="text/css"  href="{% static '/css/HomeStyle.css' %}">
+
 </head>
 <body>
 
-<h1>Stock Information</h1>
 
+    <section class="table-wrapper">
 
-    <table>
-        <tr>
-            <th>Ticker</th>
-            <th>Name</th>
+        <main class="row title">
+            <ul>
+                <li>Name</li>
+                <li>Market Capitalization</li>
+                <li>EPS Estimate</li>
+{#                <li>Quarterly Growth</li>#}
+                <li>Implied Move</li>
+{#                <li>Short Interest</li>#}
+{#                <li>Days To Cover</li>#}
+            </ul>
+        </main>
 
-        </tr>
         {% for stock_info in stock_info_objects %}
-        <tr>
-            <td>{{ stock_info.Ticker }}</td>
-            <td>{{ stock_info.Name }}</td>
+        <section class="row-fadeIn-wrapper">
+            <article class="row fadeIn">
+                <ul>
+                    <li>{{ stock_info.Name }}</li>
+                    <li>{{ stock_info.Market_Cap|div:1000000000|floatformat:2 }}B</li>
+                    <li>{{ stock_info.Estimate|floatformat:2 }}</li>
+                    <li>{{ stock_info.Implied_Move|mul:100|floatformat:2 }}%</li>
 
-        </tr>
+                </ul>
+                <ul class="more-content">
+                    <li>Quarterly Growth: {{ stock_info.Quarterly_Growth|mul:100|floatformat:2 }}%</li>
+                </ul>
+            </article>
+        </section>
         {% endfor %}
-    </table>
+
+    </section>
+
+
+{#<h1>Stock Information</h1>#}
+{##}
+{#    <table>#}
+{#        <tr>#}
+{#            <th>Ticker</th>#}
+{#            <th>Name</th>#}
+{#            <th>Days to Cover</th>#}
+{##}
+{#        </tr>#}
+{#        {% for stock_info in stock_info_objects %}#}
+{#        <tr>#}
+{#            <td>{{ stock_info.Ticker }}</td>#}
+{#            <td>{{ stock_info.Name }}</td>#}
+{#            <td>{{ stock_info.Days_To_Cover }}</td>#}
+{#            <td>{{ stock_info.Report_Date }}</td>#}
+{##}
+{#        </tr>#}
+{#        {% endfor %}#}
+{#    </table>#}
 
 </body>
 </html>
