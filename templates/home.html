@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Home</title>
+</head>
+<body>
+
+<h1>Stock Information</h1>
+
+
+    <table>
+        <tr>
+            <th>Ticker</th>
+            <th>Name</th>
+
+        </tr>
+        {% for stock_info in stock_info_objects %}
+        <tr>
+            <td>{{ stock_info.Ticker }}</td>
+            <td>{{ stock_info.Name }}</td>
+
+        </tr>
+        {% endfor %}
+    </table>
+
+</body>
+</html>
