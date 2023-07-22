@@ -1,0 +1,37 @@
+@import url('https://fonts.cdnfonts.com/css/typold');
+
+body {
+  font-family: Typold, serif;
+  font-size: 1.1rem;
+  background: whitesmoke;
+
+}
+
+.calender-section {
+    display: grid;
+    justify-content: center;
+}
+
+.grid-container {
+    justify-self: center;
+    display: grid;
+    width: 90vw;
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+    justify-content: space-evenly;
+}
+
+
+.grid-item {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    justify-content: space-evenly;
+    column-gap: 100px;
+    row-gap: 10px;
+    align-items: center;
+}
+
+.logo-container {
+    display: grid;
+    justify-content: center;
+    align-items: center;
+}

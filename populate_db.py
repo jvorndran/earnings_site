@@ -32,7 +32,6 @@ df = df.drop(index=0).reset_index(drop=True)
 df['reportDate'] = pd.to_datetime(df['reportDate'])
 df = df.sort_values(by='reportDate')
 df = df[df['currency'] == 'USD']
-df = df.head(200)
 
 
 def find_nearest_option(options, stock_price):

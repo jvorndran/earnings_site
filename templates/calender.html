@@ -1,0 +1,57 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Calender</title>
+
+    <link rel="stylesheet" href="{% static '/css/Calender_Style.css' %}" type="text/css">
+
+</head>
+<body>
+
+<section class="calender-section">
+
+
+<div class="grid-container">
+    {% for release_date, stock_info_list in stock_info_objects.items %}
+
+            <div>
+                    <a href="{% url 'calender_detail' release_date|date:'Ymd' %}" target="_blank">
+                        <h1 style="display: grid; justify-content: center; align-items: center">{{ release_date }}</h1>
+                    </a>
+                <div class="grid-item" style=
+                            "display: grid;
+                            grid-template-columns: 1fr 1fr;
+                            justify-content: space-evenly;
+                            column-gap: 30px;
+                            row-gap: 10px;
+                            align-items: center;
+                            padding: 10px;
+                            border: black 1px solid;
+                            height: 1000px">
+
+
+
+                    {% for stock_info in stock_info_list %}
+
+
+                        <div class="logo-container"><img src="https://logo.clearbit.com/{{ stock_info.Website }}?size=80" alt="logo"></div>
+
+
+                    {% endfor %}
+                </div>
+            </div>
+
+    {% endfor %}
+    <div></div>
+    <div></div>
+    <div></div>
+    <div></div>
+
+</div>
+
+</section>
+
+</body>
+</html>
