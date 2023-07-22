@@ -8,7 +8,9 @@ def home(request):
 
     today = timezone.now().date()
 
-    stock_info_objects = StockInfo.objects.filter(Report_Date=today)
+    # stock_info_objects = StockInfo.objects.filter(Report_Date=today)
+
+    stock_info_objects = StockInfo.objects.all().order_by('-Market_Cap')
 
 
     context = {

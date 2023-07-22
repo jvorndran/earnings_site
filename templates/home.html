@@ -11,60 +11,40 @@
 </head>
 <body>
 
+    <div class="container">
 
-    <section class="table-wrapper">
+        <ul class="responsive-table">
+            <li class="table-header">
+                <div class="col col-1">Name</div>
+                <div class="col col-2">Market Cap</div>
+                <div class="col col-2">EPS Est.</div>
+                <div class="col col-2">Implied Move</div>
+                <div class="col col-2">EPS Growth</div>
+                <div class="col col-2">Short Interest</div>
+                <div class="col col-2">Days To Cover</div>
+            </li>
+            {% for stock_info in stock_info_objects %}
+                <li class="table-row">
+                        <div class="col col-1 stock-item">
+                            <div class="image-container"><img src="https://logo.clearbit.com/{{ stock_info.Website }}?size=70" alt="logo"></div>
+                            <div class="details-container">
+                                <span class="ticker">{{ stock_info.Ticker }}</span>
+                                <span>{{ stock_info.Name }}</span>
+                            </div>
+                        </div>
+                        <div class="col col-2" >{{ stock_info.Market_Cap|div:1000000000|floatformat:2 }}B</div>
+                        <div class="col col-2">{{ stock_info.Estimate|floatformat:2 }}</div>
+                        <div class="col col-2">{{ stock_info.Implied_Move|mul:100|floatformat:2 }}%</div>
+                        <div class="col col-2">{{ stock_info.Quarterly_Growth|mul:100|floatformat:2 }}%</div>
+                        <div class="col col-2">{{ stock_info.Short_Interest|mul:100|floatformat:2 }}%</div>
+                        <div class="col col-2">{{ stock_info.Days_To_Cover|floatformat:2 }}</div>
 
-        <main class="row title">
-            <ul>
-                <li>Name</li>
-                <li>Market Capitalization</li>
-                <li>EPS Estimate</li>
-{#                <li>Quarterly Growth</li>#}
-                <li>Implied Move</li>
-{#                <li>Short Interest</li>#}
-{#                <li>Days To Cover</li>#}
-            </ul>
-        </main>
+                </li>
+            {% endfor %}
+        </ul>
 
-        {% for stock_info in stock_info_objects %}
-        <section class="row-fadeIn-wrapper">
-            <article class="row fadeIn">
-                <ul>
-                    <li>{{ stock_info.Name }}</li>
-                    <li>{{ stock_info.Market_Cap|div:1000000000|floatformat:2 }}B</li>
-                    <li>{{ stock_info.Estimate|floatformat:2 }}</li>
-                    <li>{{ stock_info.Implied_Move|mul:100|floatformat:2 }}%</li>
+    </div>
 
-                </ul>
-                <ul class="more-content">
-                    <li>Quarterly Growth: {{ stock_info.Quarterly_Growth|mul:100|floatformat:2 }}%</li>
-                </ul>
-            </article>
-        </section>
-        {% endfor %}
-
-    </section>
-
-
-{#<h1>Stock Information</h1>#}
-{##}
-{#    <table>#}
-{#        <tr>#}
-{#            <th>Ticker</th>#}
-{#            <th>Name</th>#}
-{#            <th>Days to Cover</th>#}
-{##}
-{#        </tr>#}
-{#        {% for stock_info in stock_info_objects %}#}
-{#        <tr>#}
-{#            <td>{{ stock_info.Ticker }}</td>#}
-{#            <td>{{ stock_info.Name }}</td>#}
-{#            <td>{{ stock_info.Days_To_Cover }}</td>#}
-{#            <td>{{ stock_info.Report_Date }}</td>#}
-{##}
-{#        </tr>#}
-{#        {% endfor %}#}
-{#    </table>#}
 
 </body>
 </html>
