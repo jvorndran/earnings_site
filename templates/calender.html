@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="{% static '/css/Calender_Style.css' %}" type="text/css">
 
 </head>
-<body>
+<body style="background-color: #2A2F33">
 
 <section class="calender-section">
 
@@ -17,20 +17,29 @@
     {% for release_date, stock_info_list in stock_info_objects.items %}
 
             <div>
-                    <a href="{% url 'calender_detail' release_date|date:'Ymd' %}" target="_blank">
-                        <h1 style="display: grid; justify-content: center; align-items: center">{{ release_date }}</h1>
+                    <a href="{% url 'calender_detail' release_date|date:'Ymd' %}" target="_blank" style="color: #2A2F33; text-decoration: none; font-size: 0.9rem;">
+                        <h1 style="display: grid; justify-content: center; align-items: center; justify-items: center">
+                            <span style="text-decoration: underline; font-size: 1.5rem">
+                            {{ release_date|date:"l" }}
+                            </span>
+                            <span style="text-decoration: none; font-size: 1.2rem">
+                                {{ release_date|date:"M d Y" }}
+                            </span>
+                        </h1>
                     </a>
                 <div class="grid-item" style=
                             "display: grid;
                             grid-template-columns: 1fr 1fr;
                             justify-content: space-evenly;
-                            column-gap: 30px;
+                            column-gap: 20px;
                             row-gap: 10px;
                             align-items: center;
                             padding: 10px;
-                            border: black 1px solid;
-                            height: 1000px">
-
+                            border: black 0px solid;
+                            border-radius: 20px;
+                            min-height: 1000px;
+                            background-color: whitesmoke;
+                            ">
 
 
                     {% for stock_info in stock_info_list %}
@@ -44,10 +53,6 @@
             </div>
 
     {% endfor %}
-    <div></div>
-    <div></div>
-    <div></div>
-    <div></div>
 
 </div>
 

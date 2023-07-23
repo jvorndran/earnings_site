@@ -3,21 +3,24 @@
 body {
   font-family: Typold, serif;
   font-size: 1.1rem;
-  background: whitesmoke;
+  background: #BBB6A5;
 
 }
 
 .calender-section {
     display: grid;
     justify-content: center;
+    background: #BBB6A5;
 }
 
 .grid-container {
     justify-self: center;
     display: grid;
     width: 90vw;
+    background: #BBB6A5;
     grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
     justify-content: space-evenly;
+    gap: 2vw;
 }
 
 
@@ -25,8 +28,8 @@ body {
     display: grid;
     grid-template-columns: 1fr 1fr;
     justify-content: space-evenly;
-    column-gap: 100px;
-    row-gap: 10px;
+    column-gap: 2vw;
+    row-gap: 1vw;
     align-items: center;
 }
 

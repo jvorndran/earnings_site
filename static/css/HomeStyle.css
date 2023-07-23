@@ -11,7 +11,7 @@
 body {
   font-family: Typold, serif;
   font-size: 1.1rem;
-  background: whitesmoke;
+  background: #BBB6A5;
 }
 
 .container {
@@ -20,6 +20,8 @@ body {
   margin-right: auto;
   padding-left: 10px;
   padding-right: 10px;
+  background: #BBB6A5;
+
 }
 
 .responsive-table li {
