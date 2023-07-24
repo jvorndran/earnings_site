@@ -7,6 +7,8 @@
 
     <link rel="stylesheet" href="{% static '/css/Calender_Style.css' %}" type="text/css">
 
+    <link rel="icon" href=" {% static '/img/ninja.svg' %}">
+
 </head>
 <body style="background-color: #2A2F33">
 
@@ -17,7 +19,7 @@
     {% for release_date, stock_info_list in stock_info_objects.items %}
 
             <div>
-                    <a href="{% url 'calender_detail' release_date|date:'Ymd' %}" target="_blank" style="color: #2A2F33; text-decoration: none; font-size: 0.9rem;">
+                    <a href="{% url 'calender_detail' release_date|date:'Ymd' %}" target="_blank" style="color: #2A2F33; text-decoration: none; font-size: 0.9rem">
                         <h1 style="display: grid; justify-content: center; align-items: center; justify-items: center">
                             <span style="text-decoration: underline; font-size: 1.5rem">
                             {{ release_date|date:"l" }}
@@ -27,6 +29,7 @@
                             </span>
                         </h1>
                     </a>
+
                 <div class="grid-item" style=
                             "display: grid;
                             grid-template-columns: 1fr 1fr;

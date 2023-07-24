@@ -54,8 +54,13 @@ def home(request, calender_date):
 
 
 def calender_detail(request, date):
+
+    if request.path == '/favicon.ico/':
+        return HttpResponse()
+
     # Parse the date string into a datetime object
     release_date = datetime.strptime(date, '%Y%m%d').date()
+
 
     # Get the StockInfo objects for the specified release date
     stock_info_objects = StockInfo.objects.filter(Report_Date=release_date).order_by('-Market_Cap')
