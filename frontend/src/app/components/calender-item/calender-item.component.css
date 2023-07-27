@@ -1,0 +1,52 @@
+.grid-list{
+  margin-left: 5vw;
+  justify-self: center;
+  width: 90vw;
+}
+
+.link{
+  transition: opacity 0.3s ease;
+}
+
+.link:hover{
+  opacity: 0.9;
+}
+
+.container{
+  display: flex;
+  justify-content: center;
+}
+
+.example-card {
+  width: 200px;
+  height: 400px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo-wrapper{
+  margin-top: 1vh;
+  display: grid;
+  align-items: center;
+  justify-content: center;
+  justify-items: center;
+  height: 100%;
+}
+
+
+.logo {
+  width: 60%;
+}
+
+.mat-card-company{
+  height: 15em;
+  width: 20em;
+  border: #808080 1px solid;
+}
+
+
+.example-spacer {
+  flex: 1 1 auto;
+}
