@@ -1,7 +1,7 @@
 import { Component, OnInit, HostListener } from '@angular/core';
 import { GetCalenderService } from '../../services/get-calender.service'
 import { CalenderData } from "./calender-item.interface";
-
+import { SlickCarouselModule } from "ngx-slick-carousel";
 
 @Component({
   selector: 'app-calender-item',
@@ -64,7 +64,7 @@ export class CalenderItemComponent implements OnInit {
     setCols() {
     const width = window.innerWidth;
 
-    if (width >= 1350) {
+    if (width >= 1500) {
       this.cols = this.breakpoints.xl;
     } else if (width >= 992) {
       this.cols = this.breakpoints.lg;
@@ -77,14 +77,26 @@ export class CalenderItemComponent implements OnInit {
     }
   }
     @HostListener('window:resize', ['$event'])
-  onResize(event: any) {
-    this.setCols();
-  }
+    onResize(event: any) {
+      this.setCols();
+    }
 
   formatDateRoute (date:string):string{
 
       return date.replace(/-/g, '')
 
   }
+
+
+  slideConfig = {
+    infinite: true,
+    arrows: true,
+  slidesToShow: 1,
+  slidesToScroll: 1,
+    dots: true,
+    className: 'slides'
+  }
+
+
 
 }

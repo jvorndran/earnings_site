@@ -1,5 +1,12 @@
 {
   "devDependencies": {
     "@angular/language-service": "^16.1.7"
+  },
+  "dependencies": {
+    "@angular/animations": "^16.1.7",
+    "@angular/router": "^16.1.7",
+    "jquery": "^3.7.0",
+    "ngx-owl-carousel-o": "^16.0.0",
+    "ngx-slick-carousel": "^15.0.0"
   }
 }

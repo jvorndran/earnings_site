@@ -19,6 +19,11 @@ import {MatDatepickerModule} from "@angular/material/datepicker";
 import {MatNativeDateModule} from "@angular/material/core";
 import { ReportDateTableComponent } from './components/report-date-table/report-date-table.component';
 import {MatTableModule} from "@angular/material/table";
+import { SlickCarouselModule } from "ngx-slick-carousel";
+import { CarouselModule } from "ngx-owl-carousel-o";
+import {RouterModule} from "@angular/router";
+import { CarouselHolderComponentComponent } from './components/carousel-holder-component/carousel-holder-component.component';
+import { SlickCarouselComponent } from "ngx-slick-carousel";
 
 @NgModule({
   declarations: [
@@ -26,7 +31,9 @@ import {MatTableModule} from "@angular/material/table";
     CalenderItemComponent,
     HomeComponent,
     TruncatePipe,
-    ReportDateTableComponent
+    ReportDateTableComponent,
+    CarouselHolderComponentComponent,
+    CalenderItemComponent
   ],
   imports: [
     BrowserModule,
@@ -42,7 +49,11 @@ import {MatTableModule} from "@angular/material/table";
     MatFormFieldModule,
     MatDatepickerModule,
     MatNativeDateModule,
-    MatTableModule
+    MatTableModule,
+    SlickCarouselModule,
+    CarouselModule,
+    RouterModule,
+    BrowserAnimationsModule,
   ],
   providers: [GetCalenderService],
   bootstrap: [AppComponent]

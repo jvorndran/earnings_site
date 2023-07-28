@@ -1,11 +1,23 @@
-.grid-list{
+
+
+.carousel-style{
+  height: 100vh;
+}
+
+.slick-slide{
   margin-left: 5vw;
-  justify-self: center;
-  width: 90vw;
+  margin-right: 5vw;
+}
+
+.grid-list{
+  justify-content: center;
+  align-items: center;
 }
 
 .link{
   transition: opacity 0.3s ease;
+  text-decoration: none;
+  border-radius: 20px;
 }
 
 .link:hover{
@@ -17,14 +29,6 @@
   justify-content: center;
 }
 
-.example-card {
-  width: 200px;
-  height: 400px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: center;
-}
 
 .logo-wrapper{
   margin-top: 1vh;
@@ -43,7 +47,7 @@
 .mat-card-company{
   height: 15em;
   width: 20em;
-  border: #808080 1px solid;
+  border: #cccccc 1px solid;
 }
 
 

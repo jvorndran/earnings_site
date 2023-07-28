@@ -1,48 +1,56 @@
 
-<ng-container *ngFor="let date of getDates(calenderData)" class="container">
+<ngx-slick-carousel #slickModal="slick-carousel" [config]="slideConfig" class="carousel-style">
 
-  <a [routerLink]="['/', formatDateRoute(date)]" class="link">
+  <ng-container ngxSlickItem *ngFor="let date of getDates(calenderData)" class="container">
 
-  <mat-toolbar color="primary">
-    <mat-toolbar-row>
-      <span>{{formatDate(date)}}</span>
-      <span class="example-spacer"></span>
-      <mat-icon class="example-icon" aria-hidden="false">date_range</mat-icon>
-    </mat-toolbar-row>
-
-  </mat-toolbar>
-
-  </a>
-  <mat-grid-list [cols]="cols" gutterSize="1vw" class="grid-list">
-
-    <div *ngFor="let item of calenderData[date]" style="color: black">
-
-      <mat-grid-tile>
-
-        <mat-card style="border-radius: 10px" class="mat-card-company">
-
-          <div class="logo-wrapper">
-             <img src="https://logo.clearbit.com/{{ item.Website }}" alt="logo" class="logo" (error)="handleImageError($event)">
-          </div>
-
-          <mat-card-header>
+    <mat-grid-list [cols]="cols" gutterSize="1vw" class="grid-list">
 
 
-            <mat-card-title>{{item.Name | truncate: 15}}</mat-card-title>
-            <mat-card-subtitle >{{item.Ticker}}</mat-card-subtitle>
+       <a [routerLink]="['/', formatDateRoute(date)]" class="link">
 
-          </mat-card-header>
+        <mat-toolbar color="primary" style="border-radius: 10px; margin-top: 1vh">
+          <mat-toolbar-row>
+            <span >{{formatDate(date)}}</span>
+            <span class="example-spacer"></span>
+            <mat-icon class="example-icon" aria-hidden="false">date_range</mat-icon>
+          </mat-toolbar-row>
 
-          <mat-card-content>
-            <p> {{ item.Market_Cap / 1000000000 | number:'1.0-1'}}B</p>
-          </mat-card-content>
+        </mat-toolbar>
 
-        </mat-card>
+        </a>
 
-      </mat-grid-tile>
-    </div>
+      <div *ngFor="let item of calenderData[date]" style="color: black">
 
-  </mat-grid-list>
+        <mat-grid-tile>
 
-</ng-container>
+          <mat-card style="border-radius: 10px" class="mat-card-company">
+
+            <div class="logo-wrapper">
+               <img src="https://logo.clearbit.com/{{ item.Website }}" alt="logo" class="logo" (error)="handleImageError($event)">
+            </div>
+
+            <mat-card-header>
+
+
+              <mat-card-title>{{item.Name | truncate: 15}}</mat-card-title>
+              <mat-card-subtitle >{{item.Ticker}}</mat-card-subtitle>
+
+            </mat-card-header>
+
+            <mat-card-content>
+              <p> {{ item.Market_Cap / 1000000000 | number:'1.0-1'}}B</p>
+            </mat-card-content>
+
+          </mat-card>
+
+        </mat-grid-tile>
+      </div>
+
+    </mat-grid-list>
+
+  </ng-container>
+
+
+</ngx-slick-carousel>
+
 

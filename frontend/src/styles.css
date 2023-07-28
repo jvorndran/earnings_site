@@ -1,4 +1,6 @@
 @import '~@angular/material/prebuilt-themes/indigo-pink.css';
+@import "node_modules/slick-carousel/slick/slick-theme.css";
+@import "node_modules/slick-carousel/slick/slick.css";
 
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
