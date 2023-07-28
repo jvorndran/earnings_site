@@ -9,7 +9,25 @@
   <link rel="preconnect" href="https://fonts.gstatic.com">
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  <link rel="stylesheet" type="text/css" href="http://kenwheeler.github.io/slick/slick/slick-theme.css"/>
+
+
+  <style>
+
+    .slick-next{
+      right: -15px !important;
+    }
+    .slick-prev{
+      left: -15px !important;
+    }
+
+
+    .slick-prev:before, .slick-next:before{
+      color: black !important;
+      z-index: 1 !important;
+    }
+
+  </style>
+
 </head>
 <body class="mat-typography">
   <app-root></app-root>

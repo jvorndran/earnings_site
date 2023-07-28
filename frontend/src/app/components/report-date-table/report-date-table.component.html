@@ -1,6 +1,9 @@
 <!-- report-date-table.component.html -->
-<h1>Reports for {{ date }}</h1>
+<mat-toolbar color="primary" class="date-span">
+    {{formatDate(date)}}
+</mat-toolbar>
 
+<div class="table-container">
 <table mat-table [dataSource]="stockInfoObjects" class="mat-elevation-z8" multiTemplateDataRows>
 
 
@@ -45,3 +48,4 @@
   <tr mat-row *matRowDef="let row; columns: ['expandedDetail']" class="example-detail-row"></tr>
 
 </table>
+</div>

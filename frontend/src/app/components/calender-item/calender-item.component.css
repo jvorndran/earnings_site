@@ -1,12 +1,31 @@
 
+:root{
+  --cust-primary: #e9f0ff;
+  --secondary: #ffffff;
+  --accent: #52568e;
+  --background: #6363fc;
+  --text: #040406;
+}
+
+.carousel-container-style{
+  overflow: hidden;
+  margin-left: 1vw;
+  margin-right: 1vw;
+}
 
 .carousel-style{
-  height: 100vh;
+  height: 92vh;
+  margin-left: 1vw;
+  margin-right: 1vw;
+}
+
+mat-toolbar{
+  border-radius: 10px; margin-top: 1vh
 }
 
 .slick-slide{
-  margin-left: 5vw;
-  margin-right: 5vw;
+  margin-left: 1vw;
+  margin-right: 1vw;
 }
 
 .grid-list{
@@ -29,7 +48,6 @@
   justify-content: center;
 }
 
-
 .logo-wrapper{
   margin-top: 1vh;
   display: grid;
@@ -38,7 +56,6 @@
   justify-items: center;
   height: 100%;
 }
-
 
 .logo {
   width: 60%;

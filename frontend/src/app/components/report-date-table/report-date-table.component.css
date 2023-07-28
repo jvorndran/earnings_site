@@ -1,5 +1,11 @@
 table {
-  width: 100%;
+  width: 90%;
+}
+
+.date-span{
+  display: grid;
+  justify-content: center;
+  align-items: center;
 }
 
 tr.example-detail-row {
@@ -12,6 +18,10 @@ tr.example-element-row:not(.example-expanded-row):hover {
 
 tr.example-element-row:not(.example-expanded-row):active {
   background: #efefef;
+}
+
+.table-container{
+  display: grid;
 }
 
 .example-element-row td {

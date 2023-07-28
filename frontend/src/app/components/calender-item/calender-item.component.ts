@@ -1,4 +1,4 @@
-import { Component, OnInit, HostListener } from '@angular/core';
+import {Component, OnInit, HostListener} from '@angular/core';
 import { GetCalenderService } from '../../services/get-calender.service'
 import { CalenderData } from "./calender-item.interface";
 import { SlickCarouselModule } from "ngx-slick-carousel";
@@ -82,9 +82,7 @@ export class CalenderItemComponent implements OnInit {
     }
 
   formatDateRoute (date:string):string{
-
       return date.replace(/-/g, '')
-
   }
 
 
@@ -94,7 +92,6 @@ export class CalenderItemComponent implements OnInit {
   slidesToShow: 1,
   slidesToScroll: 1,
     dots: true,
-    className: 'slides'
   }
 
 

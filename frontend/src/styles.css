@@ -2,5 +2,5 @@
 @import "node_modules/slick-carousel/slick/slick-theme.css";
 @import "node_modules/slick-carousel/slick/slick.css";
 
-html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+html, body { height: 100%; background: #f8f8ff}
+body { margin: 0;font-family: sans-serif, "Franklin Gothic Book", Verdana; }

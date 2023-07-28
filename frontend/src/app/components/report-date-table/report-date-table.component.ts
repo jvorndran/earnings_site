@@ -2,6 +2,7 @@ import {Component, OnInit} from '@angular/core';
 import {ActivatedRoute} from "@angular/router";
 import {HttpClient} from "@angular/common/http";
 import {animate, state, style, transition, trigger} from '@angular/animations';
+import {yearsPerPage} from "@angular/material/datepicker";
 
 export interface StockInfo {
   Ticker: string;
@@ -64,4 +65,17 @@ export class ReportDateTableComponent implements OnInit{
     )
 
   }
+
+  formatDate(date:string):string|null{
+
+    const year = parseInt(date.slice(0,4), 10);
+    const month = parseInt(date.slice(4,6), 10);
+    const day = parseInt(date.slice(6,8), 10);
+
+    const dateObject = new Date(year, month, day);
+
+    return new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', year: 'numeric' }).format(dateObject)
+  }
+
+
 }
