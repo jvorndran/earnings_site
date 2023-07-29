@@ -87,8 +87,9 @@ export class CalenderItemComponent implements OnInit {
 
 
   slideConfig = {
-    infinite: true,
+    infinite: false,
     arrows: true,
+    speed: 600,
   slidesToShow: 1,
   slidesToScroll: 1,
     dots: true,

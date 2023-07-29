@@ -22,7 +22,7 @@ def api_calender(request):
 
     # Get the first five dates on or after today
     five_dates_after_today = StockInfo.objects.filter(Report_Date__gte=today).values('Report_Date').distinct().order_by(
-        'Report_Date')[:5]
+        'Report_Date')[:40]
 
     # Fetch the corresponding StockInfo objects for the five dates
     five_most_recent_objects = StockInfo.objects.filter(Report_Date__in=five_dates_after_today)

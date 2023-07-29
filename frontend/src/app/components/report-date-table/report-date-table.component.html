@@ -26,15 +26,21 @@
     <td mat-cell *matCellDef="let element" [attr.colspan]="columnsToDisplayWithExpand.length">
       <div class="example-element-detail"
            [@detailExpand]="element == expandedElement ? 'expanded' : 'collapsed'">
-        <div class="example-element-diagram">
-          <img src="https://logo.clearbit.com/{{ element.Website }}" alt="logo" class="logo">
+        <div class="description-flex-item">
+          <div class="example-element-diagram ">
+            <img src="https://logo.clearbit.com/{{ element.Website }}" alt="logo" class="logo">
+          </div>
         </div>
-        <div class="example-element-description">
-          <div><strong>Days To Cover:</strong> {{element['Days To Cover'] | number:'1.1-1'}}</div>
-          <div><strong>Quarterly Growth:</strong> {{element['Quarterly Growth'] * 100 | number:'1.1-1'}}%</div>
-          <div><strong>Short Interest:</strong> {{element['Short Interest'] * 100 | number:'1.1-1'}}%</div>
-          <div><strong>Implied Move:</strong> {{element['Implied Move'] * 100 | number:'1.1-1'}}%</div>
-        </div>
+          <div class="example-element-description description-flex-item">
+            <div><strong>Days To Cover</strong></div>
+            <div><strong>Quarterly Growth</strong></div>
+            <div><strong>Short Interest</strong></div>
+            <div><strong>Implied Move</strong></div>
+            <div>{{element['Days To Cover'] | number:'1.1-1'}}</div>
+            <div>{{element['Quarterly Growth'] * 100 | number:'1.1-1'}}%</div>
+            <div>{{element['Short Interest'] * 100 | number:'1.1-1'}}%</div>
+            <div>{{element['Implied Move'] * 100 | number:'1.1-1'}}%</div>
+          </div>
       </div>
     </td>
   </ng-container>
