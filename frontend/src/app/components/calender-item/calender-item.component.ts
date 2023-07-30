@@ -15,7 +15,9 @@ export class CalenderItemComponent implements OnInit {
   cols: number = 6;
 
   constructor(private calenderService: GetCalenderService) { }
+
   ngOnInit(): void {
+
     this.setCols()
 
     // @ts-ignore
@@ -39,19 +41,6 @@ export class CalenderItemComponent implements OnInit {
 
   getDates(data: { [key: string]: CalenderData[] }): string[] {
     return Object.keys(data);
-  }
-
-  handleImageError(event:any) {
-    event.target.src = '../../../assets/img/image.svg';
-    event.target.style.width = '3vw';
-    event.target.style.height = '3vh'
-  }
-
-
-  formatDate(date:string):string|null{
-    console.log(date)
-    const dateObject = new Date(date);
-    return new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', year: 'numeric' }).format(dateObject)
   }
 
   breakpoints = {
@@ -93,6 +82,7 @@ export class CalenderItemComponent implements OnInit {
   slidesToShow: 1,
   slidesToScroll: 1,
     dots: true,
+    lazyLoad: 'progressive',
   }
 
 

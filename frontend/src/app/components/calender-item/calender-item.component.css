@@ -48,25 +48,10 @@ mat-toolbar{
   justify-content: center;
 }
 
-.logo-wrapper{
+.grid-tile{
+  color: black;
   margin-top: 1vh;
-  display: grid;
-  align-items: center;
-  justify-content: center;
-  justify-items: center;
-  height: 100%;
 }
-
-.logo {
-  width: 60%;
-}
-
-.mat-card-company{
-  height: 15em;
-  width: 20em;
-  border: #cccccc 1px solid;
-}
-
 
 .example-spacer {
   flex: 1 1 auto;

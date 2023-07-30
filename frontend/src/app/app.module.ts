@@ -22,8 +22,8 @@ import {MatTableModule} from "@angular/material/table";
 import { SlickCarouselModule } from "ngx-slick-carousel";
 import { CarouselModule } from "ngx-owl-carousel-o";
 import {RouterModule} from "@angular/router";
-import { CarouselHolderComponentComponent } from './components/carousel-holder-component/carousel-holder-component.component';
 import { SlickCarouselComponent } from "ngx-slick-carousel";
+import { CompanyCardComponent } from './components/company-card/company-card.component';
 
 @NgModule({
   declarations: [
@@ -32,8 +32,8 @@ import { SlickCarouselComponent } from "ngx-slick-carousel";
     HomeComponent,
     TruncatePipe,
     ReportDateTableComponent,
-    CarouselHolderComponentComponent,
-    CalenderItemComponent
+    CalenderItemComponent,
+    CompanyCardComponent
   ],
   imports: [
     BrowserModule,

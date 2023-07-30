@@ -9,7 +9,7 @@
 
         <mat-toolbar color="primary">
           <mat-toolbar-row>
-            <span>{{formatDate(date)}}</span>
+            <span>{{date | date: 'EEEE, LLLL d'}}</span>
             <span class="example-spacer"></span>
             <mat-icon aria-hidden="false">arrow_outward</mat-icon>
           </mat-toolbar-row>
@@ -18,32 +18,14 @@
 
         </a>
 
-      <div *ngFor="let item of calenderData[date]" style="color: black; margin-top: 1vh;">
 
-        <mat-grid-tile>
-
-          <mat-card style="border-radius: 10px" class="mat-card-company">
-
-            <div class="logo-wrapper">
-               <img src="https://logo.clearbit.com/{{ item.Website }}" alt="logo" class="logo" (error)="handleImageError($event)">
-            </div>
-
-            <mat-card-header>
+        <mat-grid-tile *ngFor="let item of calenderData[date]" class="grid-tile">
 
 
-              <mat-card-title>{{item.Name | truncate: 15}}</mat-card-title>
-              <mat-card-subtitle >{{item.Ticker}}</mat-card-subtitle>
+          <app-company-card [companyInfo]="item"></app-company-card>
 
-            </mat-card-header>
-
-            <mat-card-content>
-              <p> {{ item.Market_Cap / 1000000000 | number:'1.0-1'}}B</p>
-            </mat-card-content>
-
-          </mat-card>
 
         </mat-grid-tile>
-      </div>
 
     </mat-grid-list>
 

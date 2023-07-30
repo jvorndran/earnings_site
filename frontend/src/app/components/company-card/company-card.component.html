@@ -1,0 +1,19 @@
+ <mat-card class="mat-card-company">
+
+      <div class="logo-wrapper">
+         <img src="https://logo.clearbit.com/{{ companyInfo.Website }}" alt="logo" class="logo" (error)="handleImageError($event)">
+      </div>
+
+      <mat-card-header>
+
+
+        <mat-card-title>{{companyInfo.Name | truncate: 15}}</mat-card-title>
+        <mat-card-subtitle >{{companyInfo.Ticker}}</mat-card-subtitle>
+
+      </mat-card-header>
+
+      <mat-card-content>
+        <p> {{ companyInfo.Market_Cap / 1000000000 | number:'1.0-1'}}B</p>
+      </mat-card-content>
+
+ </mat-card>

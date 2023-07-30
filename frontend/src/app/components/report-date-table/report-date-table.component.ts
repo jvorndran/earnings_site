@@ -61,15 +61,13 @@ export class ReportDateTableComponent implements OnInit{
       error => {
         console.error('Error fetching data', error)
       }
-
     )
-
   }
 
   formatDate(date:string):string|null{
 
     const year = parseInt(date.slice(0,4), 10);
-    const month = parseInt(date.slice(4,6), 10);
+    const month = parseInt(date.slice(4,6), 10) - 1;
     const day = parseInt(date.slice(6,8), 10);
 
     const dateObject = new Date(year, month, day);
