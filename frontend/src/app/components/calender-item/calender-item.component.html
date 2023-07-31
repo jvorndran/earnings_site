@@ -1,23 +1,23 @@
 <div class="carousel-container-style">
-<ngx-slick-carousel #slickModal="slick-carousel" [config]="slideConfig" class="carousel-style" id="slick-carousel">
+  <ngx-slick-carousel #slickModal="slick-carousel" [config]="slideConfig" class="carousel-style" id="slick-carousel">
 
-  <ng-container ngxSlickItem *ngFor="let date of getDates(calenderData)" class="container">
+    <ng-container *ngFor="let date of getDates(calenderData)" class="container" ngxSlickItem>
 
-    <mat-grid-list [cols]="cols" gutterSize="1vw" rowHeight="8:7" class="grid-list">
+      <mat-grid-list [cols]="cols" class="grid-list" gutterSize="1vw" rowHeight="8:7">
 
-       <a [routerLink]="['/', formatDateRoute(date)]" class="link">
+        <a [routerLink]="['/', formatDateRoute(date)]" class="link">
 
-        <mat-toolbar color="primary">
-          <mat-toolbar-row>
-            <span>{{date | date: 'EEEE, LLLL d'}}</span>
-            <span class="example-spacer"></span>
-            <mat-icon aria-hidden="false">arrow_outward</mat-icon>
-          </mat-toolbar-row>
+          <mat-toolbar color="primary">
 
-        </mat-toolbar>
+            <mat-toolbar-row>
+              <span>{{date | date: 'EEEE, LLLL d'}}</span>
+              <span class="example-spacer"></span>
+              <mat-icon aria-hidden="false">arrow_outward</mat-icon>
+            </mat-toolbar-row>
+
+          </mat-toolbar>
 
         </a>
-
 
         <mat-grid-tile *ngFor="let item of calenderData[date]" class="grid-tile">
 
@@ -27,11 +27,11 @@
 
         </mat-grid-tile>
 
-    </mat-grid-list>
+      </mat-grid-list>
 
-  </ng-container>
+    </ng-container>
 
 
-</ngx-slick-carousel>
+  </ngx-slick-carousel>
 
 </div>

@@ -2,3 +2,4 @@
 venv
 .idea
 /base/migrations
+/frontend/node_modules

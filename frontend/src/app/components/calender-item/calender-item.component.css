@@ -1,5 +1,5 @@
 
-:root{
+:root {
   --cust-primary: #e9f0ff;
   --secondary: #ffffff;
   --accent: #52568e;
@@ -7,48 +7,49 @@
   --text: #040406;
 }
 
-.carousel-container-style{
+.carousel-container-style {
   overflow: hidden;
   margin-left: 1vw;
   margin-right: 1vw;
 }
 
-.carousel-style{
+.carousel-style {
   height: 92vh;
   margin-left: 1vw;
   margin-right: 1vw;
 }
 
-mat-toolbar{
-  border-radius: 10px; margin-top: 1vh
+mat-toolbar {
+  border-radius: 10px;
+  margin-top: 1vh
 }
 
-.slick-slide{
+.slick-slide {
   margin-left: 1vw;
   margin-right: 1vw;
 }
 
-.grid-list{
+.grid-list {
   justify-content: center;
   align-items: center;
 }
 
-.link{
+.link {
   transition: opacity 0.3s ease;
   text-decoration: none;
   border-radius: 20px;
 }
 
-.link:hover{
+.link:hover {
   opacity: 0.9;
 }
 
-.container{
+.container {
   display: flex;
   justify-content: center;
 }
 
-.grid-tile{
+.grid-tile {
   color: black;
   margin-top: 1vh;
 }

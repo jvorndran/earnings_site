@@ -1,7 +1,7 @@
 import {Component, OnInit, HostListener} from '@angular/core';
-import { GetCalenderService } from '../../services/get-calender.service'
-import { CalenderData } from "./calender-item.interface";
-import { SlickCarouselModule } from "ngx-slick-carousel";
+import {GetCalenderService} from '../../services/get-calender.service'
+import {CalenderData} from "./calender-item.interface";
+import {SlickCarouselModule} from "ngx-slick-carousel";
 
 @Component({
   selector: 'app-calender-item',
@@ -13,36 +13,6 @@ export class CalenderItemComponent implements OnInit {
   calenderData: { [key: string]: CalenderData[] } = {};
 
   cols: number = 6;
-
-  constructor(private calenderService: GetCalenderService) { }
-
-  ngOnInit(): void {
-
-    this.setCols()
-
-    // @ts-ignore
-    this.calenderService.getCalenderData().subscribe((data:string) =>{
-      const parsedData = JSON.parse(data) as CalenderData[];
-      this.calenderData = this.groupDataByReportDate(parsedData);
-    });
-  }
-
-    private groupDataByReportDate(data: CalenderData[]): { [key: string]: CalenderData[] } {
-    return data.reduce((groupedData, item) => {
-      const reportDate = item.Report_Date;
-      if (groupedData[reportDate]) {
-        groupedData[reportDate].push(item);
-      } else {
-        groupedData[reportDate] = [item];
-      }
-      return groupedData;
-    }, {} as { [key: string]: CalenderData[] });
-  }
-
-  getDates(data: { [key: string]: CalenderData[] }): string[] {
-    return Object.keys(data);
-  }
-
   breakpoints = {
     xl: 6,
     lg: 4,
@@ -50,7 +20,35 @@ export class CalenderItemComponent implements OnInit {
     sm: 2,
     xs: 1,
   };
-    setCols() {
+  slideConfig = {
+    infinite: false,
+    arrows: true,
+    speed: 600,
+    slidesToShow: 1,
+    slidesToScroll: 1,
+    dots: true,
+    lazyLoad: 'progressive',
+  }
+
+  constructor(private calenderService: GetCalenderService) {
+  }
+
+  ngOnInit(): void {
+
+    this.setCols()
+
+    // @ts-ignore
+    this.calenderService.getCalenderData().subscribe((data: string) => {
+      const parsedData = JSON.parse(data) as CalenderData[];
+      this.calenderData = this.groupDataByReportDate(parsedData);
+    });
+  }
+
+  getDates(data: { [key: string]: CalenderData[] }): string[] {
+    return Object.keys(data);
+  }
+
+  setCols() {
     const width = window.innerWidth;
 
     if (width >= 1500) {
@@ -65,26 +63,27 @@ export class CalenderItemComponent implements OnInit {
       this.cols = this.breakpoints.xs;
     }
   }
-    @HostListener('window:resize', ['$event'])
-    onResize(event: any) {
-      this.setCols();
-    }
 
-  formatDateRoute (date:string):string{
-      return date.replace(/-/g, '')
+  @HostListener('window:resize', ['$event'])
+  onResize(event: any) {
+    this.setCols();
   }
 
-
-  slideConfig = {
-    infinite: false,
-    arrows: true,
-    speed: 600,
-  slidesToShow: 1,
-  slidesToScroll: 1,
-    dots: true,
-    lazyLoad: 'progressive',
+  formatDateRoute(date: string): string {
+    return date.replace(/-/g, '')
   }
 
+  private groupDataByReportDate(data: CalenderData[]): { [key: string]: CalenderData[] } {
+    return data.reduce((groupedData, item) => {
+      const reportDate = item.Report_Date;
+      if (groupedData[reportDate]) {
+        groupedData[reportDate].push(item);
+      } else {
+        groupedData[reportDate] = [item];
+      }
+      return groupedData;
+    }, {} as { [key: string]: CalenderData[] });
+  }
 
 
 }
