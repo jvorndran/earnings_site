@@ -5,7 +5,7 @@
 
       <mat-grid-list [cols]="cols" class="grid-list" gutterSize="1vw" rowHeight="8:7">
 
-        <a [routerLink]="['/', formatDateRoute(date)]" class="link">
+        <a [routerLink]="['/', formatDateRoute(date)]" class="link" target="_blank">
 
           <mat-toolbar color="primary">
 
@@ -21,9 +21,7 @@
 
         <mat-grid-tile *ngFor="let item of calenderData[date]" class="grid-tile">
 
-
           <app-company-card [companyInfo]="item"></app-company-card>
-
 
         </mat-grid-tile>
 

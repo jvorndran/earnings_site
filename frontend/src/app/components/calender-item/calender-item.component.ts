@@ -1,7 +1,6 @@
-import {Component, OnInit, HostListener} from '@angular/core';
+import {Component, HostListener, OnInit} from '@angular/core';
 import {GetCalenderService} from '../../services/get-calender.service'
 import {CalenderData} from "./calender-item.interface";
-import {SlickCarouselModule} from "ngx-slick-carousel";
 
 @Component({
   selector: 'app-calender-item',
@@ -45,7 +44,19 @@ export class CalenderItemComponent implements OnInit {
   }
 
   getDates(data: { [key: string]: CalenderData[] }): string[] {
-    return Object.keys(data);
+
+    const allDates = Object.keys(data);
+    const today = new Date();
+    today.setDate(today.getDate() - 1)// Making this yesterday today was being filtered out
+
+    const filteredDates = allDates.filter(dateString => {
+        const date = new Date(dateString);
+        return date >= today;
+    });
+
+    filteredDates.sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+
+    return filteredDates;
   }
 
   setCols() {
