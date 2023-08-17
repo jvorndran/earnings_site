@@ -1,13 +1,13 @@
 .mat-card-company{
-  height: 15em;
-  width: 18em;
+  height: 200px;
+  min-width: 200px;
   border: #cccccc 1px solid;
   border-radius: 10px;
   margin-left: 5px;
   margin-right: 5px;
 }
 .logo-wrapper{
-  margin-top: 1vh;
+  margin-top: 1rem;
   display: grid;
   align-items: center;
   justify-content: center;

@@ -3,7 +3,8 @@
 
     <ng-container *ngFor="let date of getDates(calenderData)" class="container" ngxSlickItem>
 
-      <mat-grid-list [cols]="cols" class="grid-list" gutterSize="1vw" rowHeight="8:7">
+
+      <mat-grid-list [cols]="1" class="grid-list" rowHeight="8:7">
 
         <a [routerLink]="['/', formatDateRoute(date)]" class="link" target="_blank">
 
@@ -19,11 +20,16 @@
 
         </a>
 
-        <mat-grid-tile *ngFor="let item of calenderData[date]" class="grid-tile">
+        <main class="calender-grid">
 
-          <app-company-card [companyInfo]="item"></app-company-card>
+          <div *ngFor="let item of calenderData[date]">
 
-        </mat-grid-tile>
+            <app-company-card [companyInfo]="item"></app-company-card>
+
+          </div>
+
+
+        </main>
 
       </mat-grid-list>
 
