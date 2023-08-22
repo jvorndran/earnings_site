@@ -11,8 +11,8 @@ export class CompanyCardComponent {
 
    handleImageError(event:any) {
     event.target.src = '../../../assets/img/image.svg';
-    event.target.style.width = '3vw';
-    event.target.style.height = '3vh'
+    event.target.style.width = '50px';
+    event.target.style.height = '50px'
   }
 
 }
