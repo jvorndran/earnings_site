@@ -6,6 +6,16 @@
   margin-left: 5px;
   margin-right: 5px;
 }
+
+.mat-card-company:hover{
+  cursor: pointer;
+  opacity: 0.9;
+  transition: all 0.3s ease;
+  transform: translate(-5px, -5px) scale(1.05);
+  box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.3);
+  z-index: 1;
+}
+
 .logo-wrapper{
   margin-top: 1rem;
   display: grid;
@@ -17,4 +27,9 @@
 
 .logo {
   width: 60%;
+}
+
+.link-style{
+  text-decoration: none;
+  color: black;
 }

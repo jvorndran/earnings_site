@@ -41,14 +41,23 @@ export class ReportDateTableComponent implements OnInit{
   date: string = "";
   stockInfoObjects: StockInfo[] = [];
 
+  expandedTicker: string | null = null;
+
+
   constructor(private route: ActivatedRoute, private http: HttpClient) { }
 
   ngOnInit(): void {
     this.route.params.subscribe(params => {
       this.date = params['date'];
       this.fetchStockInfoByDate(this.date)
-    })
+      const ticker = params['ticker'];
+      this.expandedTicker = ticker || null;
+      })
   }
+
+  toggleExpanded(ticker: string): void {
+  this.expandedTicker = this.expandedTicker === ticker ? null : ticker;
+}
 
   fetchStockInfoByDate(date:string): void {
     const apiUrl = `http://127.0.0.1:8000/api/${date}`;
@@ -75,5 +84,9 @@ export class ReportDateTableComponent implements OnInit{
     return new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', year: 'numeric' }).format(dateObject)
   }
 
-
+  handleImageError(event:any) {
+    event.target.src = '../../../assets/img/image.svg';
+    event.target.style.width = '50px';
+    event.target.style.height = '50px'
+  }
 }

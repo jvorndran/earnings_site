@@ -24,7 +24,7 @@
 
           <div *ngFor="let item of calenderData[date]">
 
-            <app-company-card [companyInfo]="item"></app-company-card>
+            <app-company-card [companyInfo]="item" [date]="formatDateRoute(date)"></app-company-card>
 
           </div>
 

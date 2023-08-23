@@ -1,4 +1,6 @@
-<mat-card class="mat-card-company">
+<a [routerLink]="['/', date, companyInfo.Ticker]" target="_blank" class="link-style">
+
+<mat-card class="mat-card-company" >
 
   <div class="logo-wrapper">
     <img (error)="handleImageError($event)" alt="logo" class="logo"
@@ -17,3 +19,4 @@
   </mat-card-content>
 
 </mat-card>
+</a>

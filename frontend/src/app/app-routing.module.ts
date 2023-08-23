@@ -5,7 +5,7 @@ import {ReportDateTableComponent} from "./components/report-date-table/report-da
 
 const routes: Routes = [
   {path: '', component: CalenderItemComponent},
-  {path: ':date', component: ReportDateTableComponent}
+  {path: ':date/:ticker', component: ReportDateTableComponent}
 ];
 
 @NgModule({
