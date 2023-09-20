@@ -1,5 +1,4 @@
 {% load static %}
-{% load mathfilters %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -32,12 +31,7 @@
                                 <span>{{ stock_info.Name }}</span>
                             </div>
                         </div>
-                        <div class="col col-2" >{{ stock_info.Market_Cap|div:1000000000|floatformat:2 }}B</div>
-                        <div class="col col-2">{{ stock_info.Estimate|floatformat:2 }}</div>
-                        <div class="col col-2">{{ stock_info.Implied_Move|mul:100|floatformat:2 }}%</div>
-                        <div class="col col-2">{{ stock_info.Quarterly_Growth|mul:100|floatformat:2 }}%</div>
-                        <div class="col col-2">{{ stock_info.Short_Interest|mul:100|floatformat:2 }}%</div>
-                        <div class="col col-2">{{ stock_info.Days_To_Cover|floatformat:2 }}</div>
+
                 </li>
             {% endfor %}
         </ul>
