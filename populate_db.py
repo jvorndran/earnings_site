@@ -1,3 +1,4 @@
+import dotenv
 import yfinance as yf
 import csv
 import requests
@@ -10,9 +11,9 @@ import django
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'earnings_site.settings')
 django.setup()
+load_dotenv()
 
-
-api_key = 'ZUVY81MBX0E12LVI'
+api_key = os.getenv('ALPHA_API_KEY')
 
 #Earnings calendar API URL
 CSV_URL = f'https://www.alphavantage.co/query?function=EARNINGS_CALENDAR&horizon=1month&apikey={api_key}'

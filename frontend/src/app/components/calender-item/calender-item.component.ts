@@ -21,8 +21,7 @@ export class CalenderItemComponent implements OnInit {
     lazyLoad: 'progressive',
   }
 
-  constructor(private calenderService: GetCalenderService) {
-  }
+  constructor(private calenderService: GetCalenderService) {}
 
   ngOnInit(): void {
 

@@ -2,7 +2,6 @@ import {Component, OnInit} from '@angular/core';
 import {ActivatedRoute} from "@angular/router";
 import {HttpClient} from "@angular/common/http";
 import {animate, state, style, transition, trigger} from '@angular/animations';
-import {yearsPerPage} from "@angular/material/datepicker";
 
 export interface StockInfo {
   Ticker: string;
