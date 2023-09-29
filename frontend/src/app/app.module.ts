@@ -33,7 +33,10 @@ import { CompanyCardComponent } from './components/company-card/company-card.com
     TruncatePipe,
     ReportDateTableComponent,
     CalenderItemComponent,
-    CompanyCardComponent
+    CompanyCardComponent,
+    SlickCarouselComponent,
+    MatGridList,
+    MatGridTile
   ],
   imports: [
     BrowserModule,
@@ -54,6 +57,7 @@ import { CompanyCardComponent } from './components/company-card/company-card.com
     CarouselModule,
     RouterModule,
     BrowserAnimationsModule,
+
   ],
   providers: [GetCalenderService],
   bootstrap: [AppComponent]
