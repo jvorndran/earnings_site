@@ -1,0 +1,5 @@
+buildCommand: |
+  nvm install 16
+  nvm use 16
+  npm install  # Install project dependencies
+  npm run build # Build your Angular project
