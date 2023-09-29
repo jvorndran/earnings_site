@@ -34,9 +34,6 @@ import { CompanyCardComponent } from './components/company-card/company-card.com
     ReportDateTableComponent,
     CalenderItemComponent,
     CompanyCardComponent,
-    SlickCarouselComponent,
-    MatGridList,
-    MatGridTile
   ],
   imports: [
     BrowserModule,
