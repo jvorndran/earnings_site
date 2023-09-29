@@ -59,7 +59,7 @@ export class ReportDateTableComponent implements OnInit{
 }
 
   fetchStockInfoByDate(date:string): void {
-    const apiUrl = `http://127.0.0.1:8000/api/${date}`;
+    const apiUrl = `https://earnings-site-api-6e5e869bb564.herokuapp.com/api/${date}`;
 
     this.http.get<StockInfo[]>(apiUrl).subscribe(
       data => {
