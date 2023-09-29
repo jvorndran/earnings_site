@@ -73,7 +73,6 @@ def calender_detail(request, date):
     stock_info_objects = StockInfo.objects.filter(Report_Date=release_date).order_by('-Market_Cap')
 
 
-
     stock_info_list = [
         {
             'Name': obj.Name,

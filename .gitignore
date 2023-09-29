@@ -3,3 +3,4 @@ venv
 .idea
 /base/migrations
 /frontend/node_modules
+node_modules
