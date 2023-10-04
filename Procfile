@@ -1,0 +1,1 @@
+web: cd frontend && npx http-server
