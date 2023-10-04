@@ -15,7 +15,9 @@ SECRET_KEY = 'django-insecure-%(@nu%!d9%+%t7k^#-k$d4da39m(+j8e-hro!qz((l1=#(y##b
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+ALLOWED_HOSTS = ['earnings-site-api-6e5e869bb564.herokuapp.com', '127.0.0.1:8000']
 
 CORS_ALLOW_ALL_ORIGINS = True
 
@@ -42,6 +44,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware'
 ]
 
 ROOT_URLCONF = 'earnings_site.urls'
