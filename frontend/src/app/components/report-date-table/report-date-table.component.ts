@@ -29,7 +29,7 @@ export interface StockInfo {
     ]),
   ],
 })
-export class ReportDateTableComponent implements OnInit{
+export class ReportDateTableComponent implements OnInit {
 
   columnsToDisplay = ['Ticker', 'Name', 'Market Cap', 'Estimate'];
 
