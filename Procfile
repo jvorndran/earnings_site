@@ -1,1 +1,1 @@
-web: gunicorn earnings_site.wsgi --log-file -
+web: cd frontend && npx http-server
