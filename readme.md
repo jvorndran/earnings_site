@@ -1,39 +1,33 @@
 # Earnings Insights Website
-This project allows you to view upcoming earnings for publicly listed companies
 
-# Purpose
-I modeled this website off what earningsights.com was. A few of the stats they had were
-behind a pay wall and I knew I could easily calculate them myself.
+This project pairs a Django backend with an Angular frontend to display upcoming earnings releases and a few
+derived statistics for public companies.
 
-# Features
-When you first come to the website you will see the largest 20 companies who are reporting earnings
-on the next report date. You can scroll left or right to see who reports in the following days.
-Click on a company or date, and you will be brought to a page with all the companies reporting for that
-day along with useful statistics. The stats include implied 1 week move, EPS estimate, market capitalization,
-quarterly growth rate, days to cover, short interest, etc.
+## Highlights
 
-# Methodology
-I used the AlphaVantage API to get a list of the companies reporting for the next 6 months. Then I use
-that to get the tickers and pull various statistics from yahoo finance using the yfinance python package.
-I had to calculate 1 week implied move myself. I take the price of the put and the call that are at the money (the closest
-strike to the underlying) and add them together. Then I take that and divide it by the price of the underlying stock. This
-effectively gives us how much the stock is implied to move by the end of the week. Implied moves are normally elevated on the
-week that earnings are reported for obvious reasons. There are various strategies that people use 1 week implied move on earnings
-week. If you would like to read more https://marketrebellion.com/news/trading-insights/implied-volatility-crush-how-to-beat-iv-crush-with-options/
+- Upcoming earnings calendar grouped by report date
+- Per-day company detail pages sorted by market capitalization
+- Local SQLite dataset that can be refreshed with `backend/populate_db.py`
 
-# Technology Used
-Frontend - Angular 
+## Methodology
 
-Backend - Django
+The backend uses the Alpha Vantage earnings calendar plus Yahoo Finance data to calculate the metrics shown on
+each report date. One of the custom statistics is the implied one-week move, estimated from the at-the-money call
+and put prices around the earnings event.
 
-Database - Sqlite
+## Local setup
 
+1. Create and activate a Python virtual environment.
+2. Install backend dependencies with `pip install -r backend/requirements.txt`.
+3. Install frontend dependencies with `cd frontend && npm install`.
+4. Set `ALPHA_API_KEY` in your environment or a local `.env` file before refreshing data.
+5. Optional: rebuild the local SQLite dataset with `python backend/populate_db.py`.
+6. Start Django from the repository root with `python backend/manage.py runserver`.
+7. In a second shell, start the Angular dev server from `frontend` with `npx ng serve`.
 
-# Installation
-The project uses Angular on the frontend and Django on the backend. cd into the frontend folder
-and use npm install to install the dependencies. Then use the requirements.txt file to install the dependencies
-for the backend with the command "pip install -r requirements.txt".
+## Notes
 
-# Running the Project
-From the root directory, use "python manage.py runserver" to run the backend. Then cd into the frontend and 
-use "ng serve" to run the frontend.
+- The Angular app currently calls the deployed API URLs in `frontend/src/app/services/get-calender.service.ts`
+  and `frontend/src/app/components/report-date-table/report-date-table.component.ts`.
+- To point the frontend at a local Django instance, update those URLs or add a frontend proxy to
+  `http://127.0.0.1:8000`.
