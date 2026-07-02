@@ -6,15 +6,15 @@ import {animate, state, style, transition, trigger} from '@angular/animations';
 export interface StockInfo {
   Ticker: string;
   Name: string;
-  Report_Date: string;
-  Fiscal_Date_End: string;
-  Days_To_Cover: number;
-  Estimate: number;
-  Quarterly_Growth: number;
-  Short_Interest: number;
-  Implied_Move: number;
-  Market_Cap: number;
   Website: string;
+  [key: string]: string | number;
+  'Report Date': string;
+  'Days To Cover': number;
+  Estimate: number;
+  'Quarterly Growth': number;
+  'Short Interest': number;
+  'Implied Move': number;
+  'Market Cap': string | number;
 }
 
 @Component({
@@ -39,8 +39,13 @@ export class ReportDateTableComponent implements OnInit {
 
   date: string = "";
   stockInfoObjects: StockInfo[] = [];
+  filteredStockInfoObjects: StockInfo[] = [];
 
   expandedTicker: string | null = null;
+  searchText = '';
+  minimumImpliedMove = 0;
+  minimumShortInterest = 0;
+  minimumMarketCap = 0;
 
 
   constructor(private route: ActivatedRoute, private http: HttpClient) { }
@@ -64,12 +69,67 @@ export class ReportDateTableComponent implements OnInit {
     this.http.get<StockInfo[]>(apiUrl).subscribe(
       data => {
         this.stockInfoObjects = data;
-        console.log(this.stockInfoObjects)
+        this.applyFilters();
       },
       error => {
         console.error('Error fetching data', error)
       }
     )
+  }
+
+  applyFilters(): void {
+    const normalizedSearch = this.searchText.trim().toLowerCase();
+
+    this.filteredStockInfoObjects = this.stockInfoObjects.filter((stock) => {
+      const matchesSearch = normalizedSearch.length === 0 ||
+        stock.Ticker.toLowerCase().includes(normalizedSearch) ||
+        stock.Name.toLowerCase().includes(normalizedSearch);
+
+      const impliedMove = this.getPercentageValue(stock, 'Implied Move');
+      const shortInterest = this.getPercentageValue(stock, 'Short Interest');
+      const marketCap = this.getMarketCapInBillions(stock['Market Cap']);
+
+      return matchesSearch &&
+        impliedMove >= this.minimumImpliedMove &&
+        shortInterest >= this.minimumShortInterest &&
+        marketCap >= this.minimumMarketCap;
+    });
+
+    if (this.expandedTicker && !this.filteredStockInfoObjects.some((stock) => stock.Ticker === this.expandedTicker)) {
+      this.expandedTicker = null;
+    }
+  }
+
+  clearFilters(): void {
+    this.searchText = '';
+    this.minimumImpliedMove = 0;
+    this.minimumShortInterest = 0;
+    this.minimumMarketCap = 0;
+    this.applyFilters();
+  }
+
+  private getPercentageValue(stock: StockInfo, field: string): number {
+    const value = Number(stock[field]);
+
+    if (Number.isNaN(value)) {
+      return 0;
+    }
+
+    return value * 100;
+  }
+
+  private getMarketCapInBillions(value: string | number): number {
+    if (typeof value === 'number') {
+      return value > 1000000 ? value / 1000000000 : value;
+    }
+
+    const parsedValue = parseFloat(value);
+
+    if (Number.isNaN(parsedValue)) {
+      return 0;
+    }
+
+    return parsedValue;
   }
 
   formatDate(date:string):string|null{

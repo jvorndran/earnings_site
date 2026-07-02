@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { CalenderItemComponent } from './components/calender-item/calender-item.component';
@@ -20,7 +21,6 @@ import {MatNativeDateModule} from "@angular/material/core";
 import { ReportDateTableComponent } from './components/report-date-table/report-date-table.component';
 import {MatTableModule} from "@angular/material/table";
 import { SlickCarouselModule } from "ngx-slick-carousel";
-import { CarouselModule } from "ngx-owl-carousel-o";
 import {RouterModule} from "@angular/router";
 import { SlickCarouselComponent } from "ngx-slick-carousel";
 import { CompanyCardComponent } from './components/company-card/company-card.component';
@@ -40,6 +40,7 @@ import { CompanyCardComponent } from './components/company-card/company-card.com
     HttpClientModule,
     AppRoutingModule,
     CommonModule,
+    FormsModule,
     BrowserAnimationsModule,
     MatButtonModule,
     MatCardModule,
@@ -51,7 +52,6 @@ import { CompanyCardComponent } from './components/company-card/company-card.com
     MatNativeDateModule,
     MatTableModule,
     SlickCarouselModule,
-    CarouselModule,
     RouterModule,
     BrowserAnimationsModule,
 

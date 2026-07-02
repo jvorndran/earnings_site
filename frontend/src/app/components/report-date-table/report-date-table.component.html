@@ -2,8 +2,62 @@
   {{formatDate(date)}}
 </mat-toolbar>
 
+<section class="filter-panel">
+  <div class="filter-header">
+    <div>
+      <h2>Earnings Filters</h2>
+      <span>{{filteredStockInfoObjects.length}} of {{stockInfoObjects.length}} companies shown</span>
+    </div>
+    <button (click)="clearFilters()" class="clear-button" type="button">Clear</button>
+  </div>
+
+  <div class="filter-grid">
+    <div class="filter-field">
+      <span>Ticker Or Company</span>
+      <input
+        [(ngModel)]="searchText"
+        (ngModelChange)="applyFilters()"
+        placeholder="Search report list"
+        type="search">
+    </div>
+
+    <div class="filter-field">
+      <span>Minimum Implied Move</span>
+      <select [(ngModel)]="minimumImpliedMove" (ngModelChange)="applyFilters()">
+        <option [ngValue]="0">Any</option>
+        <option [ngValue]="3">3%+</option>
+        <option [ngValue]="5">5%+</option>
+        <option [ngValue]="8">8%+</option>
+        <option [ngValue]="10">10%+</option>
+      </select>
+    </div>
+
+    <div class="filter-field">
+      <span>Minimum Short Interest</span>
+      <select [(ngModel)]="minimumShortInterest" (ngModelChange)="applyFilters()">
+        <option [ngValue]="0">Any</option>
+        <option [ngValue]="5">5%+</option>
+        <option [ngValue]="10">10%+</option>
+        <option [ngValue]="15">15%+</option>
+        <option [ngValue]="20">20%+</option>
+      </select>
+    </div>
+
+    <div class="filter-field">
+      <span>Minimum Market Cap</span>
+      <select [(ngModel)]="minimumMarketCap" (ngModelChange)="applyFilters()">
+        <option [ngValue]="0">Any</option>
+        <option [ngValue]="1">$1B+</option>
+        <option [ngValue]="10">$10B+</option>
+        <option [ngValue]="50">$50B+</option>
+        <option [ngValue]="100">$100B+</option>
+      </select>
+    </div>
+  </div>
+</section>
+
 <div class="table-container">
-  <table [dataSource]="stockInfoObjects" class="mat-elevation-z8" mat-table multiTemplateDataRows>
+  <table [dataSource]="filteredStockInfoObjects" class="mat-elevation-z8" mat-table multiTemplateDataRows>
 
     <ng-container *ngFor="let column of columnsToDisplay" matColumnDef="{{column}}">
       <th *matHeaderCellDef mat-header-cell> {{column}} </th>
