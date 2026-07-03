@@ -53,6 +53,24 @@
         <option [ngValue]="100">$100B+</option>
       </select>
     </div>
+
+    <div class="filter-field">
+      <span>Sort By</span>
+      <select [(ngModel)]="sortField" (ngModelChange)="applyFilters()">
+        <option [ngValue]="'marketCap'">Market Cap</option>
+        <option [ngValue]="'impliedMove'">Implied Move</option>
+        <option [ngValue]="'shortInterest'">Short Interest</option>
+        <option [ngValue]="'ticker'">Ticker</option>
+      </select>
+    </div>
+
+    <div class="filter-field">
+      <span>Sort Direction</span>
+      <select [(ngModel)]="sortDirection" (ngModelChange)="applyFilters()">
+        <option [ngValue]="'desc'">High To Low</option>
+        <option [ngValue]="'asc'">Low To High</option>
+      </select>
+    </div>
   </div>
 </section>
 

@@ -17,6 +17,9 @@ export interface StockInfo {
   'Market Cap': string | number;
 }
 
+type SortField = 'marketCap' | 'impliedMove' | 'shortInterest' | 'ticker';
+type SortDirection = 'asc' | 'desc';
+
 @Component({
   selector: 'app-report-date-table',
   templateUrl: './report-date-table.component.html',
@@ -46,6 +49,8 @@ export class ReportDateTableComponent implements OnInit {
   minimumImpliedMove = 0;
   minimumShortInterest = 0;
   minimumMarketCap = 0;
+  sortField: SortField = 'marketCap';
+  sortDirection: SortDirection = 'desc';
 
 
   constructor(private route: ActivatedRoute, private http: HttpClient) { }
@@ -80,7 +85,7 @@ export class ReportDateTableComponent implements OnInit {
   applyFilters(): void {
     const normalizedSearch = this.searchText.trim().toLowerCase();
 
-    this.filteredStockInfoObjects = this.stockInfoObjects.filter((stock) => {
+    const filteredStocks = this.stockInfoObjects.filter((stock) => {
       const matchesSearch = normalizedSearch.length === 0 ||
         stock.Ticker.toLowerCase().includes(normalizedSearch) ||
         stock.Name.toLowerCase().includes(normalizedSearch);
@@ -95,6 +100,8 @@ export class ReportDateTableComponent implements OnInit {
         marketCap >= this.minimumMarketCap;
     });
 
+    this.filteredStockInfoObjects = this.sortStocks(filteredStocks);
+
     if (this.expandedTicker && !this.filteredStockInfoObjects.some((stock) => stock.Ticker === this.expandedTicker)) {
       this.expandedTicker = null;
     }
@@ -105,7 +112,40 @@ export class ReportDateTableComponent implements OnInit {
     this.minimumImpliedMove = 0;
     this.minimumShortInterest = 0;
     this.minimumMarketCap = 0;
+    this.sortField = 'marketCap';
+    this.sortDirection = 'desc';
     this.applyFilters();
+  }
+
+  private sortStocks(stocks: StockInfo[]): StockInfo[] {
+    const directionMultiplier = this.sortDirection === 'asc' ? 1 : -1;
+
+    return [...stocks].sort((firstStock, secondStock) => {
+      const firstValue = this.getSortValue(firstStock);
+      const secondValue = this.getSortValue(secondStock);
+
+      if (typeof firstValue === 'string' && typeof secondValue === 'string') {
+        return firstValue.localeCompare(secondValue) * directionMultiplier;
+      }
+
+      return (Number(firstValue) - Number(secondValue)) * directionMultiplier;
+    });
+  }
+
+  private getSortValue(stock: StockInfo): number | string {
+    if (this.sortField === 'ticker') {
+      return stock.Ticker;
+    }
+
+    if (this.sortField === 'impliedMove') {
+      return this.getPercentageValue(stock, 'Implied Move');
+    }
+
+    if (this.sortField === 'shortInterest') {
+      return this.getPercentageValue(stock, 'Short Interest');
+    }
+
+    return this.getMarketCapInBillions(stock['Market Cap']);
   }
 
   private getPercentageValue(stock: StockInfo, field: string): number {
