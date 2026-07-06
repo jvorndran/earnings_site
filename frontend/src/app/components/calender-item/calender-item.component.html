@@ -1,7 +1,61 @@
-<div class="carousel-container-style">
-  <ngx-slick-carousel #slickModal="slick-carousel" [config]="slideConfig" class="carousel-style" id="slick-carousel">
+<section class="calendar-filter-panel">
+  <div class="calendar-filter-header">
+    <div>
+      <h2>Calendar Scanner</h2>
+      <span>{{getVisibleCompanyCount()}} matching companies across {{getDates(filteredCalenderData).length}} report dates</span>
+    </div>
+    <button (click)="clearCalendarFilters()" class="calendar-clear-button" type="button">Clear</button>
+  </div>
 
-    <ng-container *ngFor="let date of getDates(calenderData)" class="container" ngxSlickItem>
+  <div class="calendar-filter-grid">
+    <label>
+      <span>Ticker Or Company</span>
+      <input
+        [(ngModel)]="calendarSearchText"
+        (ngModelChange)="applyCalendarFilters()"
+        placeholder="Search earnings calendar"
+        type="search">
+    </label>
+
+    <label>
+      <span>Minimum Implied Move</span>
+      <select [(ngModel)]="minimumCalendarImpliedMove" (ngModelChange)="applyCalendarFilters()">
+        <option [ngValue]="0">Any</option>
+        <option [ngValue]="3">3%+</option>
+        <option [ngValue]="5">5%+</option>
+        <option [ngValue]="8">8%+</option>
+        <option [ngValue]="10">10%+</option>
+      </select>
+    </label>
+
+    <label>
+      <span>Minimum Short Interest</span>
+      <select [(ngModel)]="minimumCalendarShortInterest" (ngModelChange)="applyCalendarFilters()">
+        <option [ngValue]="0">Any</option>
+        <option [ngValue]="5">5%+</option>
+        <option [ngValue]="10">10%+</option>
+        <option [ngValue]="15">15%+</option>
+        <option [ngValue]="20">20%+</option>
+      </select>
+    </label>
+
+    <label>
+      <span>Minimum Market Cap</span>
+      <select [(ngModel)]="minimumCalendarMarketCap" (ngModelChange)="applyCalendarFilters()">
+        <option [ngValue]="0">Any</option>
+        <option [ngValue]="1">$1B+</option>
+        <option [ngValue]="10">$10B+</option>
+        <option [ngValue]="50">$50B+</option>
+        <option [ngValue]="100">$100B+</option>
+      </select>
+    </label>
+  </div>
+</section>
+
+<div class="carousel-container-style">
+  <ngx-slick-carousel *ngIf="getDates(filteredCalenderData).length > 0; else noCalendarMatches" #slickModal="slick-carousel" [config]="slideConfig" class="carousel-style" id="slick-carousel">
+
+    <ng-container *ngFor="let date of getDates(filteredCalenderData)" class="container" ngxSlickItem>
 
 
       <mat-grid-list [cols]="1" class="grid-list" rowHeight="8:7">
@@ -20,9 +74,16 @@
 
         </a>
 
+        <div *ngIf="getCalendarStats(date) as stats" class="calendar-day-summary">
+          <span>{{stats.count}} reports</span>
+          <span>Avg move {{stats.avgImpliedMove | number:'1.1-1'}}%</span>
+          <span>Max short {{stats.maxShortInterest | number:'1.1-1'}}%</span>
+          <span>Total cap ${{stats.totalMarketCap | number:'1.0-0'}}B</span>
+        </div>
+
         <main class="calender-grid">
 
-          <div *ngFor="let item of calenderData[date]">
+          <div *ngFor="let item of filteredCalenderData[date]">
 
             <app-company-card [companyInfo]="item" [date]="formatDateRoute(date)"></app-company-card>
 
@@ -37,5 +98,11 @@
 
 
   </ngx-slick-carousel>
+
+  <ng-template #noCalendarMatches>
+    <div class="calendar-empty-state">
+      No upcoming earnings reports match the current scanner settings.
+    </div>
+  </ng-template>
 
 </div>
