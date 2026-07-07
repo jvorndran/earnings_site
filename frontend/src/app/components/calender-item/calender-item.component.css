@@ -122,6 +122,105 @@
   text-align: center;
 }
 
+.catalyst-leaderboard {
+  width: calc(100% - 4rem);
+  margin: 1rem auto 0;
+  padding: 1rem;
+  border: 1px solid #d7dde8;
+  border-radius: 6px;
+  background: #ffffff;
+}
+
+.catalyst-leaderboard-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.catalyst-leaderboard-header h2 {
+  margin: 0 0 0.25rem;
+  font-size: 1.15rem;
+  font-weight: 500;
+}
+
+.catalyst-leaderboard-header span {
+  color: #475467;
+  font-size: 0.9rem;
+}
+
+.catalyst-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 0.85rem;
+}
+
+.catalyst-card {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 0.8rem;
+  align-items: center;
+  border: 1px solid #d7dde8;
+  border-radius: 6px;
+  color: #101828;
+  padding: 0.8rem;
+  text-decoration: none;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.catalyst-card:hover {
+  border-color: #3f51b5;
+  transform: translateY(-1px);
+}
+
+.catalyst-rank {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #3f51b5;
+  color: white;
+  font-weight: 700;
+}
+
+.catalyst-card-main {
+  display: grid;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.catalyst-card-main strong {
+  color: #101828;
+  font-size: 1rem;
+}
+
+.catalyst-card-main span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.catalyst-card-main small,
+.catalyst-card-stats {
+  color: #667085;
+  font-size: 0.78rem;
+}
+
+.catalyst-card-stats {
+  grid-column: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.catalyst-card-stats span {
+  border-radius: 999px;
+  background: #f2f4f7;
+  padding: 0.25rem 0.45rem;
+}
+
 mat-toolbar {
   border-radius: 10px;
   margin-top: 1rem;
@@ -170,6 +269,10 @@ mat-toolbar {
 
 @media (max-width: 640px) {
   .calendar-filter-panel {
+    width: calc(100% - 2rem);
+  }
+
+  .catalyst-leaderboard {
     width: calc(100% - 2rem);
   }
 

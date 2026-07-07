@@ -2,6 +2,12 @@ import {Component, HostListener, OnInit} from '@angular/core';
 import {GetCalenderService} from '../../services/get-calender.service'
 import {CalenderData} from "./calender-item.interface";
 
+interface CalendarCatalyst {
+  date: string;
+  item: CalenderData;
+  score: number;
+}
+
 @Component({
   selector: 'app-calender-item',
   templateUrl: './calender-item.component.html',
@@ -119,6 +125,39 @@ export class CalenderItemComponent implements OnInit {
       maxShortInterest,
       totalMarketCap
     };
+  }
+
+  getCatalystLeaders(): CalendarCatalyst[] {
+    return Object.entries(this.filteredCalenderData)
+      .flatMap(([date, items]) => items.map((item) => ({
+        date,
+        item,
+        score: this.getCatalystScore(item)
+      })))
+      .sort((firstCatalyst, secondCatalyst) => secondCatalyst.score - firstCatalyst.score)
+      .slice(0, 6);
+  }
+
+  getCatalystScore(item: CalenderData): number {
+    const impliedMoveScore = this.getPercentValue(item.Implied_Move) * 2;
+    const shortInterestScore = this.getPercentValue(item.Short_Interest);
+    const marketCapScore = Math.min(this.getMarketCapInBillions(item.Market_Cap), 250) / 50;
+
+    return impliedMoveScore + shortInterestScore + marketCapScore;
+  }
+
+  formatPercentValue(value: number): string {
+    return `${this.getPercentValue(value).toFixed(1)}%`;
+  }
+
+  formatMarketCap(value: number): string {
+    const marketCap = this.getMarketCapInBillions(value);
+
+    if (marketCap >= 1000) {
+      return `$${(marketCap / 1000).toFixed(1)}T`;
+    }
+
+    return `$${marketCap.toFixed(marketCap >= 10 ? 0 : 1)}B`;
   }
 
   formatDateRoute(date: string): string {

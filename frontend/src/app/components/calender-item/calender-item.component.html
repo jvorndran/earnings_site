@@ -52,6 +52,35 @@
   </div>
 </section>
 
+<section *ngIf="getCatalystLeaders().length > 0" class="catalyst-leaderboard">
+  <div class="catalyst-leaderboard-header">
+    <div>
+      <h2>Top Earnings Catalysts</h2>
+      <span>Ranked from the current calendar scanner results</span>
+    </div>
+  </div>
+
+  <div class="catalyst-card-grid">
+    <a
+      *ngFor="let catalyst of getCatalystLeaders(); let i = index"
+      [routerLink]="['/', formatDateRoute(catalyst.date), catalyst.item.Ticker]"
+      class="catalyst-card"
+      target="_blank">
+      <span class="catalyst-rank">{{i + 1}}</span>
+      <div class="catalyst-card-main">
+        <strong>{{catalyst.item.Ticker}}</strong>
+        <span>{{catalyst.item.Name}}</span>
+        <small>{{catalyst.date | date: 'EEE, LLL d'}}</small>
+      </div>
+      <div class="catalyst-card-stats">
+        <span>Move {{formatPercentValue(catalyst.item.Implied_Move)}}</span>
+        <span>Short {{formatPercentValue(catalyst.item.Short_Interest)}}</span>
+        <span>Cap {{formatMarketCap(catalyst.item.Market_Cap)}}</span>
+      </div>
+    </a>
+  </div>
+</section>
+
 <div class="carousel-container-style">
   <ngx-slick-carousel *ngIf="getDates(filteredCalenderData).length > 0; else noCalendarMatches" #slickModal="slick-carousel" [config]="slideConfig" class="carousel-style" id="slick-carousel">
 
