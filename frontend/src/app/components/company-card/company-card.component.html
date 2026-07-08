@@ -16,6 +16,9 @@
 
   <mat-card-content>
     <p> {{ companyInfo.Market_Cap / 1000000000 | number:'1.0-1'}}B</p>
+    <div *ngIf="getRiskTags().length > 0" class="risk-tag-list">
+      <span *ngFor="let tag of getRiskTags()">{{tag}}</span>
+    </div>
   </mat-card-content>
 
 </mat-card>

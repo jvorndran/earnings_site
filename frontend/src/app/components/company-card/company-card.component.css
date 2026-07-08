@@ -1,5 +1,5 @@
 .mat-card-company{
-  height: 200px;
+  height: 230px;
   min-width: 200px;
   border: #cccccc 1px solid;
   border-radius: 10px;
@@ -32,4 +32,22 @@
 .link-style{
   text-decoration: none;
   color: black;
+}
+
+.risk-tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  justify-content: center;
+  margin-top: 0.5rem;
+}
+
+.risk-tag-list span {
+  background: #eef2ff;
+  border: 1px solid #c7d2fe;
+  border-radius: 999px;
+  color: #3730a3;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.2rem 0.45rem;
 }

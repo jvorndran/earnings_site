@@ -21,6 +21,7 @@ export class CalenderItemComponent implements OnInit {
   minimumCalendarImpliedMove = 0;
   minimumCalendarShortInterest = 0;
   minimumCalendarMarketCap = 0;
+  calendarRiskProfile = 'any';
 
   slideConfig = {
     infinite: false,
@@ -76,7 +77,8 @@ export class CalenderItemComponent implements OnInit {
         return matchesSearch &&
           impliedMove >= this.minimumCalendarImpliedMove &&
           shortInterest >= this.minimumCalendarShortInterest &&
-          marketCap >= this.minimumCalendarMarketCap;
+          marketCap >= this.minimumCalendarMarketCap &&
+          this.matchesRiskProfile(item);
       }).sort((firstItem, secondItem) => {
         const moveDifference = secondItem.Implied_Move - firstItem.Implied_Move;
 
@@ -100,6 +102,7 @@ export class CalenderItemComponent implements OnInit {
     this.minimumCalendarImpliedMove = 0;
     this.minimumCalendarShortInterest = 0;
     this.minimumCalendarMarketCap = 0;
+    this.calendarRiskProfile = 'any';
     this.applyCalendarFilters();
   }
 
@@ -182,6 +185,31 @@ export class CalenderItemComponent implements OnInit {
     }
 
     return parsedValue / 1000000000;
+  }
+
+  private matchesRiskProfile(item: CalenderData): boolean {
+    const impliedMove = this.getPercentValue(item.Implied_Move);
+    const shortInterest = this.getPercentValue(item.Short_Interest);
+    const marketCap = this.getMarketCapInBillions(item.Market_Cap);
+    const quarterlyGrowth = this.getPercentValue(item.Quarterly_Growth);
+
+    if (this.calendarRiskProfile === 'highMove') {
+      return impliedMove >= 8;
+    }
+
+    if (this.calendarRiskProfile === 'shortSqueeze') {
+      return shortInterest >= 15;
+    }
+
+    if (this.calendarRiskProfile === 'megaCap') {
+      return marketCap >= 100;
+    }
+
+    if (this.calendarRiskProfile === 'growthVolatility') {
+      return quarterlyGrowth >= 10 && impliedMove >= 5;
+    }
+
+    return true;
   }
 
   private groupDataByReportDate(data: CalenderData[]): { [key: string]: CalenderData[] } {

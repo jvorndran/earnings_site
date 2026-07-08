@@ -49,6 +49,17 @@
         <option [ngValue]="100">$100B+</option>
       </select>
     </label>
+
+    <label>
+      <span>Risk Profile</span>
+      <select [(ngModel)]="calendarRiskProfile" (ngModelChange)="applyCalendarFilters()">
+        <option [ngValue]="'any'">Any Setup</option>
+        <option [ngValue]="'highMove'">High Implied Move</option>
+        <option [ngValue]="'shortSqueeze'">Crowded Short</option>
+        <option [ngValue]="'megaCap'">Mega Cap Reports</option>
+        <option [ngValue]="'growthVolatility'">Growth Volatility</option>
+      </select>
+    </label>
   </div>
 </section>
 
