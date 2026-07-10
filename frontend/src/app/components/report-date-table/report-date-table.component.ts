@@ -20,6 +20,15 @@ export interface StockInfo {
 type SortField = 'marketCap' | 'impliedMove' | 'shortInterest' | 'ticker';
 type SortDirection = 'asc' | 'desc';
 
+interface ReportDateSummary {
+  companyCount: number;
+  avgImpliedMove: number;
+  avgShortInterest: number;
+  megaCapCount: number;
+  topMoveStock: StockInfo | null;
+  largestMarketCapStock: StockInfo | null;
+}
+
 @Component({
   selector: 'app-report-date-table',
   templateUrl: './report-date-table.component.html',
@@ -115,6 +124,73 @@ export class ReportDateTableComponent implements OnInit {
     this.sortField = 'marketCap';
     this.sortDirection = 'desc';
     this.applyFilters();
+  }
+
+  getReportDateSummary(): ReportDateSummary {
+    const stocks = this.filteredStockInfoObjects;
+
+    if (stocks.length === 0) {
+      return {
+        companyCount: 0,
+        avgImpliedMove: 0,
+        avgShortInterest: 0,
+        megaCapCount: 0,
+        topMoveStock: null,
+        largestMarketCapStock: null
+      };
+    }
+
+    const totalImpliedMove = stocks.reduce((total, stock) => total + this.getPercentageValue(stock, 'Implied Move'), 0);
+    const totalShortInterest = stocks.reduce((total, stock) => total + this.getPercentageValue(stock, 'Short Interest'), 0);
+    const topMoveStock = stocks.reduce((topStock, stock) => (
+      this.getPercentageValue(stock, 'Implied Move') > this.getPercentageValue(topStock, 'Implied Move')
+        ? stock
+        : topStock
+    ), stocks[0]);
+    const largestMarketCapStock = stocks.reduce((largestStock, stock) => (
+      this.getMarketCapInBillions(stock['Market Cap']) > this.getMarketCapInBillions(largestStock['Market Cap'])
+        ? stock
+        : largestStock
+    ), stocks[0]);
+
+    return {
+      companyCount: stocks.length,
+      avgImpliedMove: totalImpliedMove / stocks.length,
+      avgShortInterest: totalShortInterest / stocks.length,
+      megaCapCount: stocks.filter((stock) => this.getMarketCapInBillions(stock['Market Cap']) >= 100).length,
+      topMoveStock,
+      largestMarketCapStock
+    };
+  }
+
+  formatStockPercent(stock: StockInfo | null, field: string): string {
+    if (!stock) {
+      return '-';
+    }
+
+    return `${this.getPercentageValue(stock, field).toFixed(1)}%`;
+  }
+
+  formatStockMarketCap(stock: StockInfo | null): string {
+    if (!stock) {
+      return '-';
+    }
+
+    return this.formatMarketCapDisplay(stock['Market Cap']);
+  }
+
+  formatMarketCapDisplay(value: string | number | undefined): string {
+    if (value === undefined) {
+      return '-';
+    }
+
+    const marketCap = this.getMarketCapInBillions(value);
+
+    if (marketCap >= 1000) {
+      return `$${(marketCap / 1000).toFixed(1)}T`;
+    }
+
+    return `$${marketCap.toFixed(marketCap >= 10 ? 0 : 1)}B`;
   }
 
   private sortStocks(stocks: StockInfo[]): StockInfo[] {

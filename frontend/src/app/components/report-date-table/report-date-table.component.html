@@ -74,6 +74,47 @@
   </div>
 </section>
 
+<section *ngIf="getReportDateSummary() as summary" class="report-summary-panel">
+  <div class="report-summary-header">
+    <div>
+      <h2>Report Date Summary</h2>
+      <span>{{summary.companyCount}} matching companies on {{formatDate(date)}}</span>
+    </div>
+  </div>
+
+  <div class="report-summary-grid">
+    <span>
+      <small>Avg Implied Move</small>
+      <strong>{{summary.avgImpliedMove | number:'1.1-1'}}%</strong>
+      <em>Across visible names</em>
+    </span>
+
+    <span>
+      <small>Avg Short Interest</small>
+      <strong>{{summary.avgShortInterest | number:'1.1-1'}}%</strong>
+      <em>Reported float pressure</em>
+    </span>
+
+    <span>
+      <small>Top Move</small>
+      <strong>{{summary.topMoveStock?.Ticker || '-'}}</strong>
+      <em>{{formatStockPercent(summary.topMoveStock, 'Implied Move')}}</em>
+    </span>
+
+    <span>
+      <small>Largest Cap</small>
+      <strong>{{summary.largestMarketCapStock?.Ticker || '-'}}</strong>
+      <em>{{formatStockMarketCap(summary.largestMarketCapStock)}}</em>
+    </span>
+
+    <span>
+      <small>Mega Caps</small>
+      <strong>{{summary.megaCapCount}}</strong>
+      <em>$100B+ reports</em>
+    </span>
+  </div>
+</section>
+
 <div class="table-container">
   <table [dataSource]="filteredStockInfoObjects" class="mat-elevation-z8" mat-table multiTemplateDataRows>
 
