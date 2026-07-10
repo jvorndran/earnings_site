@@ -8,6 +8,17 @@ interface CalendarCatalyst {
   score: number;
 }
 
+interface CalendarOverview {
+  reportDateCount: number;
+  companyCount: number;
+  avgImpliedMove: number;
+  highMoveCount: number;
+  crowdedShortCount: number;
+  busiestDate: string;
+  busiestDateCount: number;
+  largestMarketCapItem: CalenderData | null;
+}
+
 @Component({
   selector: 'app-calender-item',
   templateUrl: './calender-item.component.html',
@@ -115,6 +126,45 @@ export class CalenderItemComponent implements OnInit {
   getVisibleCompanyCount(): number {
     return Object.values(this.filteredCalenderData)
       .reduce((total, items) => total + items.length, 0);
+  }
+
+  getCalendarOverview(): CalendarOverview {
+    const entries = Object.entries(this.filteredCalenderData);
+    const items = entries.flatMap(([, calendarItems]) => calendarItems);
+
+    if (items.length === 0) {
+      return {
+        reportDateCount: 0,
+        companyCount: 0,
+        avgImpliedMove: 0,
+        highMoveCount: 0,
+        crowdedShortCount: 0,
+        busiestDate: '',
+        busiestDateCount: 0,
+        largestMarketCapItem: null
+      };
+    }
+
+    const busiestEntry = entries.reduce((currentBusiest, entry) => (
+      entry[1].length > currentBusiest[1].length ? entry : currentBusiest
+    ), entries[0]);
+    const largestMarketCapItem = items.reduce((largestItem, item) => (
+      this.getMarketCapInBillions(item.Market_Cap) > this.getMarketCapInBillions(largestItem.Market_Cap)
+        ? item
+        : largestItem
+    ), items[0]);
+    const totalImpliedMove = items.reduce((total, item) => total + this.getPercentValue(item.Implied_Move), 0);
+
+    return {
+      reportDateCount: entries.length,
+      companyCount: items.length,
+      avgImpliedMove: totalImpliedMove / items.length,
+      highMoveCount: items.filter((item) => this.getPercentValue(item.Implied_Move) >= 8).length,
+      crowdedShortCount: items.filter((item) => this.getPercentValue(item.Short_Interest) >= 15).length,
+      busiestDate: busiestEntry[0],
+      busiestDateCount: busiestEntry[1].length,
+      largestMarketCapItem
+    };
   }
 
   getCalendarStats(date: string): { count: number; avgImpliedMove: number; maxShortInterest: number; totalMarketCap: number } {

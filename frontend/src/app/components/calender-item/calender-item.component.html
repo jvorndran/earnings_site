@@ -73,6 +73,47 @@
   </div>
 </section>
 
+<section *ngIf="getCalendarOverview() as overview" class="catalyst-leaderboard calendar-overview-panel">
+  <div class="catalyst-leaderboard-header">
+    <div>
+      <h2>Filtered Calendar Overview</h2>
+      <span>Summary of the active scanner results</span>
+    </div>
+  </div>
+
+  <div class="calendar-day-summary">
+    <span>
+      Reports
+      <strong>{{overview.companyCount}}</strong>
+      <small>{{overview.reportDateCount}} report dates</small>
+    </span>
+
+    <span>
+      Avg Implied Move
+      <strong>{{overview.avgImpliedMove | number:'1.1-1'}}%</strong>
+      <small>Across visible companies</small>
+    </span>
+
+    <span>
+      Busiest Date
+      <strong>{{overview.busiestDate ? (overview.busiestDate | date: 'EEE, LLL d') : '-'}}</strong>
+      <small>{{overview.busiestDateCount}} reports</small>
+    </span>
+
+    <span>
+      Largest Cap
+      <strong>{{overview.largestMarketCapItem?.Ticker || '-'}}</strong>
+      <small>{{overview.largestMarketCapItem ? formatMarketCap(overview.largestMarketCapItem.Market_Cap) : '-'}}</small>
+    </span>
+
+    <span>
+      Risk Flags
+      <strong>{{overview.highMoveCount + overview.crowdedShortCount}}</strong>
+      <small>{{overview.highMoveCount}} high move / {{overview.crowdedShortCount}} crowded short</small>
+    </span>
+  </div>
+</section>
+
 <section *ngIf="getCatalystLeaders().length > 0" class="catalyst-leaderboard">
   <div class="catalyst-leaderboard-header">
     <div>
