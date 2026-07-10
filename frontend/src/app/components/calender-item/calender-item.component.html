@@ -60,6 +60,16 @@
         <option [ngValue]="'growthVolatility'">Growth Volatility</option>
       </select>
     </label>
+
+    <label>
+      <span>Report Window</span>
+      <select [(ngModel)]="calendarHorizonDays" (ngModelChange)="applyCalendarFilters()">
+        <option [ngValue]="7">Next 7 Days</option>
+        <option [ngValue]="30">Next 30 Days</option>
+        <option [ngValue]="90">Next 90 Days</option>
+        <option [ngValue]="0">All Upcoming</option>
+      </select>
+    </label>
   </div>
 </section>
 

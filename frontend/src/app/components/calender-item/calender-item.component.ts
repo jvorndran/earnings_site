@@ -22,6 +22,7 @@ export class CalenderItemComponent implements OnInit {
   minimumCalendarShortInterest = 0;
   minimumCalendarMarketCap = 0;
   calendarRiskProfile = 'any';
+  calendarHorizonDays = 30;
 
   slideConfig = {
     infinite: false,
@@ -66,6 +67,10 @@ export class CalenderItemComponent implements OnInit {
     const filteredData: { [key: string]: CalenderData[] } = {};
 
     Object.entries(this.calenderData).forEach(([date, items]) => {
+      if (!this.isDateInCalendarHorizon(date)) {
+        return;
+      }
+
       const filteredItems = items.filter((item) => {
         const matchesSearch = normalizedSearch.length === 0 ||
           item.Ticker.toLowerCase().includes(normalizedSearch) ||
@@ -103,6 +108,7 @@ export class CalenderItemComponent implements OnInit {
     this.minimumCalendarShortInterest = 0;
     this.minimumCalendarMarketCap = 0;
     this.calendarRiskProfile = 'any';
+    this.calendarHorizonDays = 30;
     this.applyCalendarFilters();
   }
 
@@ -185,6 +191,26 @@ export class CalenderItemComponent implements OnInit {
     }
 
     return parsedValue / 1000000000;
+  }
+
+  private isDateInCalendarHorizon(dateString: string): boolean {
+    const date = new Date(dateString);
+    const startDate = new Date();
+    startDate.setHours(0, 0, 0, 0);
+    startDate.setDate(startDate.getDate() - 1);
+
+    if (date < startDate) {
+      return false;
+    }
+
+    if (this.calendarHorizonDays === 0) {
+      return true;
+    }
+
+    const endDate = new Date(startDate);
+    endDate.setDate(endDate.getDate() + this.calendarHorizonDays);
+
+    return date <= endDate;
   }
 
   private matchesRiskProfile(item: CalenderData): boolean {
