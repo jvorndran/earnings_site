@@ -115,12 +115,62 @@
   </div>
 </section>
 
+<section *ngIf="comparisonTickers.length > 0" class="comparison-panel">
+  <div class="comparison-header">
+    <div>
+      <h2>Earnings Company Comparison</h2>
+      <span>{{comparisonTickers.length}} of 4 companies selected</span>
+    </div>
+    <button (click)="clearComparison()" class="clear-button" type="button">Clear Comparison</button>
+  </div>
+
+  <p class="comparison-message" aria-live="polite">{{comparisonMessage}}</p>
+
+  <div class="comparison-grid">
+    <article *ngFor="let stock of comparedStocks" class="comparison-card">
+      <div class="comparison-card-header">
+        <div>
+          <h3>{{stock.Ticker}}</h3>
+          <span>{{stock.Name}}</span>
+        </div>
+        <button
+          (click)="toggleComparison(stock)"
+          [attr.aria-label]="'Remove ' + stock.Ticker + ' from comparison'"
+          type="button">Remove</button>
+      </div>
+
+      <div class="comparison-metrics">
+        <span><small>Market Cap</small><strong>{{formatMarketCapDisplay(stock['Market Cap'])}}</strong></span>
+        <span><small>Estimate</small><strong>{{stock.Estimate | number:'1.2-2'}}</strong></span>
+        <span><small>Implied Move</small><strong>{{stock['Implied Move'] * 100 | number:'1.1-1'}}%</strong></span>
+        <span><small>Quarterly Growth</small><strong>{{stock['Quarterly Growth'] * 100 | number:'1.1-1'}}%</strong></span>
+        <span><small>Short Interest</small><strong>{{stock['Short Interest'] * 100 | number:'1.1-1'}}%</strong></span>
+        <span><small>Days To Cover</small><strong>{{stock['Days To Cover'] | number:'1.1-1'}}</strong></span>
+      </div>
+    </article>
+  </div>
+</section>
+
 <div class="table-container">
   <table [dataSource]="filteredStockInfoObjects" class="mat-elevation-z8" mat-table multiTemplateDataRows>
 
     <ng-container *ngFor="let column of columnsToDisplay" matColumnDef="{{column}}">
       <th *matHeaderCellDef mat-header-cell> {{column}} </th>
       <td *matCellDef="let element" mat-cell> {{element[column]}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="compare">
+      <th *matHeaderCellDef mat-header-cell>Compare</th>
+      <td *matCellDef="let element" mat-cell>
+        <button
+          (click)="toggleComparison(element); $event.stopPropagation()"
+          [attr.aria-pressed]="isCompared(element.Ticker)"
+          [class.compare-button--selected]="isCompared(element.Ticker)"
+          class="compare-button"
+          type="button">
+          {{isCompared(element.Ticker) ? 'Selected' : 'Add'}}
+        </button>
+      </td>
     </ng-container>
 
     <ng-container matColumnDef="expand">

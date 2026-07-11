@@ -45,7 +45,7 @@ export class ReportDateTableComponent implements OnInit {
 
   columnsToDisplay = ['Ticker', 'Name', 'Market Cap', 'Estimate'];
 
-  columnsToDisplayWithExpand = [...this.columnsToDisplay, 'expand'];
+  columnsToDisplayWithExpand = [...this.columnsToDisplay, 'compare', 'expand'];
 
   expandedElement?: StockInfo | null;
 
@@ -60,6 +60,8 @@ export class ReportDateTableComponent implements OnInit {
   minimumMarketCap = 0;
   sortField: SortField = 'marketCap';
   sortDirection: SortDirection = 'desc';
+  comparisonTickers: string[] = [];
+  comparisonMessage = 'Select up to four companies from the report table.';
 
 
   constructor(private route: ActivatedRoute, private http: HttpClient) { }
@@ -77,8 +79,42 @@ export class ReportDateTableComponent implements OnInit {
   this.expandedTicker = this.expandedTicker === ticker ? null : ticker;
 }
 
+  get comparedStocks(): StockInfo[] {
+    return this.comparisonTickers
+      .map((ticker) => this.stockInfoObjects.find((stock) => stock.Ticker === ticker))
+      .filter((stock): stock is StockInfo => Boolean(stock));
+  }
+
+  isCompared(ticker: string): boolean {
+    return this.comparisonTickers.includes(ticker);
+  }
+
+  toggleComparison(stock: StockInfo): void {
+    if (this.isCompared(stock.Ticker)) {
+      this.comparisonTickers = this.comparisonTickers.filter((ticker) => ticker !== stock.Ticker);
+      this.comparisonMessage = `${stock.Ticker} removed from the comparison.`;
+      return;
+    }
+
+    if (this.comparisonTickers.length >= 4) {
+      this.comparisonMessage = 'Remove a company before adding another; the comparison supports four names.';
+      return;
+    }
+
+    this.comparisonTickers = [...this.comparisonTickers, stock.Ticker];
+    this.comparisonMessage = `${stock.Ticker} added to the comparison.`;
+  }
+
+  clearComparison(): void {
+    this.comparisonTickers = [];
+    this.comparisonMessage = 'Comparison cleared. Select up to four companies from the report table.';
+  }
+
   fetchStockInfoByDate(date:string): void {
     const apiUrl = `https://earnings-site-api-6e5e869bb564.herokuapp.com/api/${date}`;
+
+    this.comparisonTickers = [];
+    this.comparisonMessage = 'Select up to four companies from the report table.';
 
     this.http.get<StockInfo[]>(apiUrl).subscribe(
       data => {
