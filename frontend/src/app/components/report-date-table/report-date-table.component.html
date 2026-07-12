@@ -8,8 +8,19 @@
       <h2>Earnings Filters</h2>
       <span>{{filteredStockInfoObjects.length}} of {{stockInfoObjects.length}} companies shown</span>
     </div>
-    <button (click)="clearFilters()" class="clear-button" type="button">Clear</button>
+    <div class="filter-actions">
+      <button
+        (click)="exportFilteredReports()"
+        [disabled]="filteredStockInfoObjects.length === 0"
+        class="clear-button"
+        type="button">
+        Export CSV
+      </button>
+      <button (click)="clearFilters()" class="clear-button" type="button">Clear</button>
+    </div>
   </div>
+
+  <p *ngIf="exportMessage" aria-live="polite">{{exportMessage}}</p>
 
   <div class="filter-grid">
     <div class="filter-field">

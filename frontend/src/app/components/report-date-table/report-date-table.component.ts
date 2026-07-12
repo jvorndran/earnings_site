@@ -62,6 +62,7 @@ export class ReportDateTableComponent implements OnInit {
   sortDirection: SortDirection = 'desc';
   comparisonTickers: string[] = [];
   comparisonMessage = 'Select up to four companies from the report table.';
+  exportMessage = '';
 
 
   constructor(private route: ActivatedRoute, private http: HttpClient) { }
@@ -160,6 +161,52 @@ export class ReportDateTableComponent implements OnInit {
     this.sortField = 'marketCap';
     this.sortDirection = 'desc';
     this.applyFilters();
+  }
+
+  exportFilteredReports(): void {
+    if (this.filteredStockInfoObjects.length === 0) {
+      this.exportMessage = 'No matching reports to export.';
+      return;
+    }
+
+    const headers = [
+      'Report Date',
+      'Ticker',
+      'Company',
+      'Estimate',
+      'Market Cap',
+      'Implied Move %',
+      'Quarterly Growth %',
+      'Short Interest %',
+      'Days To Cover',
+      'Website'
+    ];
+    const rows = this.filteredStockInfoObjects.map((stock) => [
+      stock['Report Date'] || this.date,
+      stock.Ticker,
+      stock.Name,
+      stock.Estimate,
+      stock['Market Cap'],
+      this.getPercentageValue(stock, 'Implied Move').toFixed(2),
+      this.getPercentageValue(stock, 'Quarterly Growth').toFixed(2),
+      this.getPercentageValue(stock, 'Short Interest').toFixed(2),
+      stock['Days To Cover'],
+      stock.Website
+    ]);
+    const csv = [headers, ...rows]
+      .map((row) => row.map((value) => this.escapeCsvValue(value)).join(','))
+      .join('\r\n');
+    const blob = new Blob([csv], {type: 'text/csv;charset=utf-8'});
+    const downloadUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+
+    link.href = downloadUrl;
+    link.download = `earnings-reports-${this.date}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(downloadUrl);
+    this.exportMessage = `${rows.length} matching report${rows.length === 1 ? '' : 's'} exported.`;
   }
 
   getReportDateSummary(): ReportDateSummary {
@@ -282,6 +329,12 @@ export class ReportDateTableComponent implements OnInit {
     }
 
     return parsedValue;
+  }
+
+  private escapeCsvValue(value: string | number): string {
+    const stringValue = value === undefined || value === null ? '' : String(value);
+
+    return `"${stringValue.replace(/"/g, '""')}"`;
   }
 
   formatDate(date:string):string|null{
