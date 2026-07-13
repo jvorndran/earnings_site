@@ -29,6 +29,13 @@ interface ReportDateSummary {
   largestMarketCapStock: StockInfo | null;
 }
 
+interface EventRiskPlan {
+  stock: StockInfo;
+  impliedMove: number;
+  maxPositionValue: number;
+  estimatedEventLoss: number;
+}
+
 @Component({
   selector: 'app-report-date-table',
   templateUrl: './report-date-table.component.html',
@@ -63,6 +70,8 @@ export class ReportDateTableComponent implements OnInit {
   comparisonTickers: string[] = [];
   comparisonMessage = 'Select up to four companies from the report table.';
   exportMessage = '';
+  portfolioValue = 25000;
+  maximumEventRiskPercent = 1;
 
 
   constructor(private route: ActivatedRoute, private http: HttpClient) { }
@@ -244,6 +253,39 @@ export class ReportDateTableComponent implements OnInit {
       topMoveStock,
       largestMarketCapStock
     };
+  }
+
+  getEventRiskBudget(): number {
+    const portfolioValue = Math.max(Number(this.portfolioValue) || 0, 0);
+    const riskPercent = Math.max(Number(this.maximumEventRiskPercent) || 0, 0);
+
+    return portfolioValue * (riskPercent / 100);
+  }
+
+  getEventRiskPlans(): EventRiskPlan[] {
+    const portfolioValue = Math.max(Number(this.portfolioValue) || 0, 0);
+    const eventRiskBudget = this.getEventRiskBudget();
+
+    if (portfolioValue === 0 || eventRiskBudget === 0) {
+      return [];
+    }
+
+    return this.filteredStockInfoObjects
+      .map((stock) => {
+        const impliedMove = this.getPercentageValue(stock, 'Implied Move');
+        const maxPositionValue = impliedMove > 0
+          ? Math.min(eventRiskBudget / (impliedMove / 100), portfolioValue)
+          : 0;
+
+        return {
+          stock,
+          impliedMove,
+          maxPositionValue,
+          estimatedEventLoss: maxPositionValue * (impliedMove / 100)
+        };
+      })
+      .filter((plan) => plan.impliedMove > 0)
+      .slice(0, 8);
   }
 
   formatStockPercent(stock: StockInfo | null, field: string): string {

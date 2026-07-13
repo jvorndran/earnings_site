@@ -126,6 +126,62 @@
   </div>
 </section>
 
+<section class="event-risk-planner">
+  <div class="event-risk-header">
+    <div>
+      <h2>Event Risk Sizing Planner</h2>
+      <span>Estimate position exposure from each company's implied earnings move</span>
+    </div>
+    <strong>{{getEventRiskBudget() | currency:'USD':'symbol':'1.0-0'}} risk budget per report</strong>
+  </div>
+
+  <div class="event-risk-controls">
+    <label>
+      <span>Portfolio Value</span>
+      <input [(ngModel)]="portfolioValue" min="0" step="1000" type="number">
+    </label>
+    <label>
+      <span>Maximum Loss Per Report</span>
+      <select [(ngModel)]="maximumEventRiskPercent">
+        <option [ngValue]="0.5">0.5%</option>
+        <option [ngValue]="1">1.0%</option>
+        <option [ngValue]="1.5">1.5%</option>
+        <option [ngValue]="2">2.0%</option>
+      </select>
+    </label>
+  </div>
+
+  <p class="event-risk-note">
+    Scenarios assume the full implied move occurs against the position. The planner shows the first eight filtered companies.
+  </p>
+
+  <div *ngIf="getEventRiskPlans().length > 0; else noRiskPlans" class="event-risk-grid">
+    <article *ngFor="let plan of getEventRiskPlans()">
+      <div class="event-risk-card-header">
+        <div>
+          <strong>{{plan.stock.Ticker}}</strong>
+          <span>{{plan.stock.Name}}</span>
+        </div>
+        <button
+          (click)="toggleComparison(plan.stock)"
+          [attr.aria-pressed]="isCompared(plan.stock.Ticker)"
+          type="button">
+          {{isCompared(plan.stock.Ticker) ? 'Selected' : 'Compare'}}
+        </button>
+      </div>
+      <div class="event-risk-metrics">
+        <span><small>Implied Move</small><strong>{{plan.impliedMove | number:'1.1-1'}}%</strong></span>
+        <span><small>Max Exposure</small><strong>{{plan.maxPositionValue | currency:'USD':'symbol':'1.0-0'}}</strong></span>
+        <span><small>Scenario Loss</small><strong>{{plan.estimatedEventLoss | currency:'USD':'symbol':'1.0-0'}}</strong></span>
+      </div>
+    </article>
+  </div>
+
+  <ng-template #noRiskPlans>
+    <p class="event-risk-empty">Enter a portfolio value and keep reports with an implied move visible to build scenarios.</p>
+  </ng-template>
+</section>
+
 <section *ngIf="comparisonTickers.length > 0" class="comparison-panel">
   <div class="comparison-header">
     <div>

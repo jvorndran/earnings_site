@@ -4,3 +4,155 @@
 
 html, body { height: 100%; background: #f8f8ff}
 body { margin: 0;font-family: sans-serif, "Franklin Gothic Book", Verdana; }
+
+.event-risk-planner {
+  width: 90%;
+  margin: 0 auto 1.5rem;
+  padding: 1rem;
+  border: 1px solid #b8c8df;
+  border-radius: 6px;
+  background: #f5f8fc;
+  box-sizing: border-box;
+}
+
+.event-risk-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.event-risk-header h2 {
+  margin: 0 0 0.25rem;
+  font-size: 1.15rem;
+  font-weight: 500;
+}
+
+.event-risk-header span,
+.event-risk-note,
+.event-risk-empty {
+  color: #475467;
+}
+
+.event-risk-header > strong {
+  color: #27358f;
+  white-space: nowrap;
+}
+
+.event-risk-controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(180px, 260px));
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.event-risk-controls label {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.event-risk-controls span {
+  color: #344054;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.event-risk-controls input,
+.event-risk-controls select {
+  min-height: 2.5rem;
+  border: 1px solid #c1ccdc;
+  border-radius: 4px;
+  background: white;
+  padding: 0 0.75rem;
+}
+
+.event-risk-note {
+  margin: 0.75rem 0;
+  font-size: 0.8rem;
+}
+
+.event-risk-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.75rem;
+}
+
+.event-risk-grid article {
+  border: 1px solid #d7dde8;
+  border-left: 3px solid #3f51b5;
+  border-radius: 4px;
+  background: white;
+  padding: 0.85rem;
+}
+
+.event-risk-card-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.event-risk-card-header > div {
+  display: grid;
+  min-width: 0;
+}
+
+.event-risk-card-header > div strong {
+  color: #27358f;
+  font-size: 1.05rem;
+}
+
+.event-risk-card-header > div span {
+  overflow: hidden;
+  color: #667085;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.event-risk-card-header button {
+  align-self: start;
+  border: 1px solid #3f51b5;
+  border-radius: 999px;
+  background: white;
+  color: #3f51b5;
+  cursor: pointer;
+  padding: 0.3rem 0.55rem;
+}
+
+.event-risk-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin-top: 0.85rem;
+}
+
+.event-risk-metrics span {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.event-risk-metrics small {
+  color: #667085;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.event-risk-metrics strong {
+  color: #101828;
+}
+
+@media (max-width: 560px) {
+  .event-risk-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .event-risk-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .event-risk-metrics {
+    grid-template-columns: 1fr;
+  }
+}
