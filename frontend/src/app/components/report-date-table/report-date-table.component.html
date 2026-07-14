@@ -66,11 +66,22 @@
     </div>
 
     <div class="filter-field">
+      <span>Estimate Outlook</span>
+      <select [(ngModel)]="estimateOutlook" (ngModelChange)="applyFilters()">
+        <option [ngValue]="'all'">All Estimates</option>
+        <option [ngValue]="'positive'">Positive EPS</option>
+        <option [ngValue]="'loss'">Loss Estimate</option>
+        <option [ngValue]="'breakEven'">Near Break-Even</option>
+      </select>
+    </div>
+
+    <div class="filter-field">
       <span>Sort By</span>
       <select [(ngModel)]="sortField" (ngModelChange)="applyFilters()">
         <option [ngValue]="'marketCap'">Market Cap</option>
         <option [ngValue]="'impliedMove'">Implied Move</option>
         <option [ngValue]="'shortInterest'">Short Interest</option>
+        <option [ngValue]="'estimate'">EPS Estimate</option>
         <option [ngValue]="'ticker'">Ticker</option>
       </select>
     </div>
@@ -123,6 +134,44 @@
       <strong>{{summary.megaCapCount}}</strong>
       <em>$100B+ reports</em>
     </span>
+  </div>
+</section>
+
+<section *ngIf="getEstimateOutlookSummary() as outlook" class="estimate-outlook-panel">
+  <div class="estimate-outlook-header">
+    <div>
+      <h2>Estimate Outlook</h2>
+      <span>Consensus EPS shape across the current report filters; near break-even is -0.10 to 0.10.</span>
+    </div>
+    <strong>{{outlook.averageEstimate | number:'1.2-2'}} average EPS</strong>
+  </div>
+
+  <div class="estimate-outlook-grid">
+    <article class="estimate-outlook-card estimate-outlook-card--positive">
+      <small>Positive EPS</small>
+      <strong>{{outlook.positiveCount}}</strong>
+      <span>companies above 0.10</span>
+    </article>
+    <article class="estimate-outlook-card estimate-outlook-card--loss">
+      <small>Loss Estimates</small>
+      <strong>{{outlook.lossCount}}</strong>
+      <span>companies below -0.10</span>
+    </article>
+    <article class="estimate-outlook-card estimate-outlook-card--neutral">
+      <small>Near Break-Even</small>
+      <strong>{{outlook.breakEvenCount}}</strong>
+      <span>companies inside the neutral band</span>
+    </article>
+    <article class="estimate-outlook-card">
+      <small>Highest Estimate</small>
+      <strong>{{outlook.highestEstimateStock?.Ticker || '-'}}</strong>
+      <span>{{formatStockEstimate(outlook.highestEstimateStock)}} EPS</span>
+    </article>
+    <article class="estimate-outlook-card">
+      <small>Lowest Estimate</small>
+      <strong>{{outlook.lowestEstimateStock?.Ticker || '-'}}</strong>
+      <span>{{formatStockEstimate(outlook.lowestEstimateStock)}} EPS</span>
+    </article>
   </div>
 </section>
 

@@ -17,8 +17,9 @@ export interface StockInfo {
   'Market Cap': string | number;
 }
 
-type SortField = 'marketCap' | 'impliedMove' | 'shortInterest' | 'ticker';
+type SortField = 'marketCap' | 'impliedMove' | 'shortInterest' | 'estimate' | 'ticker';
 type SortDirection = 'asc' | 'desc';
+type EstimateOutlook = 'all' | 'positive' | 'loss' | 'breakEven';
 
 interface ReportDateSummary {
   companyCount: number;
@@ -34,6 +35,15 @@ interface EventRiskPlan {
   impliedMove: number;
   maxPositionValue: number;
   estimatedEventLoss: number;
+}
+
+interface EstimateOutlookSummary {
+  positiveCount: number;
+  lossCount: number;
+  breakEvenCount: number;
+  averageEstimate: number;
+  highestEstimateStock: StockInfo | null;
+  lowestEstimateStock: StockInfo | null;
 }
 
 @Component({
@@ -65,6 +75,7 @@ export class ReportDateTableComponent implements OnInit {
   minimumImpliedMove = 0;
   minimumShortInterest = 0;
   minimumMarketCap = 0;
+  estimateOutlook: EstimateOutlook = 'all';
   sortField: SortField = 'marketCap';
   sortDirection: SortDirection = 'desc';
   comparisonTickers: string[] = [];
@@ -148,11 +159,13 @@ export class ReportDateTableComponent implements OnInit {
       const impliedMove = this.getPercentageValue(stock, 'Implied Move');
       const shortInterest = this.getPercentageValue(stock, 'Short Interest');
       const marketCap = this.getMarketCapInBillions(stock['Market Cap']);
+      const estimate = this.getEstimateValue(stock);
 
       return matchesSearch &&
         impliedMove >= this.minimumImpliedMove &&
         shortInterest >= this.minimumShortInterest &&
-        marketCap >= this.minimumMarketCap;
+        marketCap >= this.minimumMarketCap &&
+        this.matchesEstimateOutlook(estimate);
     });
 
     this.filteredStockInfoObjects = this.sortStocks(filteredStocks);
@@ -167,6 +180,7 @@ export class ReportDateTableComponent implements OnInit {
     this.minimumImpliedMove = 0;
     this.minimumShortInterest = 0;
     this.minimumMarketCap = 0;
+    this.estimateOutlook = 'all';
     this.sortField = 'marketCap';
     this.sortDirection = 'desc';
     this.applyFilters();
@@ -262,6 +276,49 @@ export class ReportDateTableComponent implements OnInit {
     return portfolioValue * (riskPercent / 100);
   }
 
+  getEstimateOutlookSummary(): EstimateOutlookSummary {
+    const stocks = this.filteredStockInfoObjects;
+
+    if (stocks.length === 0) {
+      return {
+        positiveCount: 0,
+        lossCount: 0,
+        breakEvenCount: 0,
+        averageEstimate: 0,
+        highestEstimateStock: null,
+        lowestEstimateStock: null
+      };
+    }
+
+    const positiveCount = stocks.filter((stock) => this.getEstimateValue(stock) > 0.1).length;
+    const lossCount = stocks.filter((stock) => this.getEstimateValue(stock) < -0.1).length;
+    const breakEvenCount = stocks.length - positiveCount - lossCount;
+    const averageEstimate = stocks.reduce((total, stock) => total + this.getEstimateValue(stock), 0) / stocks.length;
+    const highestEstimateStock = stocks.reduce((highest, stock) => (
+      this.getEstimateValue(stock) > this.getEstimateValue(highest) ? stock : highest
+    ), stocks[0]);
+    const lowestEstimateStock = stocks.reduce((lowest, stock) => (
+      this.getEstimateValue(stock) < this.getEstimateValue(lowest) ? stock : lowest
+    ), stocks[0]);
+
+    return {
+      positiveCount,
+      lossCount,
+      breakEvenCount,
+      averageEstimate,
+      highestEstimateStock,
+      lowestEstimateStock
+    };
+  }
+
+  formatStockEstimate(stock: StockInfo | null): string {
+    if (!stock) {
+      return '-';
+    }
+
+    return this.getEstimateValue(stock).toFixed(2);
+  }
+
   getEventRiskPlans(): EventRiskPlan[] {
     const portfolioValue = Math.max(Number(this.portfolioValue) || 0, 0);
     const eventRiskBudget = this.getEventRiskBudget();
@@ -346,7 +403,32 @@ export class ReportDateTableComponent implements OnInit {
       return this.getPercentageValue(stock, 'Short Interest');
     }
 
+    if (this.sortField === 'estimate') {
+      return this.getEstimateValue(stock);
+    }
+
     return this.getMarketCapInBillions(stock['Market Cap']);
+  }
+
+  private getEstimateValue(stock: StockInfo): number {
+    const value = Number(stock.Estimate);
+    return Number.isNaN(value) ? 0 : value;
+  }
+
+  private matchesEstimateOutlook(estimate: number): boolean {
+    if (this.estimateOutlook === 'positive') {
+      return estimate > 0.1;
+    }
+
+    if (this.estimateOutlook === 'loss') {
+      return estimate < -0.1;
+    }
+
+    if (this.estimateOutlook === 'breakEven') {
+      return estimate >= -0.1 && estimate <= 0.1;
+    }
+
+    return true;
   }
 
   private getPercentageValue(stock: StockInfo, field: string): number {
