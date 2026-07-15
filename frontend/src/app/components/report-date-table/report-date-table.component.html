@@ -76,6 +76,17 @@
     </div>
 
     <div class="filter-field">
+      <span>Catalyst Profile</span>
+      <select [(ngModel)]="catalystProfile" (ngModelChange)="applyFilters()">
+        <option [ngValue]="'all'">All Profiles</option>
+        <option [ngValue]="'volatileCrowded'">Volatile + Crowded</option>
+        <option [ngValue]="'moveDriven'">Move-Driven</option>
+        <option [ngValue]="'crowdedOnly'">Crowded Positioning</option>
+        <option [ngValue]="'lowerRisk'">Lower Event Pressure</option>
+      </select>
+    </div>
+
+    <div class="filter-field">
       <span>Sort By</span>
       <select [(ngModel)]="sortField" (ngModelChange)="applyFilters()">
         <option [ngValue]="'marketCap'">Market Cap</option>
@@ -134,6 +145,34 @@
       <strong>{{summary.megaCapCount}}</strong>
       <em>$100B+ reports</em>
     </span>
+  </div>
+</section>
+
+<section class="catalyst-matrix-panel">
+  <div class="catalyst-matrix-header">
+    <div>
+      <h2>Earnings Catalyst Matrix</h2>
+      <span>Classifies reports using 8% implied-move and 10% short-interest thresholds.</span>
+    </div>
+    <strong>{{catalystProfile === 'all' ? 'All profiles' : 'Profile filter active'}}</strong>
+  </div>
+
+  <div class="catalyst-matrix-grid">
+    <button
+      *ngFor="let bucket of getCatalystBuckets()"
+      (click)="setCatalystProfile(bucket.key)"
+      [attr.aria-pressed]="catalystProfile === bucket.key"
+      [class.catalyst-matrix-card--active]="catalystProfile === bucket.key"
+      class="catalyst-matrix-card"
+      type="button">
+      <span>{{bucket.label}}</span>
+      <strong>{{bucket.count}}</strong>
+      <small>{{bucket.detail}}</small>
+      <em>
+        Avg {{bucket.averageImpliedMove | number:'1.1-1'}}% move
+        <ng-container *ngIf="bucket.leader"> · Lead {{bucket.leader.Ticker}}</ng-container>
+      </em>
+    </button>
   </div>
 </section>
 

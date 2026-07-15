@@ -253,3 +253,91 @@ body { margin: 0;font-family: sans-serif, "Franklin Gothic Book", Verdana; }
     grid-template-columns: 1fr;
   }
 }
+
+.catalyst-matrix-panel {
+  width: 90%;
+  margin: 0 auto 1.5rem;
+  padding: 1rem;
+  border: 1px solid #d6c3f2;
+  background: #fbf8ff;
+}
+
+.catalyst-matrix-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.catalyst-matrix-header h2 {
+  margin: 0 0 0.25rem;
+  font-size: 1.15rem;
+  font-weight: 500;
+}
+
+.catalyst-matrix-header span,
+.catalyst-matrix-card small,
+.catalyst-matrix-card em {
+  color: #5d536b;
+}
+
+.catalyst-matrix-header strong {
+  color: #633b8f;
+}
+
+.catalyst-matrix-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 0.75rem;
+}
+
+.catalyst-matrix-card {
+  display: grid;
+  gap: 0.35rem;
+  border: 1px solid #d6c3f2;
+  border-top: 4px solid #8a5bb5;
+  border-radius: 6px;
+  background: white;
+  color: #241b2f;
+  cursor: pointer;
+  padding: 0.85rem;
+  text-align: left;
+}
+
+.catalyst-matrix-card > span {
+  font-weight: 700;
+}
+
+.catalyst-matrix-card > strong {
+  color: #633b8f;
+  font-size: 1.65rem;
+}
+
+.catalyst-matrix-card small,
+.catalyst-matrix-card em {
+  font-style: normal;
+}
+
+.catalyst-matrix-card--active {
+  background: #633b8f;
+  border-color: #633b8f;
+  color: white;
+}
+
+.catalyst-matrix-card--active > strong,
+.catalyst-matrix-card--active small,
+.catalyst-matrix-card--active em {
+  color: white;
+}
+
+@media (max-width: 560px) {
+  .catalyst-matrix-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .catalyst-matrix-grid {
+    grid-template-columns: 1fr;
+  }
+}

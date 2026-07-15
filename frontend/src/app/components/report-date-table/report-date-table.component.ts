@@ -20,6 +20,7 @@ export interface StockInfo {
 type SortField = 'marketCap' | 'impliedMove' | 'shortInterest' | 'estimate' | 'ticker';
 type SortDirection = 'asc' | 'desc';
 type EstimateOutlook = 'all' | 'positive' | 'loss' | 'breakEven';
+type CatalystProfile = 'all' | 'volatileCrowded' | 'moveDriven' | 'crowdedOnly' | 'lowerRisk';
 
 interface ReportDateSummary {
   companyCount: number;
@@ -44,6 +45,15 @@ interface EstimateOutlookSummary {
   averageEstimate: number;
   highestEstimateStock: StockInfo | null;
   lowestEstimateStock: StockInfo | null;
+}
+
+interface CatalystBucket {
+  key: Exclude<CatalystProfile, 'all'>;
+  label: string;
+  detail: string;
+  count: number;
+  averageImpliedMove: number;
+  leader: StockInfo | null;
 }
 
 @Component({
@@ -76,6 +86,7 @@ export class ReportDateTableComponent implements OnInit {
   minimumShortInterest = 0;
   minimumMarketCap = 0;
   estimateOutlook: EstimateOutlook = 'all';
+  catalystProfile: CatalystProfile = 'all';
   sortField: SortField = 'marketCap';
   sortDirection: SortDirection = 'desc';
   comparisonTickers: string[] = [];
@@ -152,20 +163,7 @@ export class ReportDateTableComponent implements OnInit {
     const normalizedSearch = this.searchText.trim().toLowerCase();
 
     const filteredStocks = this.stockInfoObjects.filter((stock) => {
-      const matchesSearch = normalizedSearch.length === 0 ||
-        stock.Ticker.toLowerCase().includes(normalizedSearch) ||
-        stock.Name.toLowerCase().includes(normalizedSearch);
-
-      const impliedMove = this.getPercentageValue(stock, 'Implied Move');
-      const shortInterest = this.getPercentageValue(stock, 'Short Interest');
-      const marketCap = this.getMarketCapInBillions(stock['Market Cap']);
-      const estimate = this.getEstimateValue(stock);
-
-      return matchesSearch &&
-        impliedMove >= this.minimumImpliedMove &&
-        shortInterest >= this.minimumShortInterest &&
-        marketCap >= this.minimumMarketCap &&
-        this.matchesEstimateOutlook(estimate);
+      return this.matchesBaseFilters(stock, normalizedSearch) && this.matchesCatalystProfile(stock);
     });
 
     this.filteredStockInfoObjects = this.sortStocks(filteredStocks);
@@ -181,8 +179,14 @@ export class ReportDateTableComponent implements OnInit {
     this.minimumShortInterest = 0;
     this.minimumMarketCap = 0;
     this.estimateOutlook = 'all';
+    this.catalystProfile = 'all';
     this.sortField = 'marketCap';
     this.sortDirection = 'desc';
+    this.applyFilters();
+  }
+
+  setCatalystProfile(profile: CatalystProfile): void {
+    this.catalystProfile = this.catalystProfile === profile ? 'all' : profile;
     this.applyFilters();
   }
 
@@ -311,6 +315,33 @@ export class ReportDateTableComponent implements OnInit {
     };
   }
 
+  getCatalystBuckets(): CatalystBucket[] {
+    const normalizedSearch = this.searchText.trim().toLowerCase();
+    const candidates = this.stockInfoObjects.filter((stock) => this.matchesBaseFilters(stock, normalizedSearch));
+    const bucketDefinitions: Array<Pick<CatalystBucket, 'key' | 'label' | 'detail'>> = [
+      {key: 'volatileCrowded', label: 'Volatile + Crowded', detail: '8%+ move and 10%+ short interest'},
+      {key: 'moveDriven', label: 'Move-Driven', detail: '8%+ move with lighter short interest'},
+      {key: 'crowdedOnly', label: 'Crowded Positioning', detail: '10%+ short interest with a lower move'},
+      {key: 'lowerRisk', label: 'Lower Event Pressure', detail: 'Below both matrix thresholds'}
+    ];
+
+    return bucketDefinitions.map((definition) => {
+      const stocks = candidates.filter((stock) => this.getCatalystProfile(stock) === definition.key);
+      const averageImpliedMove = stocks.length
+        ? stocks.reduce((total, stock) => total + this.getPercentageValue(stock, 'Implied Move'), 0) / stocks.length
+        : 0;
+      const leader = stocks.length
+        ? stocks.reduce((topStock, stock) => (
+          this.getPercentageValue(stock, 'Implied Move') > this.getPercentageValue(topStock, 'Implied Move')
+            ? stock
+            : topStock
+        ), stocks[0])
+        : null;
+
+      return {...definition, count: stocks.length, averageImpliedMove, leader};
+    });
+  }
+
   formatStockEstimate(stock: StockInfo | null): string {
     if (!stock) {
       return '-';
@@ -413,6 +444,41 @@ export class ReportDateTableComponent implements OnInit {
   private getEstimateValue(stock: StockInfo): number {
     const value = Number(stock.Estimate);
     return Number.isNaN(value) ? 0 : value;
+  }
+
+  private matchesBaseFilters(stock: StockInfo, normalizedSearch: string): boolean {
+    const matchesSearch = normalizedSearch.length === 0 ||
+      stock.Ticker.toLowerCase().includes(normalizedSearch) ||
+      stock.Name.toLowerCase().includes(normalizedSearch);
+
+    return matchesSearch &&
+      this.getPercentageValue(stock, 'Implied Move') >= this.minimumImpliedMove &&
+      this.getPercentageValue(stock, 'Short Interest') >= this.minimumShortInterest &&
+      this.getMarketCapInBillions(stock['Market Cap']) >= this.minimumMarketCap &&
+      this.matchesEstimateOutlook(this.getEstimateValue(stock));
+  }
+
+  private getCatalystProfile(stock: StockInfo): Exclude<CatalystProfile, 'all'> {
+    const hasHighMove = this.getPercentageValue(stock, 'Implied Move') >= 8;
+    const hasHighShortInterest = this.getPercentageValue(stock, 'Short Interest') >= 10;
+
+    if (hasHighMove && hasHighShortInterest) {
+      return 'volatileCrowded';
+    }
+
+    if (hasHighMove) {
+      return 'moveDriven';
+    }
+
+    if (hasHighShortInterest) {
+      return 'crowdedOnly';
+    }
+
+    return 'lowerRisk';
+  }
+
+  private matchesCatalystProfile(stock: StockInfo): boolean {
+    return this.catalystProfile === 'all' || this.getCatalystProfile(stock) === this.catalystProfile;
   }
 
   private matchesEstimateOutlook(estimate: number): boolean {
