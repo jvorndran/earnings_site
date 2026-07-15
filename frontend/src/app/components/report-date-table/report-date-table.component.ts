@@ -56,6 +56,16 @@ interface CatalystBucket {
   leader: StockInfo | null;
 }
 
+interface SavedReport {
+  ticker: string;
+  name: string;
+  reportDate: string;
+  estimate: number;
+  impliedMove: number;
+  shortInterest: number;
+  marketCap: string | number;
+}
+
 @Component({
   selector: 'app-report-date-table',
   templateUrl: './report-date-table.component.html',
@@ -72,7 +82,7 @@ export class ReportDateTableComponent implements OnInit {
 
   columnsToDisplay = ['Ticker', 'Name', 'Market Cap', 'Estimate'];
 
-  columnsToDisplayWithExpand = [...this.columnsToDisplay, 'compare', 'expand'];
+  columnsToDisplayWithExpand = [...this.columnsToDisplay, 'save', 'compare', 'expand'];
 
   expandedElement?: StockInfo | null;
 
@@ -92,13 +102,17 @@ export class ReportDateTableComponent implements OnInit {
   comparisonTickers: string[] = [];
   comparisonMessage = 'Select up to four companies from the report table.';
   exportMessage = '';
+  savedReportMessage = '';
+  savedReports: SavedReport[] = [];
   portfolioValue = 25000;
   maximumEventRiskPercent = 1;
+  private readonly savedReportStorageKey = 'earnings-site-saved-reports';
 
 
   constructor(private route: ActivatedRoute, private http: HttpClient) { }
 
   ngOnInit(): void {
+    this.savedReports = this.loadSavedReports();
     this.route.params.subscribe(params => {
       this.date = params['date'];
       this.fetchStockInfoByDate(this.date)
@@ -140,6 +154,46 @@ export class ReportDateTableComponent implements OnInit {
   clearComparison(): void {
     this.comparisonTickers = [];
     this.comparisonMessage = 'Comparison cleared. Select up to four companies from the report table.';
+  }
+
+  isSavedReport(ticker: string): boolean {
+    return this.savedReports.some((report) => report.ticker === ticker && report.reportDate === this.date);
+  }
+
+  toggleSavedReport(stock: StockInfo): void {
+    if (this.isSavedReport(stock.Ticker)) {
+      this.savedReports = this.savedReports.filter((report) => (
+        report.ticker !== stock.Ticker || report.reportDate !== this.date
+      ));
+      this.savedReportMessage = `${stock.Ticker} removed from saved reports.`;
+    } else {
+      this.savedReports = [{
+        ticker: stock.Ticker,
+        name: stock.Name,
+        reportDate: this.date,
+        estimate: this.getEstimateValue(stock),
+        impliedMove: this.getPercentageValue(stock, 'Implied Move'),
+        shortInterest: this.getPercentageValue(stock, 'Short Interest'),
+        marketCap: stock['Market Cap']
+      }, ...this.savedReports].slice(0, 20);
+      this.savedReportMessage = `${stock.Ticker} saved for follow-up.`;
+    }
+
+    this.persistSavedReports();
+  }
+
+  removeSavedReport(report: SavedReport): void {
+    this.savedReports = this.savedReports.filter((savedReport) => (
+      savedReport.ticker !== report.ticker || savedReport.reportDate !== report.reportDate
+    ));
+    this.savedReportMessage = `${report.ticker} removed from saved reports.`;
+    this.persistSavedReports();
+  }
+
+  clearSavedReports(): void {
+    this.savedReports = [];
+    this.savedReportMessage = 'Saved report shortlist cleared.';
+    this.persistSavedReports();
   }
 
   fetchStockInfoByDate(date:string): void {
@@ -479,6 +533,25 @@ export class ReportDateTableComponent implements OnInit {
 
   private matchesCatalystProfile(stock: StockInfo): boolean {
     return this.catalystProfile === 'all' || this.getCatalystProfile(stock) === this.catalystProfile;
+  }
+
+  private loadSavedReports(): SavedReport[] {
+    try {
+      const storedReports = JSON.parse(localStorage.getItem(this.savedReportStorageKey) || '[]');
+      return Array.isArray(storedReports)
+        ? storedReports.filter((report) => report && report.ticker && report.reportDate).slice(0, 20)
+        : [];
+    } catch (error) {
+      return [];
+    }
+  }
+
+  private persistSavedReports(): void {
+    try {
+      localStorage.setItem(this.savedReportStorageKey, JSON.stringify(this.savedReports));
+    } catch (error) {
+      this.savedReportMessage = 'Saved reports are unavailable in this browser.';
+    }
   }
 
   private matchesEstimateOutlook(estimate: number): boolean {

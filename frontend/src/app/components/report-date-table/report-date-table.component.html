@@ -270,6 +270,37 @@
   </ng-template>
 </section>
 
+<section *ngIf="savedReports.length > 0" class="saved-reports-panel">
+  <div class="saved-reports-header">
+    <div>
+      <h2>Saved Earnings Reports</h2>
+      <span>{{savedReports.length}} of 20 reports saved in this browser</span>
+    </div>
+    <button (click)="clearSavedReports()" class="clear-button" type="button">Clear Saved</button>
+  </div>
+
+  <div class="saved-reports-grid">
+    <article *ngFor="let report of savedReports" class="saved-report-card">
+      <a [routerLink]="['/', report.reportDate, report.ticker]">
+        <span>{{formatDate(report.reportDate)}}</span>
+        <strong>{{report.ticker}}</strong>
+        <small>{{report.name}}</small>
+      </a>
+      <div>
+        <span>Move <strong>{{report.impliedMove | number:'1.1-1'}}%</strong></span>
+        <span>Short <strong>{{report.shortInterest | number:'1.1-1'}}%</strong></span>
+        <span>EPS <strong>{{report.estimate | number:'1.2-2'}}</strong></span>
+      </div>
+      <button
+        (click)="removeSavedReport(report)"
+        [attr.aria-label]="'Remove ' + report.ticker + ' from saved reports'"
+        type="button">Remove</button>
+    </article>
+  </div>
+</section>
+
+<p *ngIf="savedReportMessage" aria-live="polite" class="saved-report-message">{{savedReportMessage}}</p>
+
 <section *ngIf="comparisonTickers.length > 0" class="comparison-panel">
   <div class="comparison-header">
     <div>
@@ -324,6 +355,20 @@
           class="compare-button"
           type="button">
           {{isCompared(element.Ticker) ? 'Selected' : 'Add'}}
+        </button>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="save">
+      <th *matHeaderCellDef mat-header-cell>Save</th>
+      <td *matCellDef="let element" mat-cell>
+        <button
+          (click)="toggleSavedReport(element); $event.stopPropagation()"
+          [attr.aria-pressed]="isSavedReport(element.Ticker)"
+          [class.save-report-button--selected]="isSavedReport(element.Ticker)"
+          class="save-report-button"
+          type="button">
+          {{isSavedReport(element.Ticker) ? 'Saved' : 'Save'}}
         </button>
       </td>
     </ng-container>

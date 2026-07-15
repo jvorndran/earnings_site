@@ -341,3 +341,116 @@ body { margin: 0;font-family: sans-serif, "Franklin Gothic Book", Verdana; }
     grid-template-columns: 1fr;
   }
 }
+
+.saved-reports-panel {
+  width: 90%;
+  margin: 0 auto 1.5rem;
+  padding: 1rem;
+  border: 1px solid #b7d8cc;
+  background: #f4fbf8;
+}
+
+.saved-reports-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.saved-reports-header h2 {
+  margin: 0 0 0.25rem;
+  color: #165b45;
+  font-size: 1.15rem;
+  font-weight: 500;
+}
+
+.saved-reports-header span,
+.saved-report-card small {
+  color: #52665f;
+}
+
+.saved-reports-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.75rem;
+}
+
+.saved-report-card {
+  display: grid;
+  gap: 0.7rem;
+  border: 1px solid #b7d8cc;
+  border-top: 4px solid #278464;
+  border-radius: 6px;
+  background: white;
+  padding: 0.85rem;
+}
+
+.saved-report-card > a {
+  display: grid;
+  gap: 0.2rem;
+  color: #173e32;
+  text-decoration: none;
+}
+
+.saved-report-card > a > span {
+  color: #52665f;
+  font-size: 0.75rem;
+}
+
+.saved-report-card > a > strong {
+  font-size: 1.35rem;
+}
+
+.saved-report-card > div {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.35rem;
+  color: #52665f;
+  font-size: 0.75rem;
+}
+
+.saved-report-card > div span {
+  display: grid;
+}
+
+.saved-report-card > button {
+  justify-self: start;
+  border: 0;
+  background: transparent;
+  color: #b42318;
+  cursor: pointer;
+  padding: 0;
+}
+
+.saved-report-message {
+  width: 90%;
+  margin: -0.75rem auto 1.5rem;
+  color: #356353;
+}
+
+.save-report-button {
+  min-width: 4.5rem;
+  border: 1px solid #278464;
+  border-radius: 999px;
+  background: white;
+  color: #1d6b51;
+  cursor: pointer;
+  padding: 0.35rem 0.65rem;
+}
+
+.save-report-button--selected {
+  background: #278464;
+  color: white;
+}
+
+@media (max-width: 560px) {
+  .saved-reports-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .saved-reports-grid {
+    grid-template-columns: 1fr;
+  }
+}
