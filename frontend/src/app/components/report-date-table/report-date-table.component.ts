@@ -56,6 +56,14 @@ interface CatalystBucket {
   leader: StockInfo | null;
 }
 
+interface OpportunityMapPoint {
+  stock: StockInfo;
+  x: number;
+  y: number;
+  impliedMove: number;
+  quarterlyGrowth: number;
+}
+
 interface SavedReport {
   ticker: string;
   name: string;
@@ -104,6 +112,9 @@ export class ReportDateTableComponent implements OnInit {
   exportMessage = '';
   savedReportMessage = '';
   savedReports: SavedReport[] = [];
+  opportunityMapPoints: OpportunityMapPoint[] = [];
+  opportunityRiskLine = 50;
+  opportunityZeroLine = 50;
   portfolioValue = 25000;
   maximumEventRiskPercent = 1;
   private readonly savedReportStorageKey = 'earnings-site-saved-reports';
@@ -221,6 +232,7 @@ export class ReportDateTableComponent implements OnInit {
     });
 
     this.filteredStockInfoObjects = this.sortStocks(filteredStocks);
+    this.buildOpportunityMap();
 
     if (this.expandedTicker && !this.filteredStockInfoObjects.some((stock) => stock.Ticker === this.expandedTicker)) {
       this.expandedTicker = null;
@@ -458,6 +470,48 @@ export class ReportDateTableComponent implements OnInit {
     }
 
     return `$${marketCap.toFixed(marketCap >= 10 ? 0 : 1)}B`;
+  }
+
+  private buildOpportunityMap(): void {
+    const stocks = [...this.filteredStockInfoObjects]
+      .sort((firstStock, secondStock) => (
+        this.getMarketCapInBillions(secondStock['Market Cap']) -
+        this.getMarketCapInBillions(firstStock['Market Cap'])
+      ))
+      .slice(0, 30);
+
+    if (stocks.length === 0) {
+      this.opportunityMapPoints = [];
+      this.opportunityRiskLine = 50;
+      this.opportunityZeroLine = 50;
+      return;
+    }
+
+    const impliedMoves = stocks.map((stock) => this.getPercentageValue(stock, 'Implied Move'));
+    const quarterlyGrowthValues = stocks.map((stock) => this.getPercentageValue(stock, 'Quarterly Growth'));
+    const maxImpliedMove = Math.max(8, ...impliedMoves);
+    const minQuarterlyGrowth = Math.min(0, ...quarterlyGrowthValues);
+    const maxQuarterlyGrowth = Math.max(0, ...quarterlyGrowthValues);
+    const growthRange = maxQuarterlyGrowth - minQuarterlyGrowth;
+
+    this.opportunityRiskLine = 8 + (8 / maxImpliedMove) * 84;
+    this.opportunityZeroLine = growthRange === 0
+      ? 50
+      : 8 + ((0 - minQuarterlyGrowth) / growthRange) * 84;
+    this.opportunityMapPoints = stocks.map((stock) => {
+      const impliedMove = this.getPercentageValue(stock, 'Implied Move');
+      const quarterlyGrowth = this.getPercentageValue(stock, 'Quarterly Growth');
+
+      return {
+        stock,
+        impliedMove,
+        quarterlyGrowth,
+        x: 8 + (Math.max(impliedMove, 0) / maxImpliedMove) * 84,
+        y: growthRange === 0
+          ? 50
+          : 8 + ((quarterlyGrowth - minQuarterlyGrowth) / growthRange) * 84
+      };
+    });
   }
 
   private sortStocks(stocks: StockInfo[]): StockInfo[] {

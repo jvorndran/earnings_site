@@ -454,3 +454,195 @@ body { margin: 0;font-family: sans-serif, "Franklin Gothic Book", Verdana; }
     grid-template-columns: 1fr;
   }
 }
+
+.opportunity-map-panel {
+  width: 90%;
+  box-sizing: border-box;
+  margin: 0 auto 1.5rem;
+  border: 1px solid #c8d6e5;
+  border-radius: 8px;
+  background: #f8fbff;
+  padding: 1rem;
+}
+
+.opportunity-map-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.opportunity-map-header h2 {
+  margin: 0 0 0.25rem;
+  color: #17324d;
+  font-size: 1.15rem;
+  font-weight: 500;
+}
+
+.opportunity-map-header span,
+.opportunity-map-header > strong,
+.opportunity-map-legend,
+.opportunity-map-empty {
+  color: #52677c;
+  font-size: 0.85rem;
+}
+
+.opportunity-map-header > strong {
+  white-space: nowrap;
+}
+
+.opportunity-map-chart {
+  position: relative;
+  min-height: 360px;
+  overflow: hidden;
+  border: 1px solid #d5e0eb;
+  border-radius: 6px;
+  background:
+    linear-gradient(to right, transparent 49.8%, rgba(122, 145, 168, 0.16) 50%, transparent 50.2%),
+    linear-gradient(to bottom, transparent 49.8%, rgba(122, 145, 168, 0.16) 50%, transparent 50.2%),
+    white;
+}
+
+.opportunity-map-axis {
+  position: absolute;
+  z-index: 1;
+  color: #6d7f91;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.opportunity-map-axis--vertical {
+  top: 50%;
+  left: 0.25rem;
+  transform: translate(-42%, -50%) rotate(-90deg);
+}
+
+.opportunity-map-axis--horizontal {
+  right: 0.75rem;
+  bottom: 0.35rem;
+}
+
+.opportunity-map-zero-line,
+.opportunity-map-risk-line {
+  position: absolute;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.opportunity-map-zero-line {
+  right: 3%;
+  left: 3%;
+  border-top: 1px dashed #b05d62;
+}
+
+.opportunity-map-risk-line {
+  top: 3%;
+  bottom: 3%;
+  border-left: 1px dashed #b97835;
+}
+
+.opportunity-map-zero-line em,
+.opportunity-map-risk-line em {
+  position: absolute;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #7b5c5e;
+  font-size: 0.65rem;
+  font-style: normal;
+  padding: 0.1rem 0.35rem;
+  white-space: nowrap;
+}
+
+.opportunity-map-zero-line em {
+  right: 0;
+  bottom: 0.2rem;
+}
+
+.opportunity-map-risk-line em {
+  top: 0;
+  left: 0.3rem;
+}
+
+.opportunity-map-point {
+  position: absolute;
+  z-index: 2;
+  min-width: 2.8rem;
+  transform: translate(-50%, 50%);
+  border: 2px solid white;
+  border-radius: 999px;
+  box-shadow: 0 2px 7px rgba(31, 51, 73, 0.24);
+  background: #b34c57;
+  color: white;
+  cursor: pointer;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.35rem 0.45rem;
+}
+
+.opportunity-map-point:hover,
+.opportunity-map-point:focus-visible {
+  z-index: 3;
+  transform: translate(-50%, 50%) scale(1.12);
+  outline: 2px solid #f7b955;
+  outline-offset: 2px;
+}
+
+.opportunity-map-point--growth {
+  background: #267c60;
+}
+
+.opportunity-map-point--selected {
+  box-shadow: 0 0 0 3px #f7b955, 0 3px 8px rgba(31, 51, 73, 0.28);
+}
+
+.opportunity-map-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  margin-top: 0.75rem;
+}
+
+.opportunity-map-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.opportunity-map-dot {
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 50%;
+  background: #b34c57;
+}
+
+.opportunity-map-dot--growth {
+  background: #267c60;
+}
+
+.opportunity-map-empty {
+  margin: 0;
+  border: 1px dashed #b9c7d5;
+  border-radius: 6px;
+  background: white;
+  padding: 1rem;
+}
+
+@media (max-width: 560px) {
+  .opportunity-map-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .opportunity-map-chart {
+    min-height: 300px;
+  }
+
+  .opportunity-map-point {
+    min-width: 2.4rem;
+    font-size: 0.6rem;
+    padding: 0.3rem;
+  }
+}

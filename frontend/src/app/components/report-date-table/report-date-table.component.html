@@ -176,6 +176,52 @@
   </div>
 </section>
 
+<section class="opportunity-map-panel">
+  <div class="opportunity-map-header">
+    <div>
+      <h2>Earnings Opportunity Map</h2>
+      <span>Quarterly growth versus the market's implied earnings move for the 30 largest matching companies.</span>
+    </div>
+    <strong>{{opportunityMapPoints.length}} names plotted</strong>
+  </div>
+
+  <div *ngIf="opportunityMapPoints.length > 0; else noOpportunityMap" class="opportunity-map-chart">
+    <span class="opportunity-map-axis opportunity-map-axis--vertical">Quarterly growth</span>
+    <span class="opportunity-map-axis opportunity-map-axis--horizontal">Implied move</span>
+    <span [style.bottom.%]="opportunityZeroLine" class="opportunity-map-zero-line">
+      <em>0% growth</em>
+    </span>
+    <span [style.left.%]="opportunityRiskLine" class="opportunity-map-risk-line">
+      <em>8% move</em>
+    </span>
+
+    <button
+      *ngFor="let point of opportunityMapPoints"
+      (click)="toggleComparison(point.stock)"
+      [attr.aria-label]="point.stock.Ticker + ': ' + (point.quarterlyGrowth | number:'1.1-1') + '% quarterly growth and ' + (point.impliedMove | number:'1.1-1') + '% implied move'"
+      [attr.aria-pressed]="isCompared(point.stock.Ticker)"
+      [attr.title]="point.stock.Name + ' | Growth ' + (point.quarterlyGrowth | number:'1.1-1') + '% | Move ' + (point.impliedMove | number:'1.1-1') + '%'"
+      [class.opportunity-map-point--growth]="point.quarterlyGrowth >= 0"
+      [class.opportunity-map-point--selected]="isCompared(point.stock.Ticker)"
+      [style.bottom.%]="point.y"
+      [style.left.%]="point.x"
+      class="opportunity-map-point"
+      type="button">
+      {{point.stock.Ticker}}
+    </button>
+  </div>
+
+  <div class="opportunity-map-legend">
+    <span><i class="opportunity-map-dot opportunity-map-dot--growth"></i> Positive growth</span>
+    <span><i class="opportunity-map-dot"></i> Negative growth</span>
+    <span>Click a ticker to add or remove it from comparison.</span>
+  </div>
+
+  <ng-template #noOpportunityMap>
+    <p class="opportunity-map-empty">Adjust the report filters to plot matching earnings companies.</p>
+  </ng-template>
+</section>
+
 <section *ngIf="getEstimateOutlookSummary() as outlook" class="estimate-outlook-panel">
   <div class="estimate-outlook-header">
     <div>
