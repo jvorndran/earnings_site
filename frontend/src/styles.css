@@ -646,3 +646,156 @@ body { margin: 0;font-family: sans-serif, "Franklin Gothic Book", Verdana; }
     padding: 0.3rem;
   }
 }
+.crowding-watch-panel {
+  background: linear-gradient(135deg, #131924, #202938);
+  border: 1px solid rgba(255, 177, 66, .35);
+  border-radius: 18px;
+  color: #f4f7fb;
+  margin: 1.25rem;
+  padding: 1.1rem;
+}
+
+.crowding-watch-header,
+.crowding-watch-card-header,
+.crowding-watch-actions {
+  align-items: center;
+  display: flex;
+  gap: .8rem;
+  justify-content: space-between;
+}
+
+.crowding-watch-header h2 {
+  font-size: 1.2rem;
+  margin: 0;
+}
+
+.crowding-watch-header span,
+.crowding-watch-note,
+.crowding-watch-empty {
+  color: #aeb9c8;
+}
+
+.crowding-watch-header strong {
+  color: #ffbd62;
+  white-space: nowrap;
+}
+
+.crowding-watch-note {
+  font-size: .82rem;
+  margin: .55rem 0 1rem;
+}
+
+.crowding-watch-grid {
+  display: grid;
+  gap: .75rem;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+.crowding-watch-grid article {
+  background: rgba(255, 255, 255, .055);
+  border: 1px solid rgba(255, 255, 255, .1);
+  border-radius: 13px;
+  padding: .85rem;
+}
+
+.crowding-watch-card-header > div {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.crowding-watch-card-header > div > strong {
+  font-size: 1.15rem;
+}
+
+.crowding-watch-card-header span {
+  color: #b6c0cd;
+  font-size: .76rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.crowding-watch-card-header em {
+  background: rgba(255, 189, 98, .14);
+  border-radius: 999px;
+  color: #ffca80;
+  font-size: .72rem;
+  font-style: normal;
+  padding: .3rem .55rem;
+}
+
+.crowding-watch-grid article[data-level="elevated"] .crowding-watch-card-header em {
+  background: rgba(255, 91, 91, .16);
+  color: #ff9999;
+}
+
+.crowding-watch-score {
+  display: grid;
+  gap: .25rem;
+  grid-template-columns: 1fr auto;
+  margin: .8rem 0;
+}
+
+.crowding-watch-score span {
+  color: #c8d1dd;
+  font-size: .75rem;
+}
+
+.crowding-watch-score i {
+  background: rgba(255, 255, 255, .1);
+  border-radius: 999px;
+  grid-column: 1 / -1;
+  height: 6px;
+  overflow: hidden;
+}
+
+.crowding-watch-score b {
+  background: linear-gradient(90deg, #f2b84b, #ef5c62);
+  display: block;
+  height: 100%;
+}
+
+.crowding-watch-metrics {
+  display: grid;
+  gap: .45rem;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.crowding-watch-metrics span {
+  background: rgba(0, 0, 0, .16);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  padding: .45rem;
+}
+
+.crowding-watch-metrics small {
+  color: #9eabba;
+  font-size: .65rem;
+}
+
+.crowding-watch-actions {
+  margin-top: .75rem;
+}
+
+.crowding-watch-actions button {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, .2);
+  border-radius: 8px;
+  color: #f4f7fb;
+  cursor: pointer;
+  flex: 1;
+  padding: .45rem;
+}
+
+@media (max-width: 620px) {
+  .crowding-watch-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .crowding-watch-panel {
+    margin: .75rem;
+  }
+}

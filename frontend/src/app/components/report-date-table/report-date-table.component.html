@@ -176,6 +176,58 @@
   </div>
 </section>
 
+<section class="crowding-watch-panel">
+  <div class="crowding-watch-header">
+    <div>
+      <h2>Earnings Crowding Watch</h2>
+      <span>Ranks filtered reports using short interest, days to cover, and implied move.</span>
+    </div>
+    <strong>{{getCrowdingWatch().length}} candidates</strong>
+  </div>
+
+  <p class="crowding-watch-note">
+    The pressure score is a screening aid, not a prediction: short interest contributes 2 points per percent,
+    days to cover contributes 6 points per day, and implied move contributes 2 points per percent.
+  </p>
+
+  <div *ngIf="getCrowdingWatch().length > 0; else noCrowdingWatch" class="crowding-watch-grid">
+    <article *ngFor="let item of getCrowdingWatch()" [attr.data-level]="item.level.toLowerCase()">
+      <div class="crowding-watch-card-header">
+        <div>
+          <strong>{{item.stock.Ticker}}</strong>
+          <span>{{item.stock.Name}}</span>
+        </div>
+        <em>{{item.level}}</em>
+      </div>
+
+      <div class="crowding-watch-score">
+        <span>Pressure score</span>
+        <strong>{{item.score}}</strong>
+        <i><b [style.width.%]="item.score"></b></i>
+      </div>
+
+      <div class="crowding-watch-metrics">
+        <span><small>Short Interest</small><strong>{{item.shortInterest | number:'1.1-1'}}%</strong></span>
+        <span><small>Days To Cover</small><strong>{{item.daysToCover | number:'1.1-1'}}</strong></span>
+        <span><small>Implied Move</small><strong>{{item.impliedMove | number:'1.1-1'}}%</strong></span>
+      </div>
+
+      <div class="crowding-watch-actions">
+        <button (click)="toggleComparison(item.stock)" type="button">
+          {{isCompared(item.stock.Ticker) ? 'Selected' : 'Compare'}}
+        </button>
+        <button (click)="toggleSavedReport(item.stock)" type="button">
+          {{isSavedReport(item.stock.Ticker) ? 'Saved' : 'Save Report'}}
+        </button>
+      </div>
+    </article>
+  </div>
+
+  <ng-template #noCrowdingWatch>
+    <p class="crowding-watch-empty">No filtered reports include both short-interest and days-to-cover data.</p>
+  </ng-template>
+</section>
+
 <section class="opportunity-map-panel">
   <div class="opportunity-map-header">
     <div>

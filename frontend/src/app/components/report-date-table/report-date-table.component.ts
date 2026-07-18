@@ -56,6 +56,15 @@ interface CatalystBucket {
   leader: StockInfo | null;
 }
 
+interface CrowdingWatchItem {
+  stock: StockInfo;
+  score: number;
+  level: 'Elevated' | 'Watch' | 'Moderate';
+  shortInterest: number;
+  daysToCover: number;
+  impliedMove: number;
+}
+
 interface OpportunityMapPoint {
   stock: StockInfo;
   x: number;
@@ -406,6 +415,29 @@ export class ReportDateTableComponent implements OnInit {
 
       return {...definition, count: stocks.length, averageImpliedMove, leader};
     });
+  }
+
+  getCrowdingWatch(): CrowdingWatchItem[] {
+    return this.filteredStockInfoObjects
+      .map((stock) => {
+        const shortInterest = this.getPercentageValue(stock, 'Short Interest');
+        const daysToCoverValue = Number(stock['Days To Cover']);
+        const daysToCover = Number.isFinite(daysToCoverValue) ? Math.max(daysToCoverValue, 0) : 0;
+        const impliedMove = this.getPercentageValue(stock, 'Implied Move');
+        const score = Math.min(100, Math.round(
+          (shortInterest * 2) + (daysToCover * 6) + (impliedMove * 2)
+        ));
+        const level = score >= 65 ? 'Elevated' : score >= 40 ? 'Watch' : 'Moderate';
+
+        return {stock, score, level, shortInterest, daysToCover, impliedMove} as CrowdingWatchItem;
+      })
+      .filter((item) => item.shortInterest > 0 && item.daysToCover > 0)
+      .sort((firstItem, secondItem) => (
+        secondItem.score - firstItem.score ||
+        secondItem.shortInterest - firstItem.shortInterest ||
+        firstItem.stock.Ticker.localeCompare(secondItem.stock.Ticker)
+      ))
+      .slice(0, 6);
   }
 
   formatStockEstimate(stock: StockInfo | null): string {
