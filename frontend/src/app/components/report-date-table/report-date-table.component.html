@@ -56,7 +56,7 @@
 
     <div class="filter-field">
       <span>Minimum Market Cap</span>
-      <select [(ngModel)]="minimumMarketCap" (ngModelChange)="applyFilters()">
+      <select [(ngModel)]="minimumMarketCap" (ngModelChange)="clearMarketCapCohort(); applyFilters()">
         <option [ngValue]="0">Any</option>
         <option [ngValue]="1">$1B+</option>
         <option [ngValue]="10">$10B+</option>
@@ -145,6 +145,40 @@
       <strong>{{summary.megaCapCount}}</strong>
       <em>$100B+ reports</em>
     </span>
+  </div>
+</section>
+
+<section class="size-cohort-panel">
+  <div class="size-cohort-header">
+    <div>
+      <h2>Earnings Size Cohorts</h2>
+      <span>Compare event pressure across company sizes, then click a cohort to filter the report table.</span>
+    </div>
+    <strong>{{marketCapCohort === 'all' ? 'All company sizes' : 'Size filter active'}}</strong>
+  </div>
+
+  <div class="size-cohort-grid">
+    <button
+      *ngFor="let cohort of getMarketCapCohorts()"
+      (click)="setMarketCapCohort(cohort.key)"
+      [attr.aria-pressed]="marketCapCohort === cohort.key"
+      [class.size-cohort-card--active]="marketCapCohort === cohort.key"
+      class="size-cohort-card"
+      type="button">
+      <span class="size-cohort-card-header">
+        <span><strong>{{cohort.label}}</strong><small>{{cohort.range}}</small></span>
+        <em>{{cohort.count}}</em>
+      </span>
+      <span class="size-cohort-card-metrics">
+        <span><small>Avg Implied Move</small><strong>{{cohort.averageImpliedMove | number:'1.1-1'}}%</strong></span>
+        <span><small>Avg Growth</small><strong>{{cohort.averageQuarterlyGrowth | number:'1.1-1'}}%</strong></span>
+      </span>
+      <span class="size-cohort-card-leader">
+        Move leader
+        <strong>{{cohort.moveLeader?.Ticker || '-'}}</strong>
+        <em>{{formatStockPercent(cohort.moveLeader, 'Implied Move')}}</em>
+      </span>
+    </button>
   </div>
 </section>
 

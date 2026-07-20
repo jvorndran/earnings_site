@@ -799,3 +799,145 @@ body { margin: 0;font-family: sans-serif, "Franklin Gothic Book", Verdana; }
     margin: .75rem;
   }
 }
+.size-cohort-panel {
+  width: 90%;
+  margin: 0 auto 1.5rem;
+  padding: 1rem;
+  border: 1px solid #b8c7e8;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #f7f9ff, #eef3ff);
+}
+
+.size-cohort-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.size-cohort-header h2 {
+  margin: 0 0 0.25rem;
+  color: #27358f;
+  font-size: 1.15rem;
+  font-weight: 500;
+}
+
+.size-cohort-header span {
+  color: #475467;
+  font-size: 0.9rem;
+}
+
+.size-cohort-header > strong {
+  color: #3f51b5;
+  font-size: 0.82rem;
+}
+
+.size-cohort-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.size-cohort-card {
+  display: grid;
+  gap: 0.8rem;
+  border: 1px solid #d2daeb;
+  border-radius: 6px;
+  background: white;
+  color: #101828;
+  cursor: pointer;
+  padding: 0.85rem;
+  text-align: left;
+  transition: border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease;
+}
+
+.size-cohort-card:hover,
+.size-cohort-card:focus-visible {
+  border-color: #5c6bc0;
+  box-shadow: 0 8px 20px rgba(39, 53, 143, 0.12);
+  outline: none;
+  transform: translateY(-1px);
+}
+
+.size-cohort-card--active {
+  border-color: #3f51b5;
+  box-shadow: inset 0 0 0 1px #3f51b5;
+}
+
+.size-cohort-card-header,
+.size-cohort-card-header > span,
+.size-cohort-card-metrics span {
+  display: grid;
+}
+
+.size-cohort-card-header {
+  align-items: start;
+  grid-template-columns: 1fr auto;
+}
+
+.size-cohort-card-header small,
+.size-cohort-card-metrics small {
+  color: #667085;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.size-cohort-card-header em {
+  display: grid;
+  min-width: 2rem;
+  height: 2rem;
+  place-items: center;
+  border-radius: 999px;
+  background: #e8edff;
+  color: #27358f;
+  font-style: normal;
+  font-weight: 700;
+}
+
+.size-cohort-card-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.size-cohort-card-metrics span {
+  gap: 0.15rem;
+  border-radius: 4px;
+  background: #f8fafc;
+  padding: 0.55rem;
+}
+
+.size-cohort-card-leader {
+  color: #667085;
+  font-size: 0.76rem;
+}
+
+.size-cohort-card-leader strong {
+  margin-left: 0.25rem;
+  color: #27358f;
+}
+
+.size-cohort-card-leader em {
+  margin-left: 0.25rem;
+  color: #475467;
+  font-style: normal;
+}
+
+@media (max-width: 950px) {
+  .size-cohort-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .size-cohort-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .size-cohort-grid {
+    grid-template-columns: 1fr;
+  }
+}

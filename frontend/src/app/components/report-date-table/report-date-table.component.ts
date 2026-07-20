@@ -21,6 +21,7 @@ type SortField = 'marketCap' | 'impliedMove' | 'shortInterest' | 'estimate' | 't
 type SortDirection = 'asc' | 'desc';
 type EstimateOutlook = 'all' | 'positive' | 'loss' | 'breakEven';
 type CatalystProfile = 'all' | 'volatileCrowded' | 'moveDriven' | 'crowdedOnly' | 'lowerRisk';
+type MarketCapCohort = 'all' | 'small' | 'mid' | 'large' | 'mega';
 
 interface ReportDateSummary {
   companyCount: number;
@@ -54,6 +55,16 @@ interface CatalystBucket {
   count: number;
   averageImpliedMove: number;
   leader: StockInfo | null;
+}
+
+interface MarketCapCohortSummary {
+  key: Exclude<MarketCapCohort, 'all'>;
+  label: string;
+  range: string;
+  count: number;
+  averageImpliedMove: number;
+  averageQuarterlyGrowth: number;
+  moveLeader: StockInfo | null;
 }
 
 interface CrowdingWatchItem {
@@ -114,6 +125,7 @@ export class ReportDateTableComponent implements OnInit {
   minimumMarketCap = 0;
   estimateOutlook: EstimateOutlook = 'all';
   catalystProfile: CatalystProfile = 'all';
+  marketCapCohort: MarketCapCohort = 'all';
   sortField: SortField = 'marketCap';
   sortDirection: SortDirection = 'desc';
   comparisonTickers: string[] = [];
@@ -255,6 +267,7 @@ export class ReportDateTableComponent implements OnInit {
     this.minimumMarketCap = 0;
     this.estimateOutlook = 'all';
     this.catalystProfile = 'all';
+    this.marketCapCohort = 'all';
     this.sortField = 'marketCap';
     this.sortDirection = 'desc';
     this.applyFilters();
@@ -263,6 +276,16 @@ export class ReportDateTableComponent implements OnInit {
   setCatalystProfile(profile: CatalystProfile): void {
     this.catalystProfile = this.catalystProfile === profile ? 'all' : profile;
     this.applyFilters();
+  }
+
+  setMarketCapCohort(cohort: Exclude<MarketCapCohort, 'all'>): void {
+    this.marketCapCohort = this.marketCapCohort === cohort ? 'all' : cohort;
+    this.minimumMarketCap = 0;
+    this.applyFilters();
+  }
+
+  clearMarketCapCohort(): void {
+    this.marketCapCohort = 'all';
   }
 
   exportFilteredReports(): void {
@@ -440,6 +463,44 @@ export class ReportDateTableComponent implements OnInit {
       .slice(0, 6);
   }
 
+  getMarketCapCohorts(): MarketCapCohortSummary[] {
+    const normalizedSearch = this.searchText.trim().toLowerCase();
+    const candidates = this.stockInfoObjects.filter((stock) => (
+      this.matchesBaseFilters(stock, normalizedSearch, true) && this.matchesCatalystProfile(stock)
+    ));
+    const definitions: Array<Pick<MarketCapCohortSummary, 'key' | 'label' | 'range'>> = [
+      {key: 'small', label: 'Small Cap', range: 'Below $2B'},
+      {key: 'mid', label: 'Mid Cap', range: '$2B to $10B'},
+      {key: 'large', label: 'Large Cap', range: '$10B to $100B'},
+      {key: 'mega', label: 'Mega Cap', range: '$100B and above'}
+    ];
+
+    return definitions.map((definition) => {
+      const stocks = candidates.filter((stock) => this.getMarketCapCohort(stock) === definition.key);
+      const averageImpliedMove = stocks.length
+        ? stocks.reduce((total, stock) => total + this.getPercentageValue(stock, 'Implied Move'), 0) / stocks.length
+        : 0;
+      const averageQuarterlyGrowth = stocks.length
+        ? stocks.reduce((total, stock) => total + this.getPercentageValue(stock, 'Quarterly Growth'), 0) / stocks.length
+        : 0;
+      const moveLeader = stocks.length
+        ? stocks.reduce((leader, stock) => (
+          this.getPercentageValue(stock, 'Implied Move') > this.getPercentageValue(leader, 'Implied Move')
+            ? stock
+            : leader
+        ), stocks[0])
+        : null;
+
+      return {
+        ...definition,
+        count: stocks.length,
+        averageImpliedMove,
+        averageQuarterlyGrowth,
+        moveLeader
+      };
+    });
+  }
+
   formatStockEstimate(stock: StockInfo | null): string {
     if (!stock) {
       return '-';
@@ -586,16 +647,42 @@ export class ReportDateTableComponent implements OnInit {
     return Number.isNaN(value) ? 0 : value;
   }
 
-  private matchesBaseFilters(stock: StockInfo, normalizedSearch: string): boolean {
+  private matchesBaseFilters(stock: StockInfo, normalizedSearch: string, ignoreMarketCap = false): boolean {
     const matchesSearch = normalizedSearch.length === 0 ||
       stock.Ticker.toLowerCase().includes(normalizedSearch) ||
       stock.Name.toLowerCase().includes(normalizedSearch);
+    const marketCap = this.getMarketCapInBillions(stock['Market Cap']);
+    const matchesMarketCap = ignoreMarketCap || (
+      marketCap >= this.minimumMarketCap && this.matchesMarketCapCohort(stock)
+    );
 
     return matchesSearch &&
       this.getPercentageValue(stock, 'Implied Move') >= this.minimumImpliedMove &&
       this.getPercentageValue(stock, 'Short Interest') >= this.minimumShortInterest &&
-      this.getMarketCapInBillions(stock['Market Cap']) >= this.minimumMarketCap &&
+      matchesMarketCap &&
       this.matchesEstimateOutlook(this.getEstimateValue(stock));
+  }
+
+  private getMarketCapCohort(stock: StockInfo): Exclude<MarketCapCohort, 'all'> | null {
+    const marketCap = this.getMarketCapInBillions(stock['Market Cap']);
+
+    if (marketCap <= 0) {
+      return null;
+    }
+    if (marketCap < 2) {
+      return 'small';
+    }
+    if (marketCap < 10) {
+      return 'mid';
+    }
+    if (marketCap < 100) {
+      return 'large';
+    }
+    return 'mega';
+  }
+
+  private matchesMarketCapCohort(stock: StockInfo): boolean {
+    return this.marketCapCohort === 'all' || this.getMarketCapCohort(stock) === this.marketCapCohort;
   }
 
   private getCatalystProfile(stock: StockInfo): Exclude<CatalystProfile, 'all'> {
