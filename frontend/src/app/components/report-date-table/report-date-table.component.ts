@@ -17,7 +17,7 @@ export interface StockInfo {
   'Market Cap': string | number;
 }
 
-type SortField = 'marketCap' | 'impliedMove' | 'shortInterest' | 'estimate' | 'ticker';
+type SortField = 'marketCap' | 'impliedMove' | 'shortInterest' | 'quarterlyGrowth' | 'daysToCover' | 'estimate' | 'ticker';
 type SortDirection = 'asc' | 'desc';
 type EstimateOutlook = 'all' | 'positive' | 'loss' | 'breakEven';
 type CatalystProfile = 'all' | 'volatileCrowded' | 'moveDriven' | 'crowdedOnly' | 'lowerRisk';
@@ -122,6 +122,8 @@ export class ReportDateTableComponent implements OnInit {
   searchText = '';
   minimumImpliedMove = 0;
   minimumShortInterest = 0;
+  minimumQuarterlyGrowth: number | null = null;
+  minimumDaysToCover = 0;
   minimumMarketCap = 0;
   estimateOutlook: EstimateOutlook = 'all';
   catalystProfile: CatalystProfile = 'all';
@@ -264,6 +266,8 @@ export class ReportDateTableComponent implements OnInit {
     this.searchText = '';
     this.minimumImpliedMove = 0;
     this.minimumShortInterest = 0;
+    this.minimumQuarterlyGrowth = null;
+    this.minimumDaysToCover = 0;
     this.minimumMarketCap = 0;
     this.estimateOutlook = 'all';
     this.catalystProfile = 'all';
@@ -635,6 +639,14 @@ export class ReportDateTableComponent implements OnInit {
       return this.getPercentageValue(stock, 'Short Interest');
     }
 
+    if (this.sortField === 'quarterlyGrowth') {
+      return this.getPercentageValue(stock, 'Quarterly Growth');
+    }
+
+    if (this.sortField === 'daysToCover') {
+      return this.getNumberValue(stock, 'Days To Cover');
+    }
+
     if (this.sortField === 'estimate') {
       return this.getEstimateValue(stock);
     }
@@ -659,6 +671,9 @@ export class ReportDateTableComponent implements OnInit {
     return matchesSearch &&
       this.getPercentageValue(stock, 'Implied Move') >= this.minimumImpliedMove &&
       this.getPercentageValue(stock, 'Short Interest') >= this.minimumShortInterest &&
+      (this.minimumQuarterlyGrowth === null ||
+        this.getPercentageValue(stock, 'Quarterly Growth') >= this.minimumQuarterlyGrowth) &&
+      this.getNumberValue(stock, 'Days To Cover') >= this.minimumDaysToCover &&
       matchesMarketCap &&
       this.matchesEstimateOutlook(this.getEstimateValue(stock));
   }
@@ -751,6 +766,11 @@ export class ReportDateTableComponent implements OnInit {
     }
 
     return value * 100;
+  }
+
+  private getNumberValue(stock: StockInfo, field: string): number {
+    const value = Number(stock[field]);
+    return Number.isNaN(value) ? 0 : value;
   }
 
   private getMarketCapInBillions(value: string | number): number {

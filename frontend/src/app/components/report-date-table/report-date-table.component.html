@@ -55,6 +55,28 @@
     </div>
 
     <div class="filter-field">
+      <span>Minimum Quarterly Growth</span>
+      <select [(ngModel)]="minimumQuarterlyGrowth" (ngModelChange)="applyFilters()">
+        <option [ngValue]="null">Any</option>
+        <option [ngValue]="0">Positive Or Flat</option>
+        <option [ngValue]="10">10%+</option>
+        <option [ngValue]="25">25%+</option>
+        <option [ngValue]="50">50%+</option>
+      </select>
+    </div>
+
+    <div class="filter-field">
+      <span>Minimum Days To Cover</span>
+      <select [(ngModel)]="minimumDaysToCover" (ngModelChange)="applyFilters()">
+        <option [ngValue]="0">Any</option>
+        <option [ngValue]="2">2+ Days</option>
+        <option [ngValue]="4">4+ Days</option>
+        <option [ngValue]="7">7+ Days</option>
+        <option [ngValue]="10">10+ Days</option>
+      </select>
+    </div>
+
+    <div class="filter-field">
       <span>Minimum Market Cap</span>
       <select [(ngModel)]="minimumMarketCap" (ngModelChange)="clearMarketCapCohort(); applyFilters()">
         <option [ngValue]="0">Any</option>
@@ -92,6 +114,8 @@
         <option [ngValue]="'marketCap'">Market Cap</option>
         <option [ngValue]="'impliedMove'">Implied Move</option>
         <option [ngValue]="'shortInterest'">Short Interest</option>
+        <option [ngValue]="'quarterlyGrowth'">Quarterly Growth</option>
+        <option [ngValue]="'daysToCover'">Days To Cover</option>
         <option [ngValue]="'estimate'">EPS Estimate</option>
         <option [ngValue]="'ticker'">Ticker</option>
       </select>
