@@ -429,30 +429,71 @@
 <section *ngIf="savedReports.length > 0" class="saved-reports-panel">
   <div class="saved-reports-header">
     <div>
-      <h2>Saved Earnings Reports</h2>
-      <span>{{savedReports.length}} of 20 reports saved in this browser</span>
+      <h2>Saved Earnings Workflow</h2>
+      <span>{{savedReports.length}} of 20 reports saved in this browser · move each catalyst through preparation</span>
     </div>
     <button (click)="clearSavedReports()" class="clear-button" type="button">Clear Saved</button>
   </div>
 
+  <div class="saved-report-workflow">
+    <button
+      (click)="setSavedReportFilter('all')"
+      [attr.aria-pressed]="savedReportFilter === 'all'"
+      [class.saved-report-workflow-card--active]="savedReportFilter === 'all'"
+      class="saved-report-workflow-card"
+      type="button">
+      <span>All Reports</span>
+      <strong>{{savedReports.length}}</strong>
+      <small>Full shortlist</small>
+    </button>
+    <button
+      *ngFor="let stage of savedReportWorkflowStages"
+      (click)="setSavedReportFilter(stage.key)"
+      [attr.aria-pressed]="savedReportFilter === stage.key"
+      [class.saved-report-workflow-card--active]="savedReportFilter === stage.key"
+      class="saved-report-workflow-card"
+      type="button">
+      <span>{{stage.label}}</span>
+      <strong>{{getSavedReportStatusCount(stage.key)}}</strong>
+      <small>{{stage.detail}}</small>
+    </button>
+  </div>
+
   <div class="saved-reports-grid">
-    <article *ngFor="let report of savedReports" class="saved-report-card">
+    <article
+      *ngFor="let report of visibleSavedReports"
+      [attr.data-status]="getSavedReportStatus(report)"
+      class="saved-report-card">
       <a [routerLink]="['/', report.reportDate, report.ticker]">
         <span>{{formatDate(report.reportDate)}}</span>
         <strong>{{report.ticker}}</strong>
         <small>{{report.name}}</small>
       </a>
-      <div>
+      <div class="saved-report-metrics">
         <span>Move <strong>{{report.impliedMove | number:'1.1-1'}}%</strong></span>
         <span>Short <strong>{{report.shortInterest | number:'1.1-1'}}%</strong></span>
         <span>EPS <strong>{{report.estimate | number:'1.2-2'}}</strong></span>
       </div>
-      <button
-        (click)="removeSavedReport(report)"
-        [attr.aria-label]="'Remove ' + report.ticker + ' from saved reports'"
-        type="button">Remove</button>
+      <div class="saved-report-actions">
+        <label>
+          <span>Preparation</span>
+          <select
+            (ngModelChange)="setSavedReportStatus(report, $event)"
+            [ngModel]="getSavedReportStatus(report)">
+            <option *ngFor="let stage of savedReportWorkflowStages" [ngValue]="stage.key">{{stage.label}}</option>
+          </select>
+        </label>
+        <button
+          (click)="removeSavedReport(report)"
+          [attr.aria-label]="'Remove ' + report.ticker + ' from saved reports'"
+          type="button">Remove</button>
+      </div>
     </article>
   </div>
+
+  <p *ngIf="visibleSavedReports.length === 0" class="saved-report-workflow-empty">
+    No saved reports are in this preparation stage yet.
+  </p>
 </section>
 
 <p *ngIf="savedReportMessage" aria-live="polite" class="saved-report-message">{{savedReportMessage}}</p>

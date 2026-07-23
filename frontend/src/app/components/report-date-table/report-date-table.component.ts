@@ -22,6 +22,8 @@ type SortDirection = 'asc' | 'desc';
 type EstimateOutlook = 'all' | 'positive' | 'loss' | 'breakEven';
 type CatalystProfile = 'all' | 'volatileCrowded' | 'moveDriven' | 'crowdedOnly' | 'lowerRisk';
 type MarketCapCohort = 'all' | 'small' | 'mid' | 'large' | 'mega';
+type SavedReportStatus = 'research' | 'watching' | 'ready' | 'skip';
+type SavedReportFilter = 'all' | SavedReportStatus;
 
 interface ReportDateSummary {
   companyCount: number;
@@ -92,6 +94,7 @@ interface SavedReport {
   impliedMove: number;
   shortInterest: number;
   marketCap: string | number;
+  status?: SavedReportStatus;
 }
 
 @Component({
@@ -135,6 +138,13 @@ export class ReportDateTableComponent implements OnInit {
   exportMessage = '';
   savedReportMessage = '';
   savedReports: SavedReport[] = [];
+  savedReportFilter: SavedReportFilter = 'all';
+  readonly savedReportWorkflowStages: Array<{key: SavedReportStatus; label: string; detail: string}> = [
+    {key: 'research', label: 'Research', detail: 'Needs a first review'},
+    {key: 'watching', label: 'Watching', detail: 'Catalyst is on deck'},
+    {key: 'ready', label: 'Ready', detail: 'Plan is prepared'},
+    {key: 'skip', label: 'Skip', detail: 'No action planned'}
+  ];
   opportunityMapPoints: OpportunityMapPoint[] = [];
   opportunityRiskLine = 50;
   opportunityZeroLine = 50;
@@ -208,9 +218,11 @@ export class ReportDateTableComponent implements OnInit {
         estimate: this.getEstimateValue(stock),
         impliedMove: this.getPercentageValue(stock, 'Implied Move'),
         shortInterest: this.getPercentageValue(stock, 'Short Interest'),
-        marketCap: stock['Market Cap']
+        marketCap: stock['Market Cap'],
+        status: 'research' as SavedReportStatus
       }, ...this.savedReports].slice(0, 20);
       this.savedReportMessage = `${stock.Ticker} saved for follow-up.`;
+      this.savedReportFilter = 'all';
     }
 
     this.persistSavedReports();
@@ -226,8 +238,45 @@ export class ReportDateTableComponent implements OnInit {
 
   clearSavedReports(): void {
     this.savedReports = [];
+    this.savedReportFilter = 'all';
     this.savedReportMessage = 'Saved report shortlist cleared.';
     this.persistSavedReports();
+  }
+
+  get visibleSavedReports(): SavedReport[] {
+    if (this.savedReportFilter === 'all') {
+      return this.savedReports;
+    }
+
+    return this.savedReports.filter((report) => this.getSavedReportStatus(report) === this.savedReportFilter);
+  }
+
+  getSavedReportStatus(report: SavedReport): SavedReportStatus {
+    return this.normalizeSavedReportStatus(report.status);
+  }
+
+  getSavedReportStatusCount(status: SavedReportStatus): number {
+    return this.savedReports.filter((report) => this.getSavedReportStatus(report) === status).length;
+  }
+
+  setSavedReportFilter(filter: SavedReportFilter): void {
+    this.savedReportFilter = filter;
+  }
+
+  setSavedReportStatus(report: SavedReport, status: SavedReportStatus): void {
+    const normalizedStatus = this.normalizeSavedReportStatus(status);
+
+    this.savedReports = this.savedReports.map((savedReport) => (
+      savedReport.ticker === report.ticker && savedReport.reportDate === report.reportDate
+        ? {...savedReport, status: normalizedStatus}
+        : savedReport
+    ));
+    this.savedReportMessage = `${report.ticker} moved to ${this.getSavedReportStatusLabel(normalizedStatus)}.`;
+    this.persistSavedReports();
+  }
+
+  getSavedReportStatusLabel(status: SavedReportStatus): string {
+    return this.savedReportWorkflowStages.find((stage) => stage.key === status)?.label || 'Research';
   }
 
   fetchStockInfoByDate(date:string): void {
@@ -727,11 +776,18 @@ export class ReportDateTableComponent implements OnInit {
     try {
       const storedReports = JSON.parse(localStorage.getItem(this.savedReportStorageKey) || '[]');
       return Array.isArray(storedReports)
-        ? storedReports.filter((report) => report && report.ticker && report.reportDate).slice(0, 20)
+        ? storedReports
+          .filter((report) => report && report.ticker && report.reportDate)
+          .map((report) => ({...report, status: this.normalizeSavedReportStatus(report.status)}))
+          .slice(0, 20)
         : [];
     } catch (error) {
       return [];
     }
+  }
+
+  private normalizeSavedReportStatus(status: unknown): SavedReportStatus {
+    return status === 'watching' || status === 'ready' || status === 'skip' ? status : 'research';
   }
 
   private persistSavedReports(): void {

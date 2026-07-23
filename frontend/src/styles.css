@@ -376,6 +376,39 @@ body { margin: 0;font-family: sans-serif, "Franklin Gothic Book", Verdana; }
   gap: 0.75rem;
 }
 
+.saved-report-workflow {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.55rem;
+  margin-bottom: 1rem;
+}
+
+.saved-report-workflow-card {
+  display: grid;
+  gap: 0.2rem;
+  border: 1px solid #b7d8cc;
+  border-radius: 6px;
+  background: white;
+  color: #173e32;
+  cursor: pointer;
+  padding: 0.65rem;
+  text-align: left;
+}
+
+.saved-report-workflow-card strong {
+  font-size: 1.35rem;
+}
+
+.saved-report-workflow-card small {
+  color: #52665f;
+}
+
+.saved-report-workflow-card--active {
+  border-color: #278464;
+  background: #def3eb;
+  box-shadow: inset 0 0 0 1px #278464;
+}
+
 .saved-report-card {
   display: grid;
   gap: 0.7rem;
@@ -385,6 +418,10 @@ body { margin: 0;font-family: sans-serif, "Franklin Gothic Book", Verdana; }
   background: white;
   padding: 0.85rem;
 }
+
+.saved-report-card[data-status="watching"] { border-top-color: #d58a20; }
+.saved-report-card[data-status="ready"] { border-top-color: #3f51b5; }
+.saved-report-card[data-status="skip"] { border-top-color: #98a2b3; }
 
 .saved-report-card > a {
   display: grid;
@@ -402,7 +439,7 @@ body { margin: 0;font-family: sans-serif, "Franklin Gothic Book", Verdana; }
   font-size: 1.35rem;
 }
 
-.saved-report-card > div {
+.saved-report-metrics {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.35rem;
@@ -410,17 +447,52 @@ body { margin: 0;font-family: sans-serif, "Franklin Gothic Book", Verdana; }
   font-size: 0.75rem;
 }
 
-.saved-report-card > div span {
+.saved-report-metrics span {
   display: grid;
 }
 
-.saved-report-card > button {
-  justify-self: start;
+.saved-report-actions {
+  align-items: flex-end;
+  display: flex;
+  gap: 0.65rem;
+  justify-content: space-between;
+}
+
+.saved-report-actions label {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.saved-report-actions label span {
+  color: #52665f;
+  font-size: 0.66rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.saved-report-actions select {
+  border: 1px solid #b7d8cc;
+  border-radius: 4px;
+  background: white;
+  color: #173e32;
+  min-height: 2rem;
+  padding: 0 0.45rem;
+}
+
+.saved-report-actions button {
   border: 0;
   background: transparent;
   color: #b42318;
   cursor: pointer;
   padding: 0;
+}
+
+.saved-report-workflow-empty {
+  border: 1px dashed #9fcbbd;
+  color: #52665f;
+  margin: 0;
+  padding: 0.9rem;
+  text-align: center;
 }
 
 .saved-report-message {
@@ -451,6 +523,18 @@ body { margin: 0;font-family: sans-serif, "Franklin Gothic Book", Verdana; }
   }
 
   .saved-reports-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .saved-report-workflow {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .saved-report-workflow {
     grid-template-columns: 1fr;
   }
 }
