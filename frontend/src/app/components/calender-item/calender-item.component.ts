@@ -35,6 +35,7 @@ export class CalenderItemComponent implements OnInit {
   calendarRiskProfile = 'any';
   calendarHorizonDays = 30;
   calendarExportMessage = '';
+  calendarShareMessage = '';
 
   slideConfig = {
     infinite: false,
@@ -49,6 +50,7 @@ export class CalenderItemComponent implements OnInit {
   constructor(private calenderService: GetCalenderService) {}
 
   ngOnInit(): void {
+    this.restoreCalendarView();
 
     // @ts-ignore
     this.calenderService.getCalenderData().subscribe((data: string) => {
@@ -121,7 +123,35 @@ export class CalenderItemComponent implements OnInit {
     this.minimumCalendarMarketCap = 0;
     this.calendarRiskProfile = 'any';
     this.calendarHorizonDays = 30;
+    this.calendarShareMessage = '';
+    window.history.replaceState({}, '', window.location.pathname);
     this.applyCalendarFilters();
+  }
+
+  shareCalendarView(): void {
+    const sharedUrl = new URL(window.location.href);
+
+    sharedUrl.search = '';
+    this.setCalendarQueryParam(sharedUrl, 'q', this.calendarSearchText.trim());
+    this.setCalendarQueryParam(sharedUrl, 'move', this.minimumCalendarImpliedMove, 0);
+    this.setCalendarQueryParam(sharedUrl, 'short', this.minimumCalendarShortInterest, 0);
+    this.setCalendarQueryParam(sharedUrl, 'cap', this.minimumCalendarMarketCap, 0);
+    this.setCalendarQueryParam(sharedUrl, 'profile', this.calendarRiskProfile, 'any');
+    this.setCalendarQueryParam(sharedUrl, 'window', this.calendarHorizonDays, 30);
+    window.history.replaceState({}, '', `${sharedUrl.pathname}${sharedUrl.search}${sharedUrl.hash}`);
+
+    if (!navigator.clipboard) {
+      this.calendarShareMessage = 'Shared scanner link is ready in the address bar.';
+      return;
+    }
+
+    navigator.clipboard.writeText(sharedUrl.toString())
+      .then(() => {
+        this.calendarShareMessage = 'Shared scanner link copied to the clipboard.';
+      })
+      .catch(() => {
+        this.calendarShareMessage = 'Shared scanner link is ready in the address bar.';
+      });
   }
 
   exportFilteredCalendar(): void {
@@ -361,6 +391,46 @@ export class CalenderItemComponent implements OnInit {
       .replace(/\n/g, '\\n')
       .replace(/,/g, '\\,')
       .replace(/;/g, '\\;');
+  }
+
+  private restoreCalendarView(): void {
+    const query = new URLSearchParams(window.location.search);
+    const riskProfiles = ['any', 'highMove', 'shortSqueeze', 'megaCap', 'growthVolatility'];
+
+    this.calendarSearchText = (query.get('q') || '').slice(0, 100);
+    this.minimumCalendarImpliedMove = this.readCalendarNumberFilter(query, 'move', [0, 3, 5, 8, 10], 0);
+    this.minimumCalendarShortInterest = this.readCalendarNumberFilter(query, 'short', [0, 5, 10, 15, 20], 0);
+    this.minimumCalendarMarketCap = this.readCalendarNumberFilter(query, 'cap', [0, 1, 10, 50, 100], 0);
+    this.calendarHorizonDays = this.readCalendarNumberFilter(query, 'window', [0, 7, 30, 90], 30);
+
+    const requestedProfile = query.get('profile') || 'any';
+    this.calendarRiskProfile = riskProfiles.includes(requestedProfile) ? requestedProfile : 'any';
+
+    if (query.toString()) {
+      this.calendarShareMessage = 'Shared scanner settings restored from this link.';
+    }
+  }
+
+  private readCalendarNumberFilter(
+    query: URLSearchParams,
+    key: string,
+    allowedValues: number[],
+    fallback: number
+  ): number {
+    const requestedValue = Number(query.get(key));
+
+    return allowedValues.includes(requestedValue) ? requestedValue : fallback;
+  }
+
+  private setCalendarQueryParam(
+    sharedUrl: URL,
+    key: string,
+    value: string | number,
+    defaultValue: string | number = ''
+  ): void {
+    if (value !== defaultValue && value !== '') {
+      sharedUrl.searchParams.set(key, String(value));
+    }
   }
 
   private groupDataByReportDate(data: CalenderData[]): { [key: string]: CalenderData[] } {

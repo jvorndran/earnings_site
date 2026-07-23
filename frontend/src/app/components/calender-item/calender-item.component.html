@@ -6,6 +6,12 @@
     </div>
     <div class="calendar-filter-actions">
       <button
+        (click)="shareCalendarView()"
+        class="calendar-clear-button"
+        type="button">
+        Share Scanner View
+      </button>
+      <button
         (click)="exportFilteredCalendar()"
         [disabled]="getVisibleCompanyCount() === 0"
         class="calendar-clear-button"
@@ -18,6 +24,9 @@
 
   <p *ngIf="calendarExportMessage" aria-live="polite" class="calendar-export-message">
     {{calendarExportMessage}}
+  </p>
+  <p *ngIf="calendarShareMessage" aria-live="polite" class="calendar-share-message">
+    {{calendarShareMessage}}
   </p>
 
   <div class="calendar-filter-grid">

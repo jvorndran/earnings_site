@@ -1032,7 +1032,8 @@ body { margin: 0;font-family: sans-serif, "Franklin Gothic Book", Verdana; }
   gap: 0.65rem;
 }
 
-.calendar-export-message {
+.calendar-export-message,
+.calendar-share-message {
   color: #334155;
   font-size: 0.9rem;
   margin: 0.75rem 0 0;
