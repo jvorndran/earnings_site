@@ -4,8 +4,21 @@
       <h2>Calendar Scanner</h2>
       <span>{{getVisibleCompanyCount()}} matching companies across {{getDates(filteredCalenderData).length}} report dates</span>
     </div>
-    <button (click)="clearCalendarFilters()" class="calendar-clear-button" type="button">Clear</button>
+    <div class="calendar-filter-actions">
+      <button
+        (click)="exportFilteredCalendar()"
+        [disabled]="getVisibleCompanyCount() === 0"
+        class="calendar-clear-button"
+        type="button">
+        Export Calendar
+      </button>
+      <button (click)="clearCalendarFilters()" class="calendar-clear-button" type="button">Clear</button>
+    </div>
   </div>
+
+  <p *ngIf="calendarExportMessage" aria-live="polite" class="calendar-export-message">
+    {{calendarExportMessage}}
+  </p>
 
   <div class="calendar-filter-grid">
     <label>

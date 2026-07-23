@@ -34,6 +34,7 @@ export class CalenderItemComponent implements OnInit {
   minimumCalendarMarketCap = 0;
   calendarRiskProfile = 'any';
   calendarHorizonDays = 30;
+  calendarExportMessage = '';
 
   slideConfig = {
     infinite: false,
@@ -121,6 +122,61 @@ export class CalenderItemComponent implements OnInit {
     this.calendarRiskProfile = 'any';
     this.calendarHorizonDays = 30;
     this.applyCalendarFilters();
+  }
+
+  exportFilteredCalendar(): void {
+    const reportEntries = Object.entries(this.filteredCalenderData)
+      .flatMap(([date, items]) => items.map((item) => ({date, item})));
+
+    if (reportEntries.length === 0) {
+      this.calendarExportMessage = 'No matching earnings reports to export.';
+      return;
+    }
+
+    const timestamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+    const events = reportEntries.flatMap(({date, item}) => {
+      const reportDate = date.replace(/\D/g, '').slice(0, 8);
+      const nextDate = this.getNextCalendarDate(date);
+      const description = [
+        item.Name,
+        `EPS estimate: ${Number(item.Estimate).toFixed(2)}`,
+        `Implied move: ${this.formatPercentValue(item.Implied_Move)}`,
+        `Short interest: ${this.formatPercentValue(item.Short_Interest)}`
+      ].join('\n');
+      const detailUrl = `${window.location.origin}/${this.formatDateRoute(date)}/${encodeURIComponent(item.Ticker)}`;
+
+      return [
+        'BEGIN:VEVENT',
+        `UID:${this.escapeCalendarText(`${item.Ticker}-${reportDate}@earnings-site`)}`,
+        `DTSTAMP:${timestamp}`,
+        `DTSTART;VALUE=DATE:${reportDate}`,
+        `DTEND;VALUE=DATE:${nextDate}`,
+        `SUMMARY:${this.escapeCalendarText(`${item.Ticker} earnings report`)}`,
+        `DESCRIPTION:${this.escapeCalendarText(description)}`,
+        `URL:${detailUrl}`,
+        'END:VEVENT'
+      ];
+    });
+    const calendar = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//Earnings Site//Filtered Earnings Calendar//EN',
+      'CALSCALE:GREGORIAN',
+      'METHOD:PUBLISH',
+      ...events,
+      'END:VCALENDAR'
+    ].join('\r\n');
+    const blob = new Blob([calendar], {type: 'text/calendar;charset=utf-8'});
+    const downloadUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+
+    link.href = downloadUrl;
+    link.download = `earnings-calendar-${new Date().toISOString().slice(0, 10)}.ics`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(downloadUrl);
+    this.calendarExportMessage = `${reportEntries.length} matching report${reportEntries.length === 1 ? '' : 's'} exported to your calendar.`;
   }
 
   getVisibleCompanyCount(): number {
@@ -286,6 +342,25 @@ export class CalenderItemComponent implements OnInit {
     }
 
     return true;
+  }
+
+  private getNextCalendarDate(dateString: string): string {
+    const [year, month, day] = dateString.split('-').map((part) => Number(part));
+    const nextDate = new Date(Date.UTC(year, month - 1, day + 1));
+
+    return [
+      nextDate.getUTCFullYear(),
+      String(nextDate.getUTCMonth() + 1).padStart(2, '0'),
+      String(nextDate.getUTCDate()).padStart(2, '0')
+    ].join('');
+  }
+
+  private escapeCalendarText(value: string): string {
+    return value
+      .replace(/\\/g, '\\\\')
+      .replace(/\n/g, '\\n')
+      .replace(/,/g, '\\,')
+      .replace(/;/g, '\\;');
   }
 
   private groupDataByReportDate(data: CalenderData[]): { [key: string]: CalenderData[] } {

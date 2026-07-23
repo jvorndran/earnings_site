@@ -1025,3 +1025,15 @@ body { margin: 0;font-family: sans-serif, "Franklin Gothic Book", Verdana; }
     grid-template-columns: 1fr;
   }
 }
+.calendar-filter-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.calendar-export-message {
+  color: #334155;
+  font-size: 0.9rem;
+  margin: 0.75rem 0 0;
+}
