@@ -136,6 +136,47 @@
   </div>
 </section>
 
+<section *ngIf="getCalendarWeekSummaries() as calendarWeeks" class="calendar-week-planner">
+  <div class="catalyst-leaderboard-header">
+    <div>
+      <h2>Earnings Week Planner</h2>
+      <span>Compare weekly report load and focus the calendar on one week</span>
+    </div>
+    <button
+      *ngIf="selectedCalendarWeek !== 'all'"
+      (click)="selectCalendarWeek(selectedCalendarWeek)"
+      class="calendar-clear-button"
+      type="button">
+      Show All Weeks
+    </button>
+  </div>
+
+  <div *ngIf="calendarWeeks.length > 0; else noWeekMatches" class="calendar-week-grid">
+    <button
+      *ngFor="let week of calendarWeeks"
+      (click)="selectCalendarWeek(week.key)"
+      [class.is-active]="selectedCalendarWeek === week.key"
+      [attr.aria-pressed]="selectedCalendarWeek === week.key"
+      class="calendar-week-card"
+      type="button">
+      <span class="calendar-week-card__dates">
+        {{week.startDate | date: 'LLL d'}} - {{week.endDate | date: 'LLL d'}}
+      </span>
+      <strong>{{week.companyCount}} reports</strong>
+      <span>{{week.reportDateCount}} active dates</span>
+      <span>Avg move {{week.avgImpliedMove | number:'1.1-1'}}%</span>
+      <span>{{week.highRiskCount}} elevated-risk names</span>
+      <small *ngIf="week.leader">
+        Lead catalyst: {{week.leader.item.Ticker}} ({{week.leader.score | number:'1.0-0'}})
+      </small>
+    </button>
+  </div>
+
+  <ng-template #noWeekMatches>
+    <div class="calendar-empty-state">No report weeks match the active scanner settings.</div>
+  </ng-template>
+</section>
+
 <section *ngIf="getCatalystLeaders().length > 0" class="catalyst-leaderboard">
   <div class="catalyst-leaderboard-header">
     <div>

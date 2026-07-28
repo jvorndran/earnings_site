@@ -19,6 +19,17 @@ interface CalendarOverview {
   largestMarketCapItem: CalenderData | null;
 }
 
+interface CalendarWeekSummary {
+  key: string;
+  startDate: string;
+  endDate: string;
+  reportDateCount: number;
+  companyCount: number;
+  avgImpliedMove: number;
+  highRiskCount: number;
+  leader: CalendarCatalyst | null;
+}
+
 @Component({
   selector: 'app-calender-item',
   templateUrl: './calender-item.component.html',
@@ -34,6 +45,7 @@ export class CalenderItemComponent implements OnInit {
   minimumCalendarMarketCap = 0;
   calendarRiskProfile = 'any';
   calendarHorizonDays = 30;
+  selectedCalendarWeek = 'all';
   calendarExportMessage = '';
   calendarShareMessage = '';
 
@@ -85,20 +97,12 @@ export class CalenderItemComponent implements OnInit {
         return;
       }
 
-      const filteredItems = items.filter((item) => {
-        const matchesSearch = normalizedSearch.length === 0 ||
-          item.Ticker.toLowerCase().includes(normalizedSearch) ||
-          item.Name.toLowerCase().includes(normalizedSearch);
-        const impliedMove = this.getPercentValue(item.Implied_Move);
-        const shortInterest = this.getPercentValue(item.Short_Interest);
-        const marketCap = this.getMarketCapInBillions(item.Market_Cap);
+      if (this.selectedCalendarWeek !== 'all' && this.getCalendarWeekKey(date) !== this.selectedCalendarWeek) {
+        return;
+      }
 
-        return matchesSearch &&
-          impliedMove >= this.minimumCalendarImpliedMove &&
-          shortInterest >= this.minimumCalendarShortInterest &&
-          marketCap >= this.minimumCalendarMarketCap &&
-          this.matchesRiskProfile(item);
-      }).sort((firstItem, secondItem) => {
+      const filteredItems = items.filter((item) => this.matchesCalendarFilters(item, normalizedSearch))
+        .sort((firstItem, secondItem) => {
         const moveDifference = secondItem.Implied_Move - firstItem.Implied_Move;
 
         if (moveDifference !== 0) {
@@ -123,6 +127,7 @@ export class CalenderItemComponent implements OnInit {
     this.minimumCalendarMarketCap = 0;
     this.calendarRiskProfile = 'any';
     this.calendarHorizonDays = 30;
+    this.selectedCalendarWeek = 'all';
     this.calendarShareMessage = '';
     window.history.replaceState({}, '', window.location.pathname);
     this.applyCalendarFilters();
@@ -138,6 +143,7 @@ export class CalenderItemComponent implements OnInit {
     this.setCalendarQueryParam(sharedUrl, 'cap', this.minimumCalendarMarketCap, 0);
     this.setCalendarQueryParam(sharedUrl, 'profile', this.calendarRiskProfile, 'any');
     this.setCalendarQueryParam(sharedUrl, 'window', this.calendarHorizonDays, 30);
+    this.setCalendarQueryParam(sharedUrl, 'week', this.selectedCalendarWeek, 'all');
     window.history.replaceState({}, '', `${sharedUrl.pathname}${sharedUrl.search}${sharedUrl.hash}`);
 
     if (!navigator.clipboard) {
@@ -251,6 +257,68 @@ export class CalenderItemComponent implements OnInit {
       busiestDateCount: busiestEntry[1].length,
       largestMarketCapItem
     };
+  }
+
+  getCalendarWeekSummaries(): CalendarWeekSummary[] {
+    const normalizedSearch = this.calendarSearchText.trim().toLowerCase();
+    const weekEntries = new Map<string, Array<{date: string; item: CalenderData}>>();
+
+    Object.entries(this.calenderData).forEach(([date, items]) => {
+      if (!this.isDateInCalendarHorizon(date)) {
+        return;
+      }
+
+      const matches = items.filter((item) => this.matchesCalendarFilters(item, normalizedSearch));
+
+      if (matches.length === 0) {
+        return;
+      }
+
+      const weekKey = this.getCalendarWeekKey(date);
+      const existingEntries = weekEntries.get(weekKey) || [];
+      weekEntries.set(weekKey, [
+        ...existingEntries,
+        ...matches.map((item) => ({date, item}))
+      ]);
+    });
+
+    return [...weekEntries.entries()]
+      .sort(([firstWeek], [secondWeek]) => firstWeek.localeCompare(secondWeek))
+      .map(([weekKey, entries]) => {
+        const reportDates = new Set(entries.map((entry) => entry.date));
+        const totalImpliedMove = entries.reduce(
+          (total, entry) => total + this.getPercentValue(entry.item.Implied_Move),
+          0
+        );
+        const leader = entries.reduce<CalendarCatalyst | null>((currentLeader, entry) => {
+          const candidate = {
+            date: entry.date,
+            item: entry.item,
+            score: this.getCatalystScore(entry.item)
+          };
+
+          return !currentLeader || candidate.score > currentLeader.score ? candidate : currentLeader;
+        }, null);
+
+        return {
+          key: weekKey,
+          startDate: weekKey,
+          endDate: this.offsetCalendarDate(weekKey, 6),
+          reportDateCount: reportDates.size,
+          companyCount: entries.length,
+          avgImpliedMove: totalImpliedMove / entries.length,
+          highRiskCount: entries.filter((entry) => (
+            this.getPercentValue(entry.item.Implied_Move) >= 8 ||
+            this.getPercentValue(entry.item.Short_Interest) >= 15
+          )).length,
+          leader
+        };
+      });
+  }
+
+  selectCalendarWeek(weekKey: string): void {
+    this.selectedCalendarWeek = this.selectedCalendarWeek === weekKey ? 'all' : weekKey;
+    this.applyCalendarFilters();
   }
 
   getCalendarStats(date: string): { count: number; avgImpliedMove: number; maxShortInterest: number; totalMarketCap: number } {
@@ -374,6 +442,45 @@ export class CalenderItemComponent implements OnInit {
     return true;
   }
 
+  private matchesCalendarFilters(item: CalenderData, normalizedSearch: string): boolean {
+    const matchesSearch = normalizedSearch.length === 0 ||
+      item.Ticker.toLowerCase().includes(normalizedSearch) ||
+      item.Name.toLowerCase().includes(normalizedSearch);
+    const impliedMove = this.getPercentValue(item.Implied_Move);
+    const shortInterest = this.getPercentValue(item.Short_Interest);
+    const marketCap = this.getMarketCapInBillions(item.Market_Cap);
+
+    return matchesSearch &&
+      impliedMove >= this.minimumCalendarImpliedMove &&
+      shortInterest >= this.minimumCalendarShortInterest &&
+      marketCap >= this.minimumCalendarMarketCap &&
+      this.matchesRiskProfile(item);
+  }
+
+  private getCalendarWeekKey(dateString: string): string {
+    const [year, month, day] = dateString.split('-').map((part) => Number(part));
+    const date = new Date(Date.UTC(year, month - 1, day));
+    const daysSinceMonday = (date.getUTCDay() + 6) % 7;
+    date.setUTCDate(date.getUTCDate() - daysSinceMonday);
+
+    return [
+      date.getUTCFullYear(),
+      String(date.getUTCMonth() + 1).padStart(2, '0'),
+      String(date.getUTCDate()).padStart(2, '0')
+    ].join('-');
+  }
+
+  private offsetCalendarDate(dateString: string, dayOffset: number): string {
+    const [year, month, day] = dateString.split('-').map((part) => Number(part));
+    const date = new Date(Date.UTC(year, month - 1, day + dayOffset));
+
+    return [
+      date.getUTCFullYear(),
+      String(date.getUTCMonth() + 1).padStart(2, '0'),
+      String(date.getUTCDate()).padStart(2, '0')
+    ].join('-');
+  }
+
   private getNextCalendarDate(dateString: string): string {
     const [year, month, day] = dateString.split('-').map((part) => Number(part));
     const nextDate = new Date(Date.UTC(year, month - 1, day + 1));
@@ -405,6 +512,10 @@ export class CalenderItemComponent implements OnInit {
 
     const requestedProfile = query.get('profile') || 'any';
     this.calendarRiskProfile = riskProfiles.includes(requestedProfile) ? requestedProfile : 'any';
+    const requestedWeek = query.get('week') || 'all';
+    this.selectedCalendarWeek = requestedWeek === 'all' || /^\d{4}-\d{2}-\d{2}$/.test(requestedWeek)
+      ? requestedWeek
+      : 'all';
 
     if (query.toString()) {
       this.calendarShareMessage = 'Shared scanner settings restored from this link.';
