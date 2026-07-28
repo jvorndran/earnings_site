@@ -30,6 +30,20 @@ interface CalendarWeekSummary {
   leader: CalendarCatalyst | null;
 }
 
+type SavedReportStatus = 'research' | 'watching' | 'ready' | 'skip';
+type SavedReportFilter = 'all' | SavedReportStatus;
+
+interface SavedCalendarReport {
+  ticker: string;
+  name: string;
+  reportDate: string;
+  estimate: number;
+  impliedMove: number;
+  shortInterest: number;
+  marketCap: string | number;
+  status?: SavedReportStatus;
+}
+
 @Component({
   selector: 'app-calender-item',
   templateUrl: './calender-item.component.html',
@@ -48,6 +62,16 @@ export class CalenderItemComponent implements OnInit {
   selectedCalendarWeek = 'all';
   calendarExportMessage = '';
   calendarShareMessage = '';
+  savedCalendarReports: SavedCalendarReport[] = [];
+  savedCalendarReportFilter: SavedReportFilter = 'all';
+  savedCalendarReportMessage = '';
+  readonly savedCalendarWorkflowStages: Array<{key: SavedReportStatus; label: string; detail: string}> = [
+    {key: 'research', label: 'Research', detail: 'Needs a first review'},
+    {key: 'watching', label: 'Watching', detail: 'Catalyst is on deck'},
+    {key: 'ready', label: 'Ready', detail: 'Plan is prepared'},
+    {key: 'skip', label: 'Skip', detail: 'No action planned'}
+  ];
+  private readonly savedReportStorageKey = 'earnings-site-saved-reports';
 
   slideConfig = {
     infinite: false,
@@ -62,6 +86,7 @@ export class CalenderItemComponent implements OnInit {
   constructor(private calenderService: GetCalenderService) {}
 
   ngOnInit(): void {
+    this.savedCalendarReports = this.loadSavedCalendarReports();
     this.restoreCalendarView();
 
     // @ts-ignore
@@ -321,6 +346,85 @@ export class CalenderItemComponent implements OnInit {
     this.applyCalendarFilters();
   }
 
+  get visibleSavedCalendarReports(): SavedCalendarReport[] {
+    return [...this.savedCalendarReports]
+      .filter((report) => (
+        this.savedCalendarReportFilter === 'all' ||
+        this.getSavedCalendarReportStatus(report) === this.savedCalendarReportFilter
+      ))
+      .sort((firstReport, secondReport) => firstReport.reportDate.localeCompare(secondReport.reportDate));
+  }
+
+  setSavedCalendarReportFilter(filter: SavedReportFilter): void {
+    this.savedCalendarReportFilter = filter;
+  }
+
+  getSavedCalendarReportStatus(report: SavedCalendarReport): SavedReportStatus {
+    return this.normalizeSavedCalendarReportStatus(report.status);
+  }
+
+  getSavedCalendarReportStatusCount(status: SavedReportStatus): number {
+    return this.savedCalendarReports
+      .filter((report) => this.getSavedCalendarReportStatus(report) === status)
+      .length;
+  }
+
+  setSavedCalendarReportStatus(report: SavedCalendarReport, status: SavedReportStatus): void {
+    const normalizedStatus = this.normalizeSavedCalendarReportStatus(status);
+    this.savedCalendarReports = this.savedCalendarReports.map((savedReport) => (
+      savedReport.ticker === report.ticker && savedReport.reportDate === report.reportDate
+        ? {...savedReport, status: normalizedStatus}
+        : savedReport
+    ));
+    this.persistSavedCalendarReports();
+    const statusLabel = this.savedCalendarWorkflowStages
+      .find((stage) => stage.key === normalizedStatus)?.label || 'Research';
+    this.savedCalendarReportMessage = `${report.ticker} moved to ${statusLabel}.`;
+  }
+
+  removeSavedCalendarReport(report: SavedCalendarReport): void {
+    this.savedCalendarReports = this.savedCalendarReports.filter((savedReport) => (
+      savedReport.ticker !== report.ticker || savedReport.reportDate !== report.reportDate
+    ));
+    this.persistSavedCalendarReports();
+    this.savedCalendarReportMessage = `${report.ticker} removed from the saved earnings queue.`;
+  }
+
+  formatSavedCalendarReportDate(reportDate: string): string {
+    const reportDateObject = this.parseSavedCalendarReportDate(reportDate);
+
+    return reportDateObject
+      ? new Intl.DateTimeFormat('en-US', {month: 'short', day: 'numeric', year: 'numeric'})
+        .format(reportDateObject)
+      : reportDate;
+  }
+
+  getSavedCalendarReportTiming(reportDate: string): string {
+    const reportDateObject = this.parseSavedCalendarReportDate(reportDate);
+
+    if (!reportDateObject) {
+      return 'Date unavailable';
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const daysUntil = Math.round((reportDateObject.getTime() - today.getTime()) / 86400000);
+
+    if (daysUntil === 0) {
+      return 'Reports today';
+    }
+
+    if (daysUntil === 1) {
+      return 'Reports tomorrow';
+    }
+
+    if (daysUntil > 1) {
+      return `Reports in ${daysUntil} days`;
+    }
+
+    return `Reported ${Math.abs(daysUntil)} day${daysUntil === -1 ? '' : 's'} ago`;
+  }
+
   getCalendarStats(date: string): { count: number; avgImpliedMove: number; maxShortInterest: number; totalMarketCap: number } {
     const items = this.filteredCalenderData[date] || [];
 
@@ -455,6 +559,49 @@ export class CalenderItemComponent implements OnInit {
       shortInterest >= this.minimumCalendarShortInterest &&
       marketCap >= this.minimumCalendarMarketCap &&
       this.matchesRiskProfile(item);
+  }
+
+  private loadSavedCalendarReports(): SavedCalendarReport[] {
+    try {
+      const storedReports = JSON.parse(localStorage.getItem(this.savedReportStorageKey) || '[]');
+
+      return Array.isArray(storedReports)
+        ? storedReports
+          .filter((report) => report && report.ticker && report.reportDate)
+          .map((report) => ({
+            ...report,
+            status: this.normalizeSavedCalendarReportStatus(report.status)
+          }))
+          .slice(0, 20)
+        : [];
+    } catch (error) {
+      return [];
+    }
+  }
+
+  private normalizeSavedCalendarReportStatus(status: unknown): SavedReportStatus {
+    return status === 'watching' || status === 'ready' || status === 'skip' ? status : 'research';
+  }
+
+  private persistSavedCalendarReports(): void {
+    try {
+      localStorage.setItem(this.savedReportStorageKey, JSON.stringify(this.savedCalendarReports));
+    } catch (error) {
+      this.savedCalendarReportMessage = 'Saved reports are unavailable in this browser.';
+    }
+  }
+
+  private parseSavedCalendarReportDate(reportDate: string): Date | null {
+    if (!/^\d{8}$/.test(reportDate)) {
+      return null;
+    }
+
+    const year = Number(reportDate.slice(0, 4));
+    const month = Number(reportDate.slice(4, 6));
+    const day = Number(reportDate.slice(6, 8));
+    const date = new Date(year, month - 1, day);
+
+    return Number.isNaN(date.getTime()) ? null : date;
   }
 
   private getCalendarWeekKey(dateString: string): string {

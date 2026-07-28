@@ -177,6 +177,88 @@
   </ng-template>
 </section>
 
+<section *ngIf="savedCalendarReports.length > 0" class="saved-calendar-queue">
+  <div class="catalyst-leaderboard-header">
+    <div>
+      <h2>My Saved Earnings Queue</h2>
+      <span>Review every saved catalyst and preparation stage from the main calendar</span>
+    </div>
+  </div>
+
+  <div class="saved-calendar-workflow">
+    <button
+      (click)="setSavedCalendarReportFilter('all')"
+      [attr.aria-pressed]="savedCalendarReportFilter === 'all'"
+      [class.is-active]="savedCalendarReportFilter === 'all'"
+      type="button">
+      <span>All</span>
+      <strong>{{savedCalendarReports.length}}</strong>
+    </button>
+    <button
+      *ngFor="let stage of savedCalendarWorkflowStages"
+      (click)="setSavedCalendarReportFilter(stage.key)"
+      [attr.aria-pressed]="savedCalendarReportFilter === stage.key"
+      [class.is-active]="savedCalendarReportFilter === stage.key"
+      type="button">
+      <span>{{stage.label}}</span>
+      <strong>{{getSavedCalendarReportStatusCount(stage.key)}}</strong>
+      <small>{{stage.detail}}</small>
+    </button>
+  </div>
+
+  <div class="saved-calendar-grid">
+    <article
+      *ngFor="let report of visibleSavedCalendarReports"
+      [attr.data-status]="getSavedCalendarReportStatus(report)"
+      class="saved-calendar-card">
+      <div class="saved-calendar-card__header">
+        <div>
+          <strong>{{report.ticker}}</strong>
+          <span>{{report.name}}</span>
+        </div>
+        <a [routerLink]="['/', report.reportDate, report.ticker]">Open Report</a>
+      </div>
+
+      <div class="saved-calendar-card__date">
+        <strong>{{formatSavedCalendarReportDate(report.reportDate)}}</strong>
+        <span>{{getSavedCalendarReportTiming(report.reportDate)}}</span>
+      </div>
+
+      <div class="saved-calendar-card__metrics">
+        <span>Move <strong>{{report.impliedMove | number:'1.1-1'}}%</strong></span>
+        <span>Short <strong>{{report.shortInterest | number:'1.1-1'}}%</strong></span>
+        <span>EPS <strong>{{report.estimate | number:'1.2-2'}}</strong></span>
+      </div>
+
+      <div class="saved-calendar-card__actions">
+        <label>
+          <span>Preparation</span>
+          <select
+            (ngModelChange)="setSavedCalendarReportStatus(report, $event)"
+            [ngModel]="getSavedCalendarReportStatus(report)">
+            <option *ngFor="let stage of savedCalendarWorkflowStages" [ngValue]="stage.key">
+              {{stage.label}}
+            </option>
+          </select>
+        </label>
+        <button
+          (click)="removeSavedCalendarReport(report)"
+          [attr.aria-label]="'Remove ' + report.ticker + ' from saved earnings'"
+          type="button">
+          Remove
+        </button>
+      </div>
+    </article>
+  </div>
+
+  <p *ngIf="visibleSavedCalendarReports.length === 0" class="calendar-empty-state">
+    No saved earnings reports are in this preparation stage yet.
+  </p>
+  <p *ngIf="savedCalendarReportMessage" aria-live="polite" class="saved-calendar-message">
+    {{savedCalendarReportMessage}}
+  </p>
+</section>
+
 <section *ngIf="getCatalystLeaders().length > 0" class="catalyst-leaderboard">
   <div class="catalyst-leaderboard-header">
     <div>
