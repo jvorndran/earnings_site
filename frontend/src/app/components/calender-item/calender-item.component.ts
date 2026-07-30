@@ -55,6 +55,16 @@ interface SavedCalendarReport {
   status?: SavedReportStatus;
 }
 
+interface SavedEventLoad {
+  reportDate: string;
+  reports: SavedCalendarReport[];
+  readyCount: number;
+  averageImpliedMove: number;
+  suggestedRiskPerReady: number;
+  overloaded: boolean;
+  leader: SavedCalendarReport;
+}
+
 @Component({
   selector: 'app-calender-item',
   templateUrl: './calender-item.component.html',
@@ -77,6 +87,8 @@ export class CalenderItemComponent implements OnInit {
   savedCalendarReports: SavedCalendarReport[] = [];
   savedCalendarReportFilter: SavedReportFilter = 'all';
   savedCalendarReportMessage = '';
+  savedEventRiskBudget = 500;
+  savedEventCapacity = 2;
   readonly savedCalendarWorkflowStages: Array<{key: SavedReportStatus; label: string; detail: string}> = [
     {key: 'research', label: 'Research', detail: 'Needs a first review'},
     {key: 'watching', label: 'Watching', detail: 'Catalyst is on deck'},
@@ -434,6 +446,48 @@ export class CalenderItemComponent implements OnInit {
         this.getSavedCalendarReportStatus(report) === this.savedCalendarReportFilter
       ))
       .sort((firstReport, secondReport) => firstReport.reportDate.localeCompare(secondReport.reportDate));
+  }
+
+  getSavedEventLoads(): SavedEventLoad[] {
+    const activeReports = this.savedCalendarReports.filter((report) => (
+      this.getSavedCalendarReportStatus(report) !== 'skip'
+    ));
+    const reportsByDate = activeReports.reduce((groupedReports, report) => {
+      const reports = groupedReports.get(report.reportDate) || [];
+      groupedReports.set(report.reportDate, [...reports, report]);
+      return groupedReports;
+    }, new Map<string, SavedCalendarReport[]>());
+    const riskBudget = Number(this.savedEventRiskBudget);
+    const dailyRiskBudget = Number.isFinite(riskBudget) && riskBudget > 0 ? riskBudget : 0;
+    const capacity = Number(this.savedEventCapacity);
+    const dailyCapacity = Number.isFinite(capacity) && capacity > 0 ? Math.floor(capacity) : 1;
+
+    return [...reportsByDate.entries()]
+      .sort(([firstDate], [secondDate]) => firstDate.localeCompare(secondDate))
+      .map(([reportDate, reports]) => {
+        const readyCount = reports.filter((report) => (
+          this.getSavedCalendarReportStatus(report) === 'ready'
+        )).length;
+        const averageImpliedMove = reports.reduce(
+          (total, report) => total + Number(report.impliedMove || 0),
+          0
+        ) / reports.length;
+        const leader = reports.reduce((currentLeader, report) => (
+          Number(report.impliedMove || 0) > Number(currentLeader.impliedMove || 0)
+            ? report
+            : currentLeader
+        ), reports[0]);
+
+        return {
+          reportDate,
+          reports,
+          readyCount,
+          averageImpliedMove,
+          suggestedRiskPerReady: readyCount > 0 ? dailyRiskBudget / readyCount : 0,
+          overloaded: reports.length > dailyCapacity,
+          leader
+        };
+      });
   }
 
   setSavedCalendarReportFilter(filter: SavedReportFilter): void {

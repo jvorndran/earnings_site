@@ -298,6 +298,66 @@
   </p>
 </section>
 
+<section *ngIf="savedCalendarReports.length > 0" class="saved-event-load-planner">
+  <div class="saved-event-load-planner__header">
+    <div>
+      <h2>Saved Event Load Planner</h2>
+      <span>Spot crowded report dates and divide a daily event-risk budget across ready ideas</span>
+    </div>
+    <div class="saved-event-load-planner__inputs">
+      <label>
+        <span>Daily risk budget</span>
+        <input [(ngModel)]="savedEventRiskBudget" min="0" step="50" type="number">
+      </label>
+      <label>
+        <span>Max reports per day</span>
+        <input [(ngModel)]="savedEventCapacity" min="1" max="20" step="1" type="number">
+      </label>
+    </div>
+  </div>
+
+  <div *ngIf="getSavedEventLoads() as eventLoads" class="saved-event-load-planner__grid">
+    <article
+      *ngFor="let load of eventLoads"
+      [class.is-overloaded]="load.overloaded"
+      class="saved-event-load-card">
+      <div class="saved-event-load-card__header">
+        <div>
+          <span>{{formatSavedCalendarReportDate(load.reportDate)}}</span>
+          <strong>{{load.reports.length}} active idea{{load.reports.length === 1 ? '' : 's'}}</strong>
+        </div>
+        <em>{{load.overloaded ? 'Over capacity' : 'Within capacity'}}</em>
+      </div>
+
+      <div class="saved-event-load-card__metrics">
+        <span>Ready <strong>{{load.readyCount}}</strong></span>
+        <span>Avg move <strong>{{load.averageImpliedMove | number:'1.1-1'}}%</strong></span>
+        <span>
+          Risk / ready idea
+          <strong>{{load.readyCount > 0 ? (load.suggestedRiskPerReady | currency:'USD':'symbol':'1.0-0') : '-'}}</strong>
+        </span>
+      </div>
+
+      <div class="saved-event-load-card__tickers">
+        <span
+          *ngFor="let report of load.reports"
+          [attr.data-status]="getSavedCalendarReportStatus(report)">
+          {{report.ticker}}
+        </span>
+      </div>
+
+      <div class="saved-event-load-card__footer">
+        <small>Largest move: {{load.leader.ticker}} · {{load.leader.impliedMove | number:'1.1-1'}}%</small>
+        <a [routerLink]="['/', load.reportDate]">Open report date</a>
+      </div>
+    </article>
+  </div>
+
+  <p *ngIf="getSavedEventLoads().length === 0" class="calendar-empty-state">
+    Move at least one saved report out of Skip to build an event-load plan.
+  </p>
+</section>
+
 <section *ngIf="getCatalystLeaders().length > 0" class="catalyst-leaderboard">
   <div class="catalyst-leaderboard-header">
     <div>
