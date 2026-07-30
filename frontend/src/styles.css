@@ -1271,3 +1271,87 @@ body { margin: 0;font-family: sans-serif, "Franklin Gothic Book", Verdana; }
     flex-direction: column;
   }
 }
+.calendar-risk-timeline {
+  width: min(1180px, calc(100% - 32px));
+  margin: 22px auto;
+  padding: 24px;
+  border-radius: 22px;
+  background: linear-gradient(135deg, #111827, #1e293b);
+  color: #f8fafc;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.18);
+}
+
+.calendar-risk-timeline__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.calendar-risk-day {
+  display: grid;
+  gap: 6px;
+  min-height: 190px;
+  padding: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.7);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+}
+
+.calendar-risk-day:hover,
+.calendar-risk-day.is-active {
+  transform: translateY(-2px);
+  border-color: #38bdf8;
+  background: rgba(14, 116, 144, 0.25);
+}
+
+.calendar-risk-day[data-risk-level="elevated"] {
+  border-top: 4px solid #fb7185;
+}
+
+.calendar-risk-day[data-risk-level="active"] {
+  border-top: 4px solid #fbbf24;
+}
+
+.calendar-risk-day[data-risk-level="quiet"] {
+  border-top: 4px solid #34d399;
+}
+
+.calendar-risk-day__date {
+  color: #bae6fd;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.calendar-risk-day strong {
+  font-size: 1.25rem;
+}
+
+.calendar-risk-day span,
+.calendar-risk-day small {
+  color: #cbd5e1;
+}
+
+.calendar-risk-day em {
+  align-self: end;
+  color: #f8fafc;
+  font-style: normal;
+  font-weight: 800;
+}
+
+@media (max-width: 640px) {
+  .calendar-risk-timeline {
+    width: calc(100% - 20px);
+    padding: 18px;
+  }
+
+  .calendar-risk-timeline__grid {
+    grid-template-columns: 1fr;
+  }
+}

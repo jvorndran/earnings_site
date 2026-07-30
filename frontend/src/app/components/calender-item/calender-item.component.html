@@ -136,6 +136,45 @@
   </div>
 </section>
 
+<section *ngIf="getCalendarRiskTimeline() as riskTimeline" class="calendar-risk-timeline">
+  <div class="catalyst-leaderboard-header">
+    <div>
+      <h2>Daily Earnings Risk Load</h2>
+      <span>Compare event concentration by day, then focus the scanner on one report date</span>
+    </div>
+    <button
+      *ngIf="selectedCalendarDate !== 'all'"
+      (click)="selectCalendarDate(selectedCalendarDate)"
+      class="calendar-clear-button"
+      type="button">
+      Show All Dates
+    </button>
+  </div>
+
+  <div *ngIf="riskTimeline.length > 0; else noRiskTimeline" class="calendar-risk-timeline__grid">
+    <button
+      *ngFor="let day of riskTimeline"
+      (click)="selectCalendarDate(day.date)"
+      [attr.aria-pressed]="selectedCalendarDate === day.date"
+      [attr.data-risk-level]="day.riskLevel.toLowerCase()"
+      [class.is-active]="selectedCalendarDate === day.date"
+      class="calendar-risk-day"
+      type="button">
+      <span class="calendar-risk-day__date">{{day.date | date: 'EEE, LLL d'}}</span>
+      <strong>{{day.companyCount}} report{{day.companyCount === 1 ? '' : 's'}}</strong>
+      <span>{{day.averageImpliedMove | number:'1.1-1'}}% average move</span>
+      <span>{{day.highRiskCount}} elevated-risk name{{day.highRiskCount === 1 ? '' : 's'}}</span>
+      <small>{{formatMarketCap(day.totalMarketCap * 1000000000)}} combined cap</small>
+      <small *ngIf="day.leader">Lead: {{day.leader.item.Ticker}} · score {{day.leader.score | number:'1.0-0'}}</small>
+      <em>{{day.riskLevel}} load</em>
+    </button>
+  </div>
+
+  <ng-template #noRiskTimeline>
+    <div class="calendar-empty-state">No report dates match the active scanner settings.</div>
+  </ng-template>
+</section>
+
 <section *ngIf="getCalendarWeekSummaries() as calendarWeeks" class="calendar-week-planner">
   <div class="catalyst-leaderboard-header">
     <div>

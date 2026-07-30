@@ -30,6 +30,17 @@ interface CalendarWeekSummary {
   leader: CalendarCatalyst | null;
 }
 
+interface CalendarRiskDay {
+  date: string;
+  companyCount: number;
+  averageImpliedMove: number;
+  highRiskCount: number;
+  totalMarketCap: number;
+  riskScore: number;
+  riskLevel: 'Elevated' | 'Active' | 'Quiet';
+  leader: CalendarCatalyst | null;
+}
+
 type SavedReportStatus = 'research' | 'watching' | 'ready' | 'skip';
 type SavedReportFilter = 'all' | SavedReportStatus;
 
@@ -60,6 +71,7 @@ export class CalenderItemComponent implements OnInit {
   calendarRiskProfile = 'any';
   calendarHorizonDays = 30;
   selectedCalendarWeek = 'all';
+  selectedCalendarDate = 'all';
   calendarExportMessage = '';
   calendarShareMessage = '';
   savedCalendarReports: SavedCalendarReport[] = [];
@@ -126,6 +138,10 @@ export class CalenderItemComponent implements OnInit {
         return;
       }
 
+      if (this.selectedCalendarDate !== 'all' && date !== this.selectedCalendarDate) {
+        return;
+      }
+
       const filteredItems = items.filter((item) => this.matchesCalendarFilters(item, normalizedSearch))
         .sort((firstItem, secondItem) => {
         const moveDifference = secondItem.Implied_Move - firstItem.Implied_Move;
@@ -153,6 +169,7 @@ export class CalenderItemComponent implements OnInit {
     this.calendarRiskProfile = 'any';
     this.calendarHorizonDays = 30;
     this.selectedCalendarWeek = 'all';
+    this.selectedCalendarDate = 'all';
     this.calendarShareMessage = '';
     window.history.replaceState({}, '', window.location.pathname);
     this.applyCalendarFilters();
@@ -169,6 +186,7 @@ export class CalenderItemComponent implements OnInit {
     this.setCalendarQueryParam(sharedUrl, 'profile', this.calendarRiskProfile, 'any');
     this.setCalendarQueryParam(sharedUrl, 'window', this.calendarHorizonDays, 30);
     this.setCalendarQueryParam(sharedUrl, 'week', this.selectedCalendarWeek, 'all');
+    this.setCalendarQueryParam(sharedUrl, 'day', this.selectedCalendarDate, 'all');
     window.history.replaceState({}, '', `${sharedUrl.pathname}${sharedUrl.search}${sharedUrl.hash}`);
 
     if (!navigator.clipboard) {
@@ -341,8 +359,71 @@ export class CalenderItemComponent implements OnInit {
       });
   }
 
+  getCalendarRiskTimeline(): CalendarRiskDay[] {
+    const normalizedSearch = this.calendarSearchText.trim().toLowerCase();
+
+    return Object.entries(this.calenderData)
+      .filter(([date]) => (
+        this.isDateInCalendarHorizon(date) &&
+        (this.selectedCalendarWeek === 'all' || this.getCalendarWeekKey(date) === this.selectedCalendarWeek)
+      ))
+      .map(([date, items]) => {
+        const matchingItems = items.filter((item) => this.matchesCalendarFilters(item, normalizedSearch));
+
+        if (matchingItems.length === 0) {
+          return null;
+        }
+
+        const totalImpliedMove = matchingItems.reduce(
+          (total, item) => total + this.getPercentValue(item.Implied_Move),
+          0
+        );
+        const highRiskCount = matchingItems.filter((item) => (
+          this.getPercentValue(item.Implied_Move) >= 8 ||
+          this.getPercentValue(item.Short_Interest) >= 15
+        )).length;
+        const averageImpliedMove = totalImpliedMove / matchingItems.length;
+        const highRiskShare = highRiskCount / matchingItems.length;
+        const riskScore = averageImpliedMove + (highRiskShare * 10) + Math.min(matchingItems.length, 10) / 2;
+        const riskLevel = highRiskShare >= 0.5 || averageImpliedMove >= 8
+          ? 'Elevated'
+          : highRiskCount > 0 || averageImpliedMove >= 5
+            ? 'Active'
+            : 'Quiet';
+        const leaderItem = matchingItems.reduce((currentLeader, item) => (
+          this.getCatalystScore(item) > this.getCatalystScore(currentLeader) ? item : currentLeader
+        ), matchingItems[0]);
+
+        return {
+          date,
+          companyCount: matchingItems.length,
+          averageImpliedMove,
+          highRiskCount,
+          totalMarketCap: matchingItems.reduce(
+            (total, item) => total + this.getMarketCapInBillions(item.Market_Cap),
+            0
+          ),
+          riskScore,
+          riskLevel,
+          leader: {
+            date,
+            item: leaderItem,
+            score: this.getCatalystScore(leaderItem)
+          }
+        } as CalendarRiskDay;
+      })
+      .filter((day): day is CalendarRiskDay => day !== null)
+      .sort((firstDay, secondDay) => firstDay.date.localeCompare(secondDay.date));
+  }
+
+  selectCalendarDate(date: string): void {
+    this.selectedCalendarDate = this.selectedCalendarDate === date ? 'all' : date;
+    this.applyCalendarFilters();
+  }
+
   selectCalendarWeek(weekKey: string): void {
     this.selectedCalendarWeek = this.selectedCalendarWeek === weekKey ? 'all' : weekKey;
+    this.selectedCalendarDate = 'all';
     this.applyCalendarFilters();
   }
 
@@ -662,6 +743,10 @@ export class CalenderItemComponent implements OnInit {
     const requestedWeek = query.get('week') || 'all';
     this.selectedCalendarWeek = requestedWeek === 'all' || /^\d{4}-\d{2}-\d{2}$/.test(requestedWeek)
       ? requestedWeek
+      : 'all';
+    const requestedDay = query.get('day') || 'all';
+    this.selectedCalendarDate = requestedDay === 'all' || /^\d{4}-\d{2}-\d{2}$/.test(requestedDay)
+      ? requestedDay
       : 'all';
 
     if (query.toString()) {
