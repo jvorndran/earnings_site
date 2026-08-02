@@ -474,6 +474,28 @@
         <span>Short <strong>{{report.shortInterest | number:'1.1-1'}}%</strong></span>
         <span>EPS <strong>{{report.estimate | number:'1.2-2'}}</strong></span>
       </div>
+      <div class="saved-report-checklist">
+        <div class="saved-report-checklist-header">
+          <span>Preparation checklist</span>
+          <strong>{{getSavedReportPreparationCount(report)}}/{{savedReportPreparationSteps.length}} complete</strong>
+        </div>
+        <div
+          [attr.aria-label]="report.ticker + ' preparation progress'"
+          [attr.aria-valuenow]="getSavedReportPreparationPercent(report)"
+          aria-valuemax="100"
+          aria-valuemin="0"
+          class="saved-report-progress"
+          role="progressbar">
+          <span [style.width.%]="getSavedReportPreparationPercent(report)"></span>
+        </div>
+        <label *ngFor="let step of savedReportPreparationSteps">
+          <input
+            (change)="toggleSavedReportPreparation(report, step.key)"
+            [checked]="isSavedReportPreparationComplete(report, step.key)"
+            type="checkbox">
+          <span>{{step.label}}</span>
+        </label>
+      </div>
       <div class="saved-report-actions">
         <label>
           <span>Preparation</span>

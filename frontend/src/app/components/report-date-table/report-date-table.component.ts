@@ -24,6 +24,13 @@ type CatalystProfile = 'all' | 'volatileCrowded' | 'moveDriven' | 'crowdedOnly' 
 type MarketCapCohort = 'all' | 'small' | 'mid' | 'large' | 'mega';
 type SavedReportStatus = 'research' | 'watching' | 'ready' | 'skip';
 type SavedReportFilter = 'all' | SavedReportStatus;
+type SavedReportPreparationKey = 'estimateReviewed' | 'riskPlanned' | 'timingConfirmed';
+
+interface SavedReportPreparation {
+  estimateReviewed: boolean;
+  riskPlanned: boolean;
+  timingConfirmed: boolean;
+}
 
 interface ReportDateSummary {
   companyCount: number;
@@ -95,6 +102,7 @@ interface SavedReport {
   shortInterest: number;
   marketCap: string | number;
   status?: SavedReportStatus;
+  preparation?: Partial<SavedReportPreparation>;
 }
 
 @Component({
@@ -144,6 +152,11 @@ export class ReportDateTableComponent implements OnInit {
     {key: 'watching', label: 'Watching', detail: 'Catalyst is on deck'},
     {key: 'ready', label: 'Ready', detail: 'Plan is prepared'},
     {key: 'skip', label: 'Skip', detail: 'No action planned'}
+  ];
+  readonly savedReportPreparationSteps: Array<{key: SavedReportPreparationKey; label: string}> = [
+    {key: 'estimateReviewed', label: 'Review the consensus estimate'},
+    {key: 'riskPlanned', label: 'Set the event-risk budget'},
+    {key: 'timingConfirmed', label: 'Confirm report timing'}
   ];
   opportunityMapPoints: OpportunityMapPoint[] = [];
   opportunityRiskLine = 50;
@@ -219,7 +232,8 @@ export class ReportDateTableComponent implements OnInit {
         impliedMove: this.getPercentageValue(stock, 'Implied Move'),
         shortInterest: this.getPercentageValue(stock, 'Short Interest'),
         marketCap: stock['Market Cap'],
-        status: 'research' as SavedReportStatus
+        status: 'research' as SavedReportStatus,
+        preparation: this.normalizeSavedReportPreparation()
       }, ...this.savedReports].slice(0, 20);
       this.savedReportMessage = `${stock.Ticker} saved for follow-up.`;
       this.savedReportFilter = 'all';
@@ -277,6 +291,34 @@ export class ReportDateTableComponent implements OnInit {
 
   getSavedReportStatusLabel(status: SavedReportStatus): string {
     return this.savedReportWorkflowStages.find((stage) => stage.key === status)?.label || 'Research';
+  }
+
+  isSavedReportPreparationComplete(report: SavedReport, key: SavedReportPreparationKey): boolean {
+    return this.normalizeSavedReportPreparation(report.preparation)[key];
+  }
+
+  toggleSavedReportPreparation(report: SavedReport, key: SavedReportPreparationKey): void {
+    const preparation = this.normalizeSavedReportPreparation(report.preparation);
+    preparation[key] = !preparation[key];
+
+    this.savedReports = this.savedReports.map((savedReport) => (
+      savedReport.ticker === report.ticker && savedReport.reportDate === report.reportDate
+        ? {...savedReport, preparation}
+        : savedReport
+    ));
+
+    const completedCount = this.getSavedReportPreparationCount({...report, preparation});
+    this.savedReportMessage = `${report.ticker} preparation is ${completedCount} of ${this.savedReportPreparationSteps.length} complete.`;
+    this.persistSavedReports();
+  }
+
+  getSavedReportPreparationCount(report: SavedReport): number {
+    const preparation = this.normalizeSavedReportPreparation(report.preparation);
+    return this.savedReportPreparationSteps.filter((step) => preparation[step.key]).length;
+  }
+
+  getSavedReportPreparationPercent(report: SavedReport): number {
+    return Math.round((this.getSavedReportPreparationCount(report) / this.savedReportPreparationSteps.length) * 100);
   }
 
   fetchStockInfoByDate(date:string): void {
@@ -778,7 +820,11 @@ export class ReportDateTableComponent implements OnInit {
       return Array.isArray(storedReports)
         ? storedReports
           .filter((report) => report && report.ticker && report.reportDate)
-          .map((report) => ({...report, status: this.normalizeSavedReportStatus(report.status)}))
+          .map((report) => ({
+            ...report,
+            status: this.normalizeSavedReportStatus(report.status),
+            preparation: this.normalizeSavedReportPreparation(report.preparation)
+          }))
           .slice(0, 20)
         : [];
     } catch (error) {
@@ -788,6 +834,14 @@ export class ReportDateTableComponent implements OnInit {
 
   private normalizeSavedReportStatus(status: unknown): SavedReportStatus {
     return status === 'watching' || status === 'ready' || status === 'skip' ? status : 'research';
+  }
+
+  private normalizeSavedReportPreparation(preparation?: Partial<SavedReportPreparation>): SavedReportPreparation {
+    return {
+      estimateReviewed: preparation?.estimateReviewed === true,
+      riskPlanned: preparation?.riskPlanned === true,
+      timingConfirmed: preparation?.timingConfirmed === true
+    };
   }
 
   private persistSavedReports(): void {
