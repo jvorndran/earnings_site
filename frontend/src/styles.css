@@ -1582,6 +1582,66 @@ body { margin: 0;font-family: sans-serif, "Franklin Gothic Book", Verdana; }
   font-weight: 800;
 }
 
+.saved-report-journal {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+  padding: 13px;
+  border: 1px solid #dbe4f0;
+  border-radius: 10px;
+  background: #f8fbff;
+}
+
+.saved-report-journal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: #1e3a5f;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.saved-report-journal > p {
+  margin: -3px 0 2px;
+  color: #64748b;
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.saved-report-journal label {
+  display: grid;
+  gap: 5px;
+}
+
+.saved-report-journal label > span {
+  color: #475569;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.saved-report-journal textarea {
+  width: 100%;
+  min-height: 46px;
+  box-sizing: border-box;
+  resize: vertical;
+  border: 1px solid #cbd5e1;
+  border-radius: 7px;
+  background: #fff;
+  color: #0f172a;
+  font: inherit;
+  line-height: 1.35;
+  padding: 8px 9px;
+}
+
+.saved-report-journal textarea:focus {
+  outline: 2px solid #7dd3fc;
+  outline-offset: 1px;
+  border-color: #0ea5e9;
+}
+
 @media (max-width: 640px) {
   .calendar-risk-timeline {
     width: calc(100% - 20px);

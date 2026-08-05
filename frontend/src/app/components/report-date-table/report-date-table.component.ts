@@ -25,11 +25,18 @@ type MarketCapCohort = 'all' | 'small' | 'mid' | 'large' | 'mega';
 type SavedReportStatus = 'research' | 'watching' | 'ready' | 'skip';
 type SavedReportFilter = 'all' | SavedReportStatus;
 type SavedReportPreparationKey = 'estimateReviewed' | 'riskPlanned' | 'timingConfirmed';
+type SavedReportJournalKey = 'thesis' | 'risk' | 'decision';
 
 interface SavedReportPreparation {
   estimateReviewed: boolean;
   riskPlanned: boolean;
   timingConfirmed: boolean;
+}
+
+interface SavedReportJournal {
+  thesis: string;
+  risk: string;
+  decision: string;
 }
 
 interface ReportDateSummary {
@@ -103,6 +110,7 @@ interface SavedReport {
   marketCap: string | number;
   status?: SavedReportStatus;
   preparation?: Partial<SavedReportPreparation>;
+  journal?: Partial<SavedReportJournal>;
 }
 
 @Component({
@@ -319,6 +327,27 @@ export class ReportDateTableComponent implements OnInit {
 
   getSavedReportPreparationPercent(report: SavedReport): number {
     return Math.round((this.getSavedReportPreparationCount(report) / this.savedReportPreparationSteps.length) * 100);
+  }
+
+  getSavedReportJournal(report: SavedReport): SavedReportJournal {
+    return this.normalizeSavedReportJournal(report.journal);
+  }
+
+  getSavedReportJournalCount(report: SavedReport): number {
+    const journal = this.getSavedReportJournal(report);
+    return Object.values(journal).filter((entry) => entry.trim().length > 0).length;
+  }
+
+  updateSavedReportJournal(report: SavedReport, key: SavedReportJournalKey, value: string): void {
+    const journal = this.getSavedReportJournal(report);
+    journal[key] = this.normalizeSavedReportJournalText(value);
+
+    this.savedReports = this.savedReports.map((savedReport) => (
+      savedReport.ticker === report.ticker && savedReport.reportDate === report.reportDate
+        ? {...savedReport, journal}
+        : savedReport
+    ));
+    this.persistSavedReports();
   }
 
   fetchStockInfoByDate(date:string): void {
@@ -823,7 +852,8 @@ export class ReportDateTableComponent implements OnInit {
           .map((report) => ({
             ...report,
             status: this.normalizeSavedReportStatus(report.status),
-            preparation: this.normalizeSavedReportPreparation(report.preparation)
+            preparation: this.normalizeSavedReportPreparation(report.preparation),
+            journal: this.normalizeSavedReportJournal(report.journal)
           }))
           .slice(0, 20)
         : [];
@@ -842,6 +872,18 @@ export class ReportDateTableComponent implements OnInit {
       riskPlanned: preparation?.riskPlanned === true,
       timingConfirmed: preparation?.timingConfirmed === true
     };
+  }
+
+  private normalizeSavedReportJournal(journal?: Partial<SavedReportJournal>): SavedReportJournal {
+    return {
+      thesis: this.normalizeSavedReportJournalText(journal?.thesis),
+      risk: this.normalizeSavedReportJournalText(journal?.risk),
+      decision: this.normalizeSavedReportJournalText(journal?.decision)
+    };
+  }
+
+  private normalizeSavedReportJournalText(value: unknown): string {
+    return typeof value === 'string' ? value.slice(0, 280) : '';
   }
 
   private persistSavedReports(): void {

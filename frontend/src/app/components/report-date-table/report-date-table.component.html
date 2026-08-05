@@ -496,6 +496,40 @@
           <span>{{step.label}}</span>
         </label>
       </div>
+      <div class="saved-report-journal">
+        <div class="saved-report-journal-header">
+          <span>Decision journal</span>
+          <strong>{{getSavedReportJournalCount(report)}}/3 captured</strong>
+        </div>
+        <p>Keep the event thesis, the key risk, and the action decision with this saved report.</p>
+        <label>
+          <span>Thesis</span>
+          <textarea
+            (ngModelChange)="updateSavedReportJournal(report, 'thesis', $event)"
+            [ngModel]="getSavedReportJournal(report).thesis"
+            maxlength="280"
+            placeholder="What needs to go right?"
+            rows="2"></textarea>
+        </label>
+        <label>
+          <span>Key risk</span>
+          <textarea
+            (ngModelChange)="updateSavedReportJournal(report, 'risk', $event)"
+            [ngModel]="getSavedReportJournal(report).risk"
+            maxlength="280"
+            placeholder="What would invalidate the idea?"
+            rows="2"></textarea>
+        </label>
+        <label>
+          <span>Event decision</span>
+          <textarea
+            (ngModelChange)="updateSavedReportJournal(report, 'decision', $event)"
+            [ngModel]="getSavedReportJournal(report).decision"
+            maxlength="280"
+            placeholder="Size, wait, avoid, or review after results?"
+            rows="2"></textarea>
+        </label>
+      </div>
       <div class="saved-report-actions">
         <label>
           <span>Preparation</span>
