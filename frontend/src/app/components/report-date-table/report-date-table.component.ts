@@ -273,6 +273,68 @@ export class ReportDateTableComponent implements OnInit {
     this.persistSavedReports();
   }
 
+  downloadSavedReportsBackup(): void {
+    if (this.savedReports.length === 0) {
+      this.savedReportMessage = 'Save at least one report before downloading a backup.';
+      return;
+    }
+
+    const backup = JSON.stringify({
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      reports: this.savedReports
+    }, null, 2);
+    const blob = new Blob([backup], {type: 'application/json'});
+    const downloadUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+
+    link.href = downloadUrl;
+    link.download = `earnings-research-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(downloadUrl);
+    this.savedReportMessage = `${this.savedReports.length} saved report${this.savedReports.length === 1 ? '' : 's'} downloaded as a backup.`;
+  }
+
+  restoreSavedReportsBackup(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.item(0);
+    input.value = '';
+
+    if (!file) {
+      return;
+    }
+
+    if (file.size > 1024 * 1024) {
+      this.savedReportMessage = 'Choose a saved-report backup smaller than 1 MB.';
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const parsedBackup = JSON.parse(String(reader.result || ''));
+        const importedReports = this.normalizeSavedReports(parsedBackup?.reports);
+
+        if (importedReports.length === 0) {
+          throw new Error('No saved reports found');
+        }
+
+        this.savedReports = importedReports;
+        this.savedReportFilter = 'all';
+        this.persistSavedReports();
+        this.savedReportMessage = `${importedReports.length} saved report${importedReports.length === 1 ? '' : 's'} restored from backup.`;
+      } catch (error) {
+        this.savedReportMessage = 'That file is not a valid saved-report backup.';
+      }
+    };
+    reader.onerror = () => {
+      this.savedReportMessage = 'The selected backup could not be read.';
+    };
+    reader.readAsText(file);
+  }
+
   get visibleSavedReports(): SavedReport[] {
     if (this.savedReportFilter === 'all') {
       return this.savedReports;
@@ -881,20 +943,33 @@ export class ReportDateTableComponent implements OnInit {
   private loadSavedReports(): SavedReport[] {
     try {
       const storedReports = JSON.parse(localStorage.getItem(this.savedReportStorageKey) || '[]');
-      return Array.isArray(storedReports)
-        ? storedReports
-          .filter((report) => report && report.ticker && report.reportDate)
-          .map((report) => ({
-            ...report,
-            status: this.normalizeSavedReportStatus(report.status),
-            preparation: this.normalizeSavedReportPreparation(report.preparation),
-            journal: this.normalizeSavedReportJournal(report.journal)
-          }))
-          .slice(0, 20)
-        : [];
+      return this.normalizeSavedReports(storedReports);
     } catch (error) {
       return [];
     }
+  }
+
+  private normalizeSavedReports(reports: unknown): SavedReport[] {
+    if (!Array.isArray(reports)) {
+      return [];
+    }
+
+    return reports
+      .filter((report): report is Partial<SavedReport> => (
+        Boolean(report) && typeof report === 'object' &&
+        typeof (report as SavedReport).ticker === 'string' &&
+        typeof (report as SavedReport).reportDate === 'string'
+      ))
+      .map((report) => ({
+        ...report,
+        ticker: report.ticker!.trim().toUpperCase(),
+        reportDate: report.reportDate!.trim(),
+        status: this.normalizeSavedReportStatus(report.status),
+        preparation: this.normalizeSavedReportPreparation(report.preparation),
+        journal: this.normalizeSavedReportJournal(report.journal)
+      }))
+      .filter((report) => report.ticker.length > 0 && report.reportDate.length > 0)
+      .slice(0, 20) as SavedReport[];
   }
 
   private normalizeSavedReportStatus(status: unknown): SavedReportStatus {

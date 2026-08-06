@@ -432,7 +432,14 @@
       <h2>Saved Earnings Workflow</h2>
       <span>{{savedReports.length}} of 20 reports saved in this browser · move each catalyst through preparation</span>
     </div>
-    <button (click)="clearSavedReports()" class="clear-button" type="button">Clear Saved</button>
+    <div class="saved-reports-header-actions">
+      <button (click)="downloadSavedReportsBackup()" class="saved-report-backup-button" type="button">Download Backup</button>
+      <label class="saved-report-backup-button">
+        Restore Backup
+        <input (change)="restoreSavedReportsBackup($event)" accept="application/json,.json" class="saved-report-backup-input" type="file">
+      </label>
+      <button (click)="clearSavedReports()" class="clear-button" type="button">Clear Saved</button>
+    </div>
   </div>
 
   <div class="saved-report-workflow">

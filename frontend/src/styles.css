@@ -358,6 +358,42 @@ body { margin: 0;font-family: sans-serif, "Franklin Gothic Book", Verdana; }
   margin-bottom: 1rem;
 }
 
+.saved-reports-header-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.45rem;
+}
+
+.saved-report-backup-button {
+  border: 1px solid #4a7c6b;
+  border-radius: 5px;
+  background: white;
+  color: #245b48;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.45rem 0.6rem;
+}
+
+.saved-report-backup-button:hover,
+.saved-report-backup-button:focus-within {
+  border-color: #176249;
+  background: #def3eb;
+}
+
+.saved-report-backup-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+
 .saved-reports-header h2 {
   margin: 0 0 0.25rem;
   color: #165b45;
