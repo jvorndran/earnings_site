@@ -459,6 +459,26 @@
     </button>
   </div>
 
+  <section *ngIf="getSavedReportFocusItems().length > 0" class="saved-report-focus" aria-labelledby="saved-report-focus-title">
+    <div class="saved-report-focus__header">
+      <div>
+        <h3 id="saved-report-focus-title">Next Earnings Actions</h3>
+        <span>Prioritized by unfinished preparation, missing decision context, and event pressure.</span>
+      </div>
+      <strong>Top {{getSavedReportFocusItems().length}} to review</strong>
+    </div>
+    <div class="saved-report-focus__grid">
+      <a *ngFor="let focus of getSavedReportFocusItems()" [routerLink]="['/', focus.report.reportDate, focus.report.ticker]" class="saved-report-focus__item">
+        <div>
+          <span>{{formatDate(focus.report.reportDate)}}</span>
+          <strong>{{focus.report.ticker}}</strong>
+        </div>
+        <p>{{focus.nextAction}}</p>
+        <small>{{focus.preparationRemaining}} checklist step{{focus.preparationRemaining === 1 ? '' : 's'}} · {{focus.journalRemaining}} journal field{{focus.journalRemaining === 1 ? '' : 's'}} remaining</small>
+      </a>
+    </div>
+  </section>
+
   <div class="saved-reports-grid">
     <article
       *ngFor="let report of visibleSavedReports"

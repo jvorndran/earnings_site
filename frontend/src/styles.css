@@ -376,6 +376,93 @@ body { margin: 0;font-family: sans-serif, "Franklin Gothic Book", Verdana; }
   gap: 0.75rem;
 }
 
+.saved-report-focus {
+  margin: 0 0 1rem;
+  padding: 0.9rem;
+  border: 1px solid #c5d8ec;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #f5f9ff, #eef8f5);
+}
+
+.saved-report-focus__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.saved-report-focus__header h3 {
+  margin: 0 0 0.2rem;
+  color: #17456d;
+  font-size: 1rem;
+}
+
+.saved-report-focus__header span,
+.saved-report-focus__item span,
+.saved-report-focus__item small {
+  color: #5d6e80;
+  font-size: 0.75rem;
+}
+
+.saved-report-focus__header > strong {
+  color: #176249;
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.saved-report-focus__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 0.65rem;
+}
+
+.saved-report-focus__item {
+  display: grid;
+  gap: 0.42rem;
+  border: 1px solid #cedaea;
+  border-radius: 6px;
+  background: #fff;
+  color: #173e32;
+  padding: 0.75rem;
+  text-decoration: none;
+  transition: border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease;
+}
+
+.saved-report-focus__item:hover,
+.saved-report-focus__item:focus-visible {
+  border-color: #2d7aaf;
+  box-shadow: 0 5px 14px rgba(31, 76, 112, 0.14);
+  outline: none;
+  transform: translateY(-1px);
+}
+
+.saved-report-focus__item > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.saved-report-focus__item > div > strong {
+  color: #17456d;
+  font-size: 1.12rem;
+}
+
+.saved-report-focus__item p {
+  margin: 0;
+  color: #243b53;
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+
+@media (max-width: 560px) {
+  .saved-report-focus__header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
 .saved-report-workflow {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));

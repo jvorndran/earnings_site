@@ -113,6 +113,14 @@ interface SavedReport {
   journal?: Partial<SavedReportJournal>;
 }
 
+interface SavedReportFocus {
+  report: SavedReport;
+  score: number;
+  nextAction: string;
+  preparationRemaining: number;
+  journalRemaining: number;
+}
+
 @Component({
   selector: 'app-report-date-table',
   templateUrl: './report-date-table.component.html',
@@ -271,6 +279,33 @@ export class ReportDateTableComponent implements OnInit {
     }
 
     return this.savedReports.filter((report) => this.getSavedReportStatus(report) === this.savedReportFilter);
+  }
+
+  getSavedReportFocusItems(): SavedReportFocus[] {
+    return this.savedReports
+      .filter((report) => this.getSavedReportStatus(report) !== 'skip')
+      .map((report) => {
+        const preparationRemaining = this.savedReportPreparationSteps.length - this.getSavedReportPreparationCount(report);
+        const journalRemaining = 3 - this.getSavedReportJournalCount(report);
+        const nextChecklistStep = this.savedReportPreparationSteps.find((step) => (
+          !this.isSavedReportPreparationComplete(report, step.key)
+        ));
+        const status = this.getSavedReportStatus(report);
+        const score = (preparationRemaining * 10) + (journalRemaining * 6) +
+          (status === 'research' ? 12 : status === 'watching' ? 6 : 0) +
+          (report.impliedMove >= 8 ? 4 : 0) + (report.shortInterest >= 10 ? 3 : 0);
+        const nextAction = nextChecklistStep
+          ? nextChecklistStep.label
+          : journalRemaining > 0
+            ? 'Capture the remaining decision journal fields'
+            : status === 'ready'
+              ? 'Review the ready event plan'
+              : 'Set the event workflow stage';
+
+        return {report, score, nextAction, preparationRemaining, journalRemaining};
+      })
+      .sort((first, second) => second.score - first.score || first.report.reportDate.localeCompare(second.report.reportDate))
+      .slice(0, 3);
   }
 
   getSavedReportStatus(report: SavedReport): SavedReportStatus {
