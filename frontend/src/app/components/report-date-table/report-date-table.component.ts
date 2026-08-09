@@ -121,6 +121,16 @@ interface SavedReportFocus {
   journalRemaining: number;
 }
 
+interface SavedReportReadiness {
+  activeCount: number;
+  fullyDocumentedCount: number;
+  journalFieldsRemaining: number;
+  nextReport: SavedReport | null;
+  preparationStepsRemaining: number;
+  readinessPercent: number;
+  skippedCount: number;
+}
+
 @Component({
   selector: 'app-report-date-table',
   templateUrl: './report-date-table.component.html',
@@ -368,6 +378,35 @@ export class ReportDateTableComponent implements OnInit {
       })
       .sort((first, second) => second.score - first.score || first.report.reportDate.localeCompare(second.report.reportDate))
       .slice(0, 3);
+  }
+
+  getSavedReportReadiness(): SavedReportReadiness {
+    const activeReports = this.savedReports.filter((report) => this.getSavedReportStatus(report) !== 'skip');
+    const preparationStepCount = this.savedReportPreparationSteps.length;
+    const journalFieldCount = 3;
+    const preparationStepsRemaining = activeReports.reduce((total, report) => (
+      total + preparationStepCount - this.getSavedReportPreparationCount(report)
+    ), 0);
+    const journalFieldsRemaining = activeReports.reduce((total, report) => (
+      total + journalFieldCount - this.getSavedReportJournalCount(report)
+    ), 0);
+    const totalResearchFields = activeReports.length * (preparationStepCount + journalFieldCount);
+    const completedResearchFields = totalResearchFields - preparationStepsRemaining - journalFieldsRemaining;
+    const nextReport = [...activeReports]
+      .sort((first, second) => first.reportDate.localeCompare(second.reportDate) || first.ticker.localeCompare(second.ticker))[0] || null;
+
+    return {
+      activeCount: activeReports.length,
+      fullyDocumentedCount: activeReports.filter((report) => (
+        this.getSavedReportPreparationCount(report) === preparationStepCount &&
+        this.getSavedReportJournalCount(report) === journalFieldCount
+      )).length,
+      journalFieldsRemaining,
+      nextReport,
+      preparationStepsRemaining,
+      readinessPercent: totalResearchFields === 0 ? 0 : Math.round((completedResearchFields / totalResearchFields) * 100),
+      skippedCount: this.savedReports.length - activeReports.length
+    };
   }
 
   getSavedReportStatus(report: SavedReport): SavedReportStatus {

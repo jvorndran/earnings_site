@@ -1765,6 +1765,106 @@ body { margin: 0;font-family: sans-serif, "Franklin Gothic Book", Verdana; }
   border-color: #0ea5e9;
 }
 
+.saved-report-readiness {
+  display: grid;
+  gap: 16px;
+  margin: 18px 0;
+  padding: 18px;
+  border: 1px solid #a5b4fc;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #eef2ff, #f8fafc);
+}
+
+.saved-report-readiness__header,
+.saved-report-readiness__next {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.saved-report-readiness__header h3 {
+  margin: 0 0 4px;
+  color: #312e81;
+  font-size: 1rem;
+}
+
+.saved-report-readiness__header span,
+.saved-report-readiness__next small,
+.saved-report-readiness__grid small,
+.saved-report-readiness__empty {
+  color: #475569;
+  font-size: 0.8rem;
+}
+
+.saved-report-readiness__header > strong {
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: #3730a3;
+  color: #fff;
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.saved-report-readiness__grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.saved-report-readiness__grid article {
+  display: grid;
+  gap: 5px;
+  min-height: 92px;
+  padding: 12px;
+  border: 1px solid #c7d2fe;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.84);
+}
+
+.saved-report-readiness__grid span {
+  color: #4338ca;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.saved-report-readiness__grid strong {
+  color: #1e1b4b;
+  font-size: 1.4rem;
+}
+
+.saved-report-readiness__next {
+  padding: 12px;
+  border: 1px solid #c7d2fe;
+  border-radius: 10px;
+  background: #fff;
+  color: inherit;
+  text-decoration: none;
+}
+
+.saved-report-readiness__next:hover,
+.saved-report-readiness__next:focus-visible {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
+}
+
+.saved-report-readiness__next > span {
+  color: #4338ca;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.saved-report-readiness__next > strong {
+  color: #1e1b4b;
+}
+
+.saved-report-readiness__empty {
+  margin: 0;
+}
+
 @media (max-width: 640px) {
   .calendar-risk-timeline {
     width: calc(100% - 20px);
@@ -1773,5 +1873,15 @@ body { margin: 0;font-family: sans-serif, "Franklin Gothic Book", Verdana; }
 
   .calendar-risk-timeline__grid {
     grid-template-columns: 1fr;
+  }
+
+  .saved-report-readiness__header,
+  .saved-report-readiness__next {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .saved-report-readiness__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

@@ -466,6 +466,49 @@
     </button>
   </div>
 
+  <section *ngIf="getSavedReportReadiness() as readiness" class="saved-report-readiness" aria-labelledby="saved-report-readiness-title">
+    <div class="saved-report-readiness__header">
+      <div>
+        <h3 id="saved-report-readiness-title">Research Readiness</h3>
+        <span>Track whether active earnings ideas have their preparation and decision context captured.</span>
+      </div>
+      <strong>{{readiness.readinessPercent}}% documented</strong>
+    </div>
+
+    <div *ngIf="readiness.activeCount > 0; else noActiveSavedReports" class="saved-report-readiness__grid">
+      <article>
+        <span>Active catalysts</span>
+        <strong>{{readiness.activeCount}}</strong>
+        <small>{{readiness.skippedCount}} marked as skip</small>
+      </article>
+      <article>
+        <span>Fully documented</span>
+        <strong>{{readiness.fullyDocumentedCount}}</strong>
+        <small>All checklist and journal fields complete</small>
+      </article>
+      <article>
+        <span>Preparation remaining</span>
+        <strong>{{readiness.preparationStepsRemaining}}</strong>
+        <small>Checklist step{{readiness.preparationStepsRemaining === 1 ? '' : 's'}} still open</small>
+      </article>
+      <article>
+        <span>Decision context</span>
+        <strong>{{readiness.journalFieldsRemaining}}</strong>
+        <small>Journal field{{readiness.journalFieldsRemaining === 1 ? '' : 's'}} still open</small>
+      </article>
+    </div>
+
+    <a *ngIf="readiness.nextReport" [routerLink]="['/', readiness.nextReport.reportDate, readiness.nextReport.ticker]" class="saved-report-readiness__next">
+      <span>Next active report</span>
+      <strong>{{readiness.nextReport.ticker}} · {{formatDate(readiness.nextReport.reportDate)}}</strong>
+      <small>Open the report to complete its event preparation.</small>
+    </a>
+
+    <ng-template #noActiveSavedReports>
+      <p class="saved-report-readiness__empty">All saved reports are marked Skip. Move one back to Research, Watching, or Ready to resume its workflow.</p>
+    </ng-template>
+  </section>
+
   <section *ngIf="getSavedReportFocusItems().length > 0" class="saved-report-focus" aria-labelledby="saved-report-focus-title">
     <div class="saved-report-focus__header">
       <div>
