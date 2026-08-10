@@ -131,6 +131,22 @@ interface SavedReportReadiness {
   skippedCount: number;
 }
 
+type SavedReportScheduleWindow = 'now' | 'nextWeek' | 'later' | 'past';
+
+interface SavedReportScheduleItem {
+  daysUntil: number | null;
+  journalRemaining: number;
+  preparationRemaining: number;
+  report: SavedReport;
+}
+
+interface SavedReportScheduleGroup {
+  detail: string;
+  items: SavedReportScheduleItem[];
+  key: SavedReportScheduleWindow;
+  label: string;
+}
+
 @Component({
   selector: 'app-report-date-table',
   templateUrl: './report-date-table.component.html',
@@ -407,6 +423,75 @@ export class ReportDateTableComponent implements OnInit {
       readinessPercent: totalResearchFields === 0 ? 0 : Math.round((completedResearchFields / totalResearchFields) * 100),
       skippedCount: this.savedReports.length - activeReports.length
     };
+  }
+
+  getSavedReportSchedule(now: Date = new Date()): SavedReportScheduleGroup[] {
+    const groups: SavedReportScheduleGroup[] = [
+      {key: 'now', label: 'Due now', detail: 'Today through the next two days', items: []},
+      {key: 'nextWeek', label: 'Next week', detail: 'Three to seven days away', items: []},
+      {key: 'later', label: 'Later', detail: 'More than one week away', items: []},
+      {key: 'past', label: 'Past / review', detail: 'A report date has passed or needs attention', items: []}
+    ];
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    this.savedReports
+      .filter((report) => this.getSavedReportStatus(report) !== 'skip')
+      .forEach((report) => {
+        const daysUntil = this.getSavedReportDaysUntil(report.reportDate, startOfToday);
+        const item: SavedReportScheduleItem = {
+          daysUntil,
+          journalRemaining: 3 - this.getSavedReportJournalCount(report),
+          preparationRemaining: this.savedReportPreparationSteps.length - this.getSavedReportPreparationCount(report),
+          report
+        };
+        const groupIndex = daysUntil === null || daysUntil < 0
+          ? 3
+          : daysUntil <= 2 ? 0 : daysUntil <= 7 ? 1 : 2;
+
+        groups[groupIndex].items.push(item);
+      });
+
+    return groups
+      .map((group) => ({
+        ...group,
+        items: group.items.sort((first, second) => {
+          const firstDate = first.daysUntil === null ? Number.MAX_SAFE_INTEGER : first.daysUntil;
+          const secondDate = second.daysUntil === null ? Number.MAX_SAFE_INTEGER : second.daysUntil;
+          return firstDate - secondDate || first.report.ticker.localeCompare(second.report.ticker);
+        })
+      }))
+      .filter((group) => group.items.length > 0);
+  }
+
+  formatSavedReportCountdown(daysUntil: number | null): string {
+    if (daysUntil === null) {
+      return 'Check report date';
+    }
+
+    if (daysUntil < 0) {
+      return `${Math.abs(daysUntil)} day${daysUntil === -1 ? '' : 's'} overdue`;
+    }
+
+    if (daysUntil === 0) {
+      return 'Reports today';
+    }
+
+    if (daysUntil === 1) {
+      return 'Tomorrow';
+    }
+
+    return `${daysUntil} days away`;
+  }
+
+  private getSavedReportDaysUntil(reportDate: string, startOfToday: Date): number | null {
+    const parsedDate = new Date(`${reportDate}T12:00:00`);
+
+    if (Number.isNaN(parsedDate.getTime())) {
+      return null;
+    }
+
+    const startOfReportDate = new Date(parsedDate.getFullYear(), parsedDate.getMonth(), parsedDate.getDate());
+    return Math.round((startOfReportDate.getTime() - startOfToday.getTime()) / 86400000);
   }
 
   getSavedReportStatus(report: SavedReport): SavedReportStatus {

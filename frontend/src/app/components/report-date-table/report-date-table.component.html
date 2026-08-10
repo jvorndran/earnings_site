@@ -529,6 +529,37 @@
     </div>
   </section>
 
+  <section *ngIf="getSavedReportSchedule().length > 0" class="saved-report-schedule" aria-labelledby="saved-report-schedule-title">
+    <div class="saved-report-schedule__header">
+      <div>
+        <h3 id="saved-report-schedule-title">Saved Earnings Schedule</h3>
+        <span>Organize active research by how close the report date is.</span>
+      </div>
+      <strong>{{getSavedReportSchedule().length}} active window{{getSavedReportSchedule().length === 1 ? '' : 's'}}</strong>
+    </div>
+
+    <div class="saved-report-schedule__grid">
+      <article *ngFor="let group of getSavedReportSchedule()" [attr.data-window]="group.key" class="saved-report-schedule__group">
+        <div class="saved-report-schedule__group-header">
+          <div>
+            <h4>{{group.label}}</h4>
+            <span>{{group.detail}}</span>
+          </div>
+          <strong>{{group.items.length}}</strong>
+        </div>
+
+        <a *ngFor="let item of group.items" [routerLink]="['/', item.report.reportDate, item.report.ticker]" class="saved-report-schedule__item">
+          <div>
+            <span>{{formatSavedReportCountdown(item.daysUntil)}}</span>
+            <strong>{{item.report.ticker}}</strong>
+            <small>{{formatDate(item.report.reportDate)}} - {{getSavedReportStatusLabel(getSavedReportStatus(item.report))}}</small>
+          </div>
+          <p>{{item.preparationRemaining}} prep - {{item.journalRemaining}} journal</p>
+        </a>
+      </article>
+    </div>
+  </section>
+
   <div class="saved-reports-grid">
     <article
       *ngFor="let report of visibleSavedReports"

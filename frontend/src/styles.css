@@ -1865,6 +1865,130 @@ body { margin: 0;font-family: sans-serif, "Franklin Gothic Book", Verdana; }
   margin: 0;
 }
 
+.saved-report-schedule {
+  display: grid;
+  gap: 14px;
+  margin: 18px 0;
+  padding: 18px;
+  border: 1px solid #bfdbfe;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #f0f9ff, #f8fafc);
+}
+
+.saved-report-schedule__header,
+.saved-report-schedule__group-header,
+.saved-report-schedule__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.saved-report-schedule__header h3,
+.saved-report-schedule__group-header h4 {
+  margin: 0 0 4px;
+  color: #0c4a6e;
+}
+
+.saved-report-schedule__header h3 {
+  font-size: 1rem;
+}
+
+.saved-report-schedule__group-header h4 {
+  font-size: 0.9rem;
+}
+
+.saved-report-schedule__header span,
+.saved-report-schedule__group-header span,
+.saved-report-schedule__item small,
+.saved-report-schedule__item p {
+  color: #475569;
+  font-size: 0.78rem;
+}
+
+.saved-report-schedule__header > strong {
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: #0369a1;
+  color: #fff;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.saved-report-schedule__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.saved-report-schedule__group {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid #d5e4f4;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.86);
+}
+
+.saved-report-schedule__group[data-window="now"] {
+  border-top: 3px solid #f59e0b;
+}
+
+.saved-report-schedule__group[data-window="past"] {
+  border-top: 3px solid #e11d48;
+}
+
+.saved-report-schedule__group-header > strong {
+  display: grid;
+  min-width: 26px;
+  height: 26px;
+  place-items: center;
+  border-radius: 50%;
+  background: #e0f2fe;
+  color: #075985;
+  font-size: 0.78rem;
+}
+
+.saved-report-schedule__item {
+  padding: 9px;
+  border: 1px solid #dbeafe;
+  border-radius: 8px;
+  background: #fff;
+  color: inherit;
+  text-decoration: none;
+}
+
+.saved-report-schedule__item:hover,
+.saved-report-schedule__item:focus-visible {
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.18);
+}
+
+.saved-report-schedule__item > div {
+  display: grid;
+  gap: 2px;
+}
+
+.saved-report-schedule__item span {
+  color: #0369a1;
+  font-size: 0.69rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.saved-report-schedule__item strong {
+  color: #0f172a;
+  font-size: 0.9rem;
+}
+
+.saved-report-schedule__item p {
+  margin: 0;
+  text-align: right;
+  white-space: nowrap;
+}
+
 @media (max-width: 640px) {
   .calendar-risk-timeline {
     width: calc(100% - 20px);
@@ -1883,5 +2007,16 @@ body { margin: 0;font-family: sans-serif, "Franklin Gothic Book", Verdana; }
 
   .saved-report-readiness__grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .saved-report-schedule__header,
+  .saved-report-schedule__group-header,
+  .saved-report-schedule__item {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .saved-report-schedule__item p {
+    text-align: left;
   }
 }
