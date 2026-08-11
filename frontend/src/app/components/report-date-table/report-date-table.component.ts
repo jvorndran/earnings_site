@@ -24,6 +24,8 @@ type CatalystProfile = 'all' | 'volatileCrowded' | 'moveDriven' | 'crowdedOnly' 
 type MarketCapCohort = 'all' | 'small' | 'mid' | 'large' | 'mega';
 type SavedReportStatus = 'research' | 'watching' | 'ready' | 'skip';
 type SavedReportFilter = 'all' | SavedReportStatus;
+type SavedReportStrategy = 'unassigned' | 'preEvent' | 'postEvent' | 'avoidEvent' | 'longTerm';
+type SavedReportStrategyFilter = 'all' | SavedReportStrategy;
 type SavedReportPreparationKey = 'estimateReviewed' | 'riskPlanned' | 'timingConfirmed';
 type SavedReportJournalKey = 'thesis' | 'risk' | 'decision';
 
@@ -109,6 +111,7 @@ interface SavedReport {
   shortInterest: number;
   marketCap: string | number;
   status?: SavedReportStatus;
+  strategy?: SavedReportStrategy;
   preparation?: Partial<SavedReportPreparation>;
   journal?: Partial<SavedReportJournal>;
 }
@@ -189,11 +192,19 @@ export class ReportDateTableComponent implements OnInit {
   savedReportMessage = '';
   savedReports: SavedReport[] = [];
   savedReportFilter: SavedReportFilter = 'all';
+  savedReportStrategyFilter: SavedReportStrategyFilter = 'all';
   readonly savedReportWorkflowStages: Array<{key: SavedReportStatus; label: string; detail: string}> = [
     {key: 'research', label: 'Research', detail: 'Needs a first review'},
     {key: 'watching', label: 'Watching', detail: 'Catalyst is on deck'},
     {key: 'ready', label: 'Ready', detail: 'Plan is prepared'},
     {key: 'skip', label: 'Skip', detail: 'No action planned'}
+  ];
+  readonly savedReportStrategies: Array<{key: SavedReportStrategy; label: string; detail: string}> = [
+    {key: 'unassigned', label: 'Needs decision', detail: 'Choose an event approach'},
+    {key: 'preEvent', label: 'Pre-event', detail: 'Plan for exposure before results'},
+    {key: 'postEvent', label: 'After results', detail: 'Wait for the report reaction'},
+    {key: 'avoidEvent', label: 'Avoid event', detail: 'No exposure through results'},
+    {key: 'longTerm', label: 'Long-term', detail: 'Research beyond this report'}
   ];
   readonly savedReportPreparationSteps: Array<{key: SavedReportPreparationKey; label: string}> = [
     {key: 'estimateReviewed', label: 'Review the consensus estimate'},
@@ -275,6 +286,7 @@ export class ReportDateTableComponent implements OnInit {
         shortInterest: this.getPercentageValue(stock, 'Short Interest'),
         marketCap: stock['Market Cap'],
         status: 'research' as SavedReportStatus,
+        strategy: 'unassigned' as SavedReportStrategy,
         preparation: this.normalizeSavedReportPreparation()
       }, ...this.savedReports].slice(0, 20);
       this.savedReportMessage = `${stock.Ticker} saved for follow-up.`;
@@ -362,11 +374,10 @@ export class ReportDateTableComponent implements OnInit {
   }
 
   get visibleSavedReports(): SavedReport[] {
-    if (this.savedReportFilter === 'all') {
-      return this.savedReports;
-    }
-
-    return this.savedReports.filter((report) => this.getSavedReportStatus(report) === this.savedReportFilter);
+    return this.savedReports.filter((report) => (
+      (this.savedReportFilter === 'all' || this.getSavedReportStatus(report) === this.savedReportFilter) &&
+      (this.savedReportStrategyFilter === 'all' || this.getSavedReportStrategy(report) === this.savedReportStrategyFilter)
+    ));
   }
 
   getSavedReportFocusItems(): SavedReportFocus[] {
@@ -502,8 +513,20 @@ export class ReportDateTableComponent implements OnInit {
     return this.savedReports.filter((report) => this.getSavedReportStatus(report) === status).length;
   }
 
+  getSavedReportStrategy(report: SavedReport): SavedReportStrategy {
+    return this.normalizeSavedReportStrategy(report.strategy);
+  }
+
+  getSavedReportStrategyCount(strategy: SavedReportStrategy): number {
+    return this.savedReports.filter((report) => this.getSavedReportStrategy(report) === strategy).length;
+  }
+
   setSavedReportFilter(filter: SavedReportFilter): void {
     this.savedReportFilter = filter;
+  }
+
+  setSavedReportStrategyFilter(filter: SavedReportStrategyFilter): void {
+    this.savedReportStrategyFilter = filter;
   }
 
   setSavedReportStatus(report: SavedReport, status: SavedReportStatus): void {
@@ -520,6 +543,22 @@ export class ReportDateTableComponent implements OnInit {
 
   getSavedReportStatusLabel(status: SavedReportStatus): string {
     return this.savedReportWorkflowStages.find((stage) => stage.key === status)?.label || 'Research';
+  }
+
+  setSavedReportStrategy(report: SavedReport, strategy: SavedReportStrategy): void {
+    const normalizedStrategy = this.normalizeSavedReportStrategy(strategy);
+
+    this.savedReports = this.savedReports.map((savedReport) => (
+      savedReport.ticker === report.ticker && savedReport.reportDate === report.reportDate
+        ? {...savedReport, strategy: normalizedStrategy}
+        : savedReport
+    ));
+    this.savedReportMessage = `${report.ticker} approach set to ${this.getSavedReportStrategyLabel(normalizedStrategy)}.`;
+    this.persistSavedReports();
+  }
+
+  getSavedReportStrategyLabel(strategy: SavedReportStrategy): string {
+    return this.savedReportStrategies.find((item) => item.key === strategy)?.label || 'Needs decision';
   }
 
   isSavedReportPreparationComplete(report: SavedReport, key: SavedReportPreparationKey): boolean {
@@ -1089,6 +1128,7 @@ export class ReportDateTableComponent implements OnInit {
         ticker: report.ticker!.trim().toUpperCase(),
         reportDate: report.reportDate!.trim(),
         status: this.normalizeSavedReportStatus(report.status),
+        strategy: this.normalizeSavedReportStrategy(report.strategy),
         preparation: this.normalizeSavedReportPreparation(report.preparation),
         journal: this.normalizeSavedReportJournal(report.journal)
       }))
@@ -1098,6 +1138,12 @@ export class ReportDateTableComponent implements OnInit {
 
   private normalizeSavedReportStatus(status: unknown): SavedReportStatus {
     return status === 'watching' || status === 'ready' || status === 'skip' ? status : 'research';
+  }
+
+  private normalizeSavedReportStrategy(strategy: unknown): SavedReportStrategy {
+    return strategy === 'preEvent' || strategy === 'postEvent' || strategy === 'avoidEvent' || strategy === 'longTerm'
+      ? strategy
+      : 'unassigned';
   }
 
   private normalizeSavedReportPreparation(preparation?: Partial<SavedReportPreparation>): SavedReportPreparation {

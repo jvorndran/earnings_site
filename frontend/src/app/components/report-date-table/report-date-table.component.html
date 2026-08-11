@@ -466,6 +466,40 @@
     </button>
   </div>
 
+  <section class="saved-report-strategy" aria-labelledby="saved-report-strategy-title">
+    <div class="saved-report-strategy__header">
+      <div>
+        <h3 id="saved-report-strategy-title">Event Strategy Board</h3>
+        <span>Give every saved report a clear approach, then focus the shortlist by that decision.</span>
+      </div>
+      <strong>{{visibleSavedReports.length}} report{{visibleSavedReports.length === 1 ? '' : 's'}} in view</strong>
+    </div>
+
+    <div class="saved-report-strategy__grid">
+      <button
+        (click)="setSavedReportStrategyFilter('all')"
+        [attr.aria-pressed]="savedReportStrategyFilter === 'all'"
+        [class.saved-report-strategy-card--active]="savedReportStrategyFilter === 'all'"
+        class="saved-report-strategy-card"
+        type="button">
+        <span>All approaches</span>
+        <strong>{{savedReports.length}}</strong>
+        <small>Full research shortlist</small>
+      </button>
+      <button
+        *ngFor="let strategy of savedReportStrategies"
+        (click)="setSavedReportStrategyFilter(strategy.key)"
+        [attr.aria-pressed]="savedReportStrategyFilter === strategy.key"
+        [class.saved-report-strategy-card--active]="savedReportStrategyFilter === strategy.key"
+        class="saved-report-strategy-card"
+        type="button">
+        <span>{{strategy.label}}</span>
+        <strong>{{getSavedReportStrategyCount(strategy.key)}}</strong>
+        <small>{{strategy.detail}}</small>
+      </button>
+    </div>
+  </section>
+
   <section *ngIf="getSavedReportReadiness() as readiness" class="saved-report-readiness" aria-labelledby="saved-report-readiness-title">
     <div class="saved-report-readiness__header">
       <div>
@@ -564,6 +598,7 @@
     <article
       *ngFor="let report of visibleSavedReports"
       [attr.data-status]="getSavedReportStatus(report)"
+      [attr.data-strategy]="getSavedReportStrategy(report)"
       class="saved-report-card">
       <a [routerLink]="['/', report.reportDate, report.ticker]">
         <span>{{formatDate(report.reportDate)}}</span>
@@ -640,6 +675,14 @@
             <option *ngFor="let stage of savedReportWorkflowStages" [ngValue]="stage.key">{{stage.label}}</option>
           </select>
         </label>
+        <label>
+          <span>Event approach</span>
+          <select
+            (ngModelChange)="setSavedReportStrategy(report, $event)"
+            [ngModel]="getSavedReportStrategy(report)">
+            <option *ngFor="let strategy of savedReportStrategies" [ngValue]="strategy.key">{{strategy.label}}</option>
+          </select>
+        </label>
         <button
           (click)="removeSavedReport(report)"
           [attr.aria-label]="'Remove ' + report.ticker + ' from saved reports'"
@@ -649,7 +692,7 @@
   </div>
 
   <p *ngIf="visibleSavedReports.length === 0" class="saved-report-workflow-empty">
-    No saved reports are in this preparation stage yet.
+    No saved reports match the selected preparation stage and event approach yet.
   </p>
 </section>
 
