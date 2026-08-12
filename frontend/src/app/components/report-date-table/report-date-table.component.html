@@ -594,6 +594,27 @@
     </div>
   </section>
 
+  <section *ngIf="getPostEarningsReviewItems().length > 0" class="saved-report-review-queue" aria-labelledby="saved-report-review-queue-title">
+    <div class="saved-report-review-queue__header">
+      <div>
+        <h3 id="saved-report-review-queue-title">Post-earnings Review Queue</h3>
+        <span>Close the loop on past reports by recording the market reaction and what to carry forward.</span>
+      </div>
+      <strong>{{getPostEarningsReviewCompleteCount()}}/{{getPostEarningsReviewItems().length}} complete</strong>
+    </div>
+
+    <div class="saved-report-review-queue__grid">
+      <a *ngFor="let item of getPostEarningsReviewItems()" [routerLink]="['/', item.report.reportDate, item.report.ticker]" class="saved-report-review-queue__item">
+        <div>
+          <span>{{item.daysSince}} day{{item.daysSince === 1 ? '' : 's'}} since report</span>
+          <strong>{{item.report.ticker}}</strong>
+          <small>{{formatDate(item.report.reportDate)}}</small>
+        </div>
+        <p>{{isSavedReportReviewComplete(item.report) ? getSavedReportReviewLabel(getSavedReportReview(item.report).outcome) : 'Review needed'}}</p>
+      </a>
+    </div>
+  </section>
+
   <div class="saved-reports-grid">
     <article
       *ngFor="let report of visibleSavedReports"
@@ -663,6 +684,43 @@
             [ngModel]="getSavedReportJournal(report).decision"
             maxlength="280"
             placeholder="Size, wait, avoid, or review after results?"
+            rows="2"></textarea>
+        </label>
+      </div>
+      <div *ngIf="isSavedReportReviewDue(report)" class="saved-report-review">
+        <div class="saved-report-review__header">
+          <div>
+            <span>Post-earnings review</span>
+            <small>Record the reaction and the lesson after this event.</small>
+          </div>
+          <strong [class.saved-report-review__status--complete]="isSavedReportReviewComplete(report)">
+            {{isSavedReportReviewComplete(report) ? 'Complete' : 'Needs notes'}}
+          </strong>
+        </div>
+        <label>
+          <span>Market reaction</span>
+          <select
+            (ngModelChange)="setSavedReportReviewOutcome(report, $event)"
+            [ngModel]="getSavedReportReview(report).outcome">
+            <option *ngFor="let outcome of savedReportReviewOutcomes" [ngValue]="outcome.key">{{outcome.label}}</option>
+          </select>
+        </label>
+        <label>
+          <span>What happened?</span>
+          <textarea
+            (ngModelChange)="updateSavedReportReviewNote(report, 'reaction', $event)"
+            [ngModel]="getSavedReportReview(report).reaction"
+            maxlength="280"
+            placeholder="What did the market and the core thesis do after results?"
+            rows="2"></textarea>
+        </label>
+        <label>
+          <span>Carry-forward lesson</span>
+          <textarea
+            (ngModelChange)="updateSavedReportReviewNote(report, 'lesson', $event)"
+            [ngModel]="getSavedReportReview(report).lesson"
+            maxlength="280"
+            placeholder="What would you repeat, change, or avoid next time?"
             rows="2"></textarea>
         </label>
       </div>

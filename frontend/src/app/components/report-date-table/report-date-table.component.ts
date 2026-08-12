@@ -28,6 +28,8 @@ type SavedReportStrategy = 'unassigned' | 'preEvent' | 'postEvent' | 'avoidEvent
 type SavedReportStrategyFilter = 'all' | SavedReportStrategy;
 type SavedReportPreparationKey = 'estimateReviewed' | 'riskPlanned' | 'timingConfirmed';
 type SavedReportJournalKey = 'thesis' | 'risk' | 'decision';
+type SavedReportReviewOutcome = 'unreviewed' | 'positive' | 'negative' | 'mixed' | 'flat';
+type SavedReportReviewKey = 'reaction' | 'lesson';
 
 interface SavedReportPreparation {
   estimateReviewed: boolean;
@@ -39,6 +41,12 @@ interface SavedReportJournal {
   thesis: string;
   risk: string;
   decision: string;
+}
+
+interface SavedReportReview {
+  outcome: SavedReportReviewOutcome;
+  reaction: string;
+  lesson: string;
 }
 
 interface ReportDateSummary {
@@ -114,6 +122,7 @@ interface SavedReport {
   strategy?: SavedReportStrategy;
   preparation?: Partial<SavedReportPreparation>;
   journal?: Partial<SavedReportJournal>;
+  review?: Partial<SavedReportReview>;
 }
 
 interface SavedReportFocus {
@@ -148,6 +157,11 @@ interface SavedReportScheduleGroup {
   items: SavedReportScheduleItem[];
   key: SavedReportScheduleWindow;
   label: string;
+}
+
+interface SavedReportReviewItem {
+  daysSince: number;
+  report: SavedReport;
 }
 
 @Component({
@@ -205,6 +219,13 @@ export class ReportDateTableComponent implements OnInit {
     {key: 'postEvent', label: 'After results', detail: 'Wait for the report reaction'},
     {key: 'avoidEvent', label: 'Avoid event', detail: 'No exposure through results'},
     {key: 'longTerm', label: 'Long-term', detail: 'Research beyond this report'}
+  ];
+  readonly savedReportReviewOutcomes: Array<{key: SavedReportReviewOutcome; label: string}> = [
+    {key: 'unreviewed', label: 'Not reviewed'},
+    {key: 'positive', label: 'Positive reaction'},
+    {key: 'negative', label: 'Negative reaction'},
+    {key: 'mixed', label: 'Mixed reaction'},
+    {key: 'flat', label: 'Muted reaction'}
   ];
   readonly savedReportPreparationSteps: Array<{key: SavedReportPreparationKey; label: string}> = [
     {key: 'estimateReviewed', label: 'Review the consensus estimate'},
@@ -287,7 +308,8 @@ export class ReportDateTableComponent implements OnInit {
         marketCap: stock['Market Cap'],
         status: 'research' as SavedReportStatus,
         strategy: 'unassigned' as SavedReportStrategy,
-        preparation: this.normalizeSavedReportPreparation()
+        preparation: this.normalizeSavedReportPreparation(),
+        review: this.normalizeSavedReportReview()
       }, ...this.savedReports].slice(0, 20);
       this.savedReportMessage = `${stock.Ticker} saved for follow-up.`;
       this.savedReportFilter = 'all';
@@ -474,6 +496,30 @@ export class ReportDateTableComponent implements OnInit {
       .filter((group) => group.items.length > 0);
   }
 
+  getPostEarningsReviewItems(now: Date = new Date()): SavedReportReviewItem[] {
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    return this.savedReports
+      .map((report) => ({report, daysUntil: this.getSavedReportDaysUntil(report.reportDate, startOfToday)}))
+      .filter((item): item is {report: SavedReport; daysUntil: number} => item.daysUntil !== null && item.daysUntil < 0)
+      .map((item) => ({report: item.report, daysSince: Math.abs(item.daysUntil)}))
+      .sort((first, second) => (
+        Number(this.isSavedReportReviewComplete(first.report)) - Number(this.isSavedReportReviewComplete(second.report)) ||
+        first.report.reportDate.localeCompare(second.report.reportDate) ||
+        first.report.ticker.localeCompare(second.report.ticker)
+      ));
+  }
+
+  getPostEarningsReviewCompleteCount(): number {
+    return this.getPostEarningsReviewItems().filter((item) => this.isSavedReportReviewComplete(item.report)).length;
+  }
+
+  isSavedReportReviewDue(report: SavedReport, now: Date = new Date()): boolean {
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const daysUntil = this.getSavedReportDaysUntil(report.reportDate, startOfToday);
+    return daysUntil !== null && daysUntil < 0;
+  }
+
   formatSavedReportCountdown(daysUntil: number | null): string {
     if (daysUntil === null) {
       return 'Check report date';
@@ -605,6 +651,42 @@ export class ReportDateTableComponent implements OnInit {
     this.savedReports = this.savedReports.map((savedReport) => (
       savedReport.ticker === report.ticker && savedReport.reportDate === report.reportDate
         ? {...savedReport, journal}
+        : savedReport
+    ));
+    this.persistSavedReports();
+  }
+
+  getSavedReportReview(report: SavedReport): SavedReportReview {
+    return this.normalizeSavedReportReview(report.review);
+  }
+
+  getSavedReportReviewLabel(outcome: SavedReportReviewOutcome): string {
+    return this.savedReportReviewOutcomes.find((item) => item.key === outcome)?.label || 'Not reviewed';
+  }
+
+  isSavedReportReviewComplete(report: SavedReport): boolean {
+    const review = this.getSavedReportReview(report);
+    return review.outcome !== 'unreviewed' && review.reaction.trim().length > 0 && review.lesson.trim().length > 0;
+  }
+
+  setSavedReportReviewOutcome(report: SavedReport, outcome: SavedReportReviewOutcome): void {
+    const review = this.getSavedReportReview(report);
+    review.outcome = this.normalizeSavedReportReviewOutcome(outcome);
+
+    this.updateSavedReportReview(report, review);
+    this.savedReportMessage = `${report.ticker} post-earnings outcome set to ${this.getSavedReportReviewLabel(review.outcome)}.`;
+  }
+
+  updateSavedReportReviewNote(report: SavedReport, key: SavedReportReviewKey, value: string): void {
+    const review = this.getSavedReportReview(report);
+    review[key] = this.normalizeSavedReportJournalText(value);
+    this.updateSavedReportReview(report, review);
+  }
+
+  private updateSavedReportReview(report: SavedReport, review: SavedReportReview): void {
+    this.savedReports = this.savedReports.map((savedReport) => (
+      savedReport.ticker === report.ticker && savedReport.reportDate === report.reportDate
+        ? {...savedReport, review}
         : savedReport
     ));
     this.persistSavedReports();
@@ -1130,7 +1212,8 @@ export class ReportDateTableComponent implements OnInit {
         status: this.normalizeSavedReportStatus(report.status),
         strategy: this.normalizeSavedReportStrategy(report.strategy),
         preparation: this.normalizeSavedReportPreparation(report.preparation),
-        journal: this.normalizeSavedReportJournal(report.journal)
+        journal: this.normalizeSavedReportJournal(report.journal),
+        review: this.normalizeSavedReportReview(report.review)
       }))
       .filter((report) => report.ticker.length > 0 && report.reportDate.length > 0)
       .slice(0, 20) as SavedReport[];
@@ -1160,6 +1243,20 @@ export class ReportDateTableComponent implements OnInit {
       risk: this.normalizeSavedReportJournalText(journal?.risk),
       decision: this.normalizeSavedReportJournalText(journal?.decision)
     };
+  }
+
+  private normalizeSavedReportReview(review?: Partial<SavedReportReview>): SavedReportReview {
+    return {
+      outcome: this.normalizeSavedReportReviewOutcome(review?.outcome),
+      reaction: this.normalizeSavedReportJournalText(review?.reaction),
+      lesson: this.normalizeSavedReportJournalText(review?.lesson)
+    };
+  }
+
+  private normalizeSavedReportReviewOutcome(outcome: unknown): SavedReportReviewOutcome {
+    return outcome === 'positive' || outcome === 'negative' || outcome === 'mixed' || outcome === 'flat'
+      ? outcome
+      : 'unreviewed';
   }
 
   private normalizeSavedReportJournalText(value: unknown): string {
