@@ -2117,6 +2117,42 @@ body { margin: 0;font-family: sans-serif, "Franklin Gothic Book", Verdana; }
   gap: 0.7rem;
 }
 
+.saved-report-review-queue__insights {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.7rem;
+}
+
+.saved-report-review-queue__insights article {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.75rem;
+  border: 1px solid #d7ddef;
+  border-radius: 6px;
+  background: #ffffff;
+}
+
+.saved-report-review-queue__insights span,
+.saved-report-review-queue__insights small {
+  color: #667085;
+  font-size: 0.78rem;
+}
+
+.saved-report-review-queue__insights span {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.saved-report-review-queue__insights strong {
+  color: #27358f;
+  font-size: 0.95rem;
+}
+
+.saved-report-review-queue__insights small {
+  line-height: 1.35;
+}
+
 .saved-report-review-queue__item {
   min-height: 76px;
   padding: 0.75rem;

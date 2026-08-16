@@ -603,6 +603,29 @@
       <strong>{{getPostEarningsReviewCompleteCount()}}/{{getPostEarningsReviewItems().length}} complete</strong>
     </div>
 
+    <div class="saved-report-review-queue__insights" aria-label="Post-earnings review insights">
+      <article>
+        <span>Review coverage</span>
+        <strong>{{getPostEarningsReviewSummary().completeCount}}/{{getPostEarningsReviewSummary().totalCount}}</strong>
+        <small>Outcome, reaction, and lesson captured</small>
+      </article>
+      <article>
+        <span>Recorded reactions</span>
+        <strong>{{getPostEarningsReviewSummary().recordedOutcomeCount}}</strong>
+        <small>{{getPostEarningsReviewSummary().totalCount - getPostEarningsReviewSummary().recordedOutcomeCount}} still need an outcome</small>
+      </article>
+      <article>
+        <span>Reaction balance</span>
+        <strong>{{getPostEarningsReviewSummary().positiveCount}} positive / {{getPostEarningsReviewSummary().negativeCount}} negative</strong>
+        <small>Recorded positive and negative outcome selections</small>
+      </article>
+      <article>
+        <span>Leading signal</span>
+        <strong>{{getSavedReportReviewLabel(getPostEarningsReviewSummary().leadingOutcome)}}</strong>
+        <small>{{getPostEarningsReviewSummary().lessonCount}} lesson{{getPostEarningsReviewSummary().lessonCount === 1 ? '' : 's'}} captured for future events</small>
+      </article>
+    </div>
+
     <div class="saved-report-review-queue__grid">
       <a *ngFor="let item of getPostEarningsReviewItems()" [routerLink]="['/', item.report.reportDate, item.report.ticker]" class="saved-report-review-queue__item">
         <div>

@@ -164,6 +164,16 @@ interface SavedReportReviewItem {
   report: SavedReport;
 }
 
+interface SavedReportReviewSummary {
+  completeCount: number;
+  leadingOutcome: SavedReportReviewOutcome | null;
+  lessonCount: number;
+  negativeCount: number;
+  positiveCount: number;
+  recordedOutcomeCount: number;
+  totalCount: number;
+}
+
 @Component({
   selector: 'app-report-date-table',
   templateUrl: './report-date-table.component.html',
@@ -514,6 +524,50 @@ export class ReportDateTableComponent implements OnInit {
     return this.getPostEarningsReviewItems().filter((item) => this.isSavedReportReviewComplete(item.report)).length;
   }
 
+  getPostEarningsReviewSummary(): SavedReportReviewSummary {
+    const reviewItems = this.getPostEarningsReviewItems();
+    const outcomeCounts: Record<Exclude<SavedReportReviewOutcome, 'unreviewed'>, number> = {
+      positive: 0,
+      negative: 0,
+      mixed: 0,
+      flat: 0
+    };
+    let completeCount = 0;
+    let lessonCount = 0;
+    let recordedOutcomeCount = 0;
+
+    reviewItems.forEach(({report}) => {
+      const review = this.getSavedReportReview(report);
+
+      if (this.isSavedReportReviewComplete(report)) {
+        completeCount += 1;
+      }
+
+      if (review.lesson.trim().length > 0) {
+        lessonCount += 1;
+      }
+
+      if (review.outcome !== 'unreviewed') {
+        recordedOutcomeCount += 1;
+        outcomeCounts[review.outcome] += 1;
+      }
+    });
+
+    const leadingOutcome = (Object.entries(outcomeCounts) as Array<[Exclude<SavedReportReviewOutcome, 'unreviewed'>, number]>)
+      .sort((first, second) => second[1] - first[1] || first[0].localeCompare(second[0]))
+      .find(([, count]) => count > 0)?.[0] || null;
+
+    return {
+      completeCount,
+      leadingOutcome,
+      lessonCount,
+      negativeCount: outcomeCounts.negative,
+      positiveCount: outcomeCounts.positive,
+      recordedOutcomeCount,
+      totalCount: reviewItems.length
+    };
+  }
+
   isSavedReportReviewDue(report: SavedReport, now: Date = new Date()): boolean {
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const daysUntil = this.getSavedReportDaysUntil(report.reportDate, startOfToday);
@@ -660,7 +714,11 @@ export class ReportDateTableComponent implements OnInit {
     return this.normalizeSavedReportReview(report.review);
   }
 
-  getSavedReportReviewLabel(outcome: SavedReportReviewOutcome): string {
+  getSavedReportReviewLabel(outcome: SavedReportReviewOutcome | null): string {
+    if (outcome === null) {
+      return 'No outcome yet';
+    }
+
     return this.savedReportReviewOutcomes.find((item) => item.key === outcome)?.label || 'Not reviewed';
   }
 
