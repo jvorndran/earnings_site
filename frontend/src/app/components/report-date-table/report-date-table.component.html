@@ -109,6 +109,18 @@
     </div>
 
     <div class="filter-field">
+      <span>Earnings Quality</span>
+      <select [(ngModel)]="earningsQualityProfile" (ngModelChange)="applyFilters()">
+        <option [ngValue]="'all'">All Quality Profiles</option>
+        <option [ngValue]="'durable'">Durable Growth</option>
+        <option [ngValue]="'expectationsHigh'">High Expectations</option>
+        <option [ngValue]="'turnaround'">Turnaround</option>
+        <option [ngValue]="'fundamentalPressure'">Fundamental Pressure</option>
+        <option [ngValue]="'mixed'">Mixed Setup</option>
+      </select>
+    </div>
+
+    <div class="filter-field">
       <span>Sort By</span>
       <select [(ngModel)]="sortField" (ngModelChange)="applyFilters()">
         <option [ngValue]="'marketCap'">Market Cap</option>
@@ -230,6 +242,38 @@
         Avg {{bucket.averageImpliedMove | number:'1.1-1'}}% move
         <ng-container *ngIf="bucket.leader"> · Lead {{bucket.leader.Ticker}}</ng-container>
       </em>
+    </button>
+  </div>
+</section>
+
+<section class="earnings-quality-panel">
+  <div class="earnings-quality-header">
+    <div>
+      <h2>Earnings Quality Screen</h2>
+      <span>Pair consensus EPS, quarterly growth, and implied-move expectations to focus the report list.</span>
+    </div>
+    <strong>{{earningsQualityProfile === 'all' ? 'All quality profiles' : 'Quality filter active'}}</strong>
+  </div>
+
+  <div class="earnings-quality-grid">
+    <button
+      *ngFor="let bucket of getEarningsQualityBuckets()"
+      (click)="setEarningsQualityProfile(bucket.key)"
+      [attr.aria-pressed]="earningsQualityProfile === bucket.key"
+      [class.earnings-quality-card--active]="earningsQualityProfile === bucket.key"
+      class="earnings-quality-card"
+      type="button">
+      <span class="earnings-quality-card__top">
+        <span><strong>{{bucket.label}}</strong><small>{{bucket.detail}}</small></span>
+        <em>{{bucket.count}}</em>
+      </span>
+      <span class="earnings-quality-card__metrics">
+        <span><small>Avg growth</small><strong>{{bucket.averageQuarterlyGrowth | number:'1.1-1'}}%</strong></span>
+        <span><small>Avg move</small><strong>{{bucket.averageImpliedMove | number:'1.1-1'}}%</strong></span>
+      </span>
+      <span class="earnings-quality-card__leader">
+        Growth leader <strong>{{bucket.leader?.Ticker || '-'}}</strong>
+      </span>
     </button>
   </div>
 </section>

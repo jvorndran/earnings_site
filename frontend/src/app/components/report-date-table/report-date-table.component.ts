@@ -21,6 +21,7 @@ type SortField = 'marketCap' | 'impliedMove' | 'shortInterest' | 'quarterlyGrowt
 type SortDirection = 'asc' | 'desc';
 type EstimateOutlook = 'all' | 'positive' | 'loss' | 'breakEven';
 type CatalystProfile = 'all' | 'volatileCrowded' | 'moveDriven' | 'crowdedOnly' | 'lowerRisk';
+type EarningsQualityProfile = 'all' | 'durable' | 'expectationsHigh' | 'turnaround' | 'fundamentalPressure' | 'mixed';
 type MarketCapCohort = 'all' | 'small' | 'mid' | 'large' | 'mega';
 type SavedReportStatus = 'research' | 'watching' | 'ready' | 'skip';
 type SavedReportFilter = 'all' | SavedReportStatus;
@@ -79,6 +80,16 @@ interface CatalystBucket {
   label: string;
   detail: string;
   count: number;
+  averageImpliedMove: number;
+  leader: StockInfo | null;
+}
+
+interface EarningsQualityBucket {
+  key: Exclude<EarningsQualityProfile, 'all'>;
+  label: string;
+  detail: string;
+  count: number;
+  averageQuarterlyGrowth: number;
   averageImpliedMove: number;
   leader: StockInfo | null;
 }
@@ -207,6 +218,7 @@ export class ReportDateTableComponent implements OnInit {
   minimumMarketCap = 0;
   estimateOutlook: EstimateOutlook = 'all';
   catalystProfile: CatalystProfile = 'all';
+  earningsQualityProfile: EarningsQualityProfile = 'all';
   marketCapCohort: MarketCapCohort = 'all';
   sortField: SortField = 'marketCap';
   sortDirection: SortDirection = 'desc';
@@ -771,7 +783,9 @@ export class ReportDateTableComponent implements OnInit {
     const normalizedSearch = this.searchText.trim().toLowerCase();
 
     const filteredStocks = this.stockInfoObjects.filter((stock) => {
-      return this.matchesBaseFilters(stock, normalizedSearch) && this.matchesCatalystProfile(stock);
+      return this.matchesBaseFilters(stock, normalizedSearch) &&
+        this.matchesCatalystProfile(stock) &&
+        this.matchesEarningsQualityProfile(stock);
     });
 
     this.filteredStockInfoObjects = this.sortStocks(filteredStocks);
@@ -791,6 +805,7 @@ export class ReportDateTableComponent implements OnInit {
     this.minimumMarketCap = 0;
     this.estimateOutlook = 'all';
     this.catalystProfile = 'all';
+    this.earningsQualityProfile = 'all';
     this.marketCapCohort = 'all';
     this.sortField = 'marketCap';
     this.sortDirection = 'desc';
@@ -799,6 +814,11 @@ export class ReportDateTableComponent implements OnInit {
 
   setCatalystProfile(profile: CatalystProfile): void {
     this.catalystProfile = this.catalystProfile === profile ? 'all' : profile;
+    this.applyFilters();
+  }
+
+  setEarningsQualityProfile(profile: Exclude<EarningsQualityProfile, 'all'>): void {
+    this.earningsQualityProfile = this.earningsQualityProfile === profile ? 'all' : profile;
     this.applyFilters();
   }
 
@@ -961,6 +981,39 @@ export class ReportDateTableComponent implements OnInit {
         : null;
 
       return {...definition, count: stocks.length, averageImpliedMove, leader};
+    });
+  }
+
+  getEarningsQualityBuckets(): EarningsQualityBucket[] {
+    const normalizedSearch = this.searchText.trim().toLowerCase();
+    const candidates = this.stockInfoObjects.filter((stock) => (
+      this.matchesBaseFilters(stock, normalizedSearch) && this.matchesCatalystProfile(stock)
+    ));
+    const definitions: Array<Pick<EarningsQualityBucket, 'key' | 'label' | 'detail'>> = [
+      {key: 'durable', label: 'Durable Growth', detail: 'Positive EPS, 10%+ growth, under 8% move'},
+      {key: 'expectationsHigh', label: 'High Expectations', detail: 'Positive EPS, 10%+ growth, 8%+ move'},
+      {key: 'turnaround', label: 'Turnaround', detail: '10%+ growth with breakeven or loss EPS'},
+      {key: 'fundamentalPressure', label: 'Fundamental Pressure', detail: 'Negative growth or loss estimate'},
+      {key: 'mixed', label: 'Mixed Setup', detail: 'Does not fit another quality profile'}
+    ];
+
+    return definitions.map((definition) => {
+      const stocks = candidates.filter((stock) => this.getEarningsQualityProfile(stock) === definition.key);
+      const averageQuarterlyGrowth = stocks.length
+        ? stocks.reduce((total, stock) => total + this.getPercentageValue(stock, 'Quarterly Growth'), 0) / stocks.length
+        : 0;
+      const averageImpliedMove = stocks.length
+        ? stocks.reduce((total, stock) => total + this.getPercentageValue(stock, 'Implied Move'), 0) / stocks.length
+        : 0;
+      const leader = stocks.length
+        ? stocks.reduce((currentLeader, stock) => (
+          this.getPercentageValue(stock, 'Quarterly Growth') > this.getPercentageValue(currentLeader, 'Quarterly Growth')
+            ? stock
+            : currentLeader
+        ), stocks[0])
+        : null;
+
+      return {...definition, count: stocks.length, averageQuarterlyGrowth, averageImpliedMove, leader};
     });
   }
 
@@ -1241,6 +1294,35 @@ export class ReportDateTableComponent implements OnInit {
 
   private matchesCatalystProfile(stock: StockInfo): boolean {
     return this.catalystProfile === 'all' || this.getCatalystProfile(stock) === this.catalystProfile;
+  }
+
+  private getEarningsQualityProfile(stock: StockInfo): Exclude<EarningsQualityProfile, 'all'> {
+    const estimate = this.getEstimateValue(stock);
+    const quarterlyGrowth = this.getPercentageValue(stock, 'Quarterly Growth');
+    const impliedMove = this.getPercentageValue(stock, 'Implied Move');
+
+    if (estimate > 0.1 && quarterlyGrowth >= 10 && impliedMove >= 8) {
+      return 'expectationsHigh';
+    }
+
+    if (estimate > 0.1 && quarterlyGrowth >= 10) {
+      return 'durable';
+    }
+
+    if (quarterlyGrowth >= 10 && estimate <= 0.1) {
+      return 'turnaround';
+    }
+
+    if (quarterlyGrowth < 0 || estimate < -0.1) {
+      return 'fundamentalPressure';
+    }
+
+    return 'mixed';
+  }
+
+  private matchesEarningsQualityProfile(stock: StockInfo): boolean {
+    return this.earningsQualityProfile === 'all' ||
+      this.getEarningsQualityProfile(stock) === this.earningsQualityProfile;
   }
 
   private loadSavedReports(): SavedReport[] {
