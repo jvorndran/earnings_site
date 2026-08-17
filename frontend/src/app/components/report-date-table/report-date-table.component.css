@@ -302,6 +302,50 @@ tr.example-element-row:not(.example-expanded-row):active {
   color: #101828;
 }
 
+.saved-report-search {
+  display: flex;
+  align-items: end;
+  gap: 0.75rem;
+  margin: 1rem 0;
+  padding: 0.85rem;
+  border: 1px solid #d7dde8;
+  border-radius: 6px;
+  background: #f8fafc;
+}
+
+.saved-report-search label {
+  display: grid;
+  flex: 1;
+  gap: 0.35rem;
+}
+
+.saved-report-search label > span,
+.saved-report-search > strong {
+  color: #475467;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.saved-report-search input {
+  min-height: 2.4rem;
+  border: 1px solid #cfd6e2;
+  border-radius: 4px;
+  background: white;
+  color: #101828;
+  padding: 0 0.75rem;
+}
+
+.saved-report-search button {
+  border: 1px solid #3f51b5;
+  border-radius: 4px;
+  background: white;
+  color: #3f51b5;
+  cursor: pointer;
+  font-weight: 600;
+  padding: 0.65rem 0.85rem;
+}
+
 .compare-button {
   min-width: 4.5rem;
   border: 1px solid #3f51b5;
@@ -394,5 +438,10 @@ tr.example-element-row:not(.example-expanded-row):active {
 
   .comparison-grid {
     grid-template-columns: 1fr;
+  }
+
+  .saved-report-search {
+    align-items: stretch;
+    flex-direction: column;
   }
 }

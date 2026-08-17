@@ -510,6 +510,19 @@
     </button>
   </div>
 
+  <div class="saved-report-search">
+    <label>
+      <span>Search saved research</span>
+      <input
+        [(ngModel)]="savedReportSearchText"
+        aria-label="Search saved earnings research"
+        placeholder="Ticker, company, or date"
+        type="search">
+    </label>
+    <strong>{{visibleSavedReports.length}} matching</strong>
+    <button *ngIf="savedReportSearchText" (click)="clearSavedReportSearch()" type="button">Clear Search</button>
+  </div>
+
   <section class="saved-report-strategy" aria-labelledby="saved-report-strategy-title">
     <div class="saved-report-strategy__header">
       <div>

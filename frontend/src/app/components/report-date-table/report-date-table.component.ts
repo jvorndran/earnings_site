@@ -229,6 +229,7 @@ export class ReportDateTableComponent implements OnInit {
   savedReports: SavedReport[] = [];
   savedReportFilter: SavedReportFilter = 'all';
   savedReportStrategyFilter: SavedReportStrategyFilter = 'all';
+  savedReportSearchText = '';
   readonly savedReportWorkflowStages: Array<{key: SavedReportStatus; label: string; detail: string}> = [
     {key: 'research', label: 'Research', detail: 'Needs a first review'},
     {key: 'watching', label: 'Watching', detail: 'Catalyst is on deck'},
@@ -335,6 +336,8 @@ export class ReportDateTableComponent implements OnInit {
       }, ...this.savedReports].slice(0, 20);
       this.savedReportMessage = `${stock.Ticker} saved for follow-up.`;
       this.savedReportFilter = 'all';
+      this.savedReportStrategyFilter = 'all';
+      this.savedReportSearchText = '';
     }
 
     this.persistSavedReports();
@@ -351,6 +354,8 @@ export class ReportDateTableComponent implements OnInit {
   clearSavedReports(): void {
     this.savedReports = [];
     this.savedReportFilter = 'all';
+    this.savedReportStrategyFilter = 'all';
+    this.savedReportSearchText = '';
     this.savedReportMessage = 'Saved report shortlist cleared.';
     this.persistSavedReports();
   }
@@ -418,9 +423,15 @@ export class ReportDateTableComponent implements OnInit {
   }
 
   get visibleSavedReports(): SavedReport[] {
+    const normalizedSearch = this.savedReportSearchText.trim().toLowerCase();
+
     return this.savedReports.filter((report) => (
       (this.savedReportFilter === 'all' || this.getSavedReportStatus(report) === this.savedReportFilter) &&
-      (this.savedReportStrategyFilter === 'all' || this.getSavedReportStrategy(report) === this.savedReportStrategyFilter)
+      (this.savedReportStrategyFilter === 'all' || this.getSavedReportStrategy(report) === this.savedReportStrategyFilter) &&
+      (normalizedSearch.length === 0 ||
+        report.ticker.toLowerCase().includes(normalizedSearch) ||
+        report.name.toLowerCase().includes(normalizedSearch) ||
+        report.reportDate.toLowerCase().includes(normalizedSearch))
     ));
   }
 
@@ -639,6 +650,10 @@ export class ReportDateTableComponent implements OnInit {
 
   setSavedReportStrategyFilter(filter: SavedReportStrategyFilter): void {
     this.savedReportStrategyFilter = filter;
+  }
+
+  clearSavedReportSearch(): void {
+    this.savedReportSearchText = '';
   }
 
   setSavedReportStatus(report: SavedReport, status: SavedReportStatus): void {
