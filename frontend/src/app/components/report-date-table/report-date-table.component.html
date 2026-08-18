@@ -651,6 +651,43 @@
     </div>
   </section>
 
+  <section *ngIf="getSavedReportEventConcentrations().length > 0" class="saved-report-concentration" aria-labelledby="saved-report-concentration-title">
+    <div class="saved-report-concentration__header">
+      <div>
+        <h3 id="saved-report-concentration-title">Event-Day Concentration</h3>
+        <span>Review dates where several active earnings ideas can stack the same catalyst risk.</span>
+      </div>
+      <strong>{{getSavedReportEventConcentrations().length}} shared date{{getSavedReportEventConcentrations().length === 1 ? '' : 's'}}</strong>
+    </div>
+
+    <div class="saved-report-concentration__grid">
+      <article
+        *ngFor="let group of getSavedReportEventConcentrations()"
+        [class.saved-report-concentration__card--elevated]="group.reports.length >= 3 || group.elevatedMoveCount >= 2"
+        class="saved-report-concentration__card">
+        <div class="saved-report-concentration__card-header">
+          <div>
+            <span>{{formatDate(group.reportDate)}}</span>
+            <strong>{{group.reports.length}} active reports</strong>
+          </div>
+          <small>{{group.elevatedMoveCount}} with an 8%+ implied move</small>
+        </div>
+        <div class="saved-report-concentration__metrics">
+          <span><small>Average move</small><strong>{{group.averageImpliedMove | number:'1.1-1'}}%</strong></span>
+          <span><small>Combined moves</small><strong>{{group.totalImpliedMove | number:'1.1-1'}}%</strong></span>
+          <span><small>Risk budget</small><strong>{{group.estimatedRisk | currency:'USD':'symbol':'1.0-0'}}</strong></span>
+        </div>
+        <div class="saved-report-concentration__tickers">
+          <a *ngFor="let report of group.reports" [routerLink]="['/', report.reportDate, report.ticker]">
+            <strong>{{report.ticker}}</strong>
+            <span>{{report.impliedMove | number:'1.1-1'}}% move</span>
+          </a>
+        </div>
+      </article>
+    </div>
+    <small class="saved-report-concentration__note">Risk budget is the selected per-report event-risk allowance multiplied by active reports on the same date; it is a planning limit, not a loss forecast.</small>
+  </section>
+
   <section *ngIf="getPostEarningsReviewItems().length > 0" class="saved-report-review-queue" aria-labelledby="saved-report-review-queue-title">
     <div class="saved-report-review-queue__header">
       <div>

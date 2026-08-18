@@ -170,6 +170,15 @@ interface SavedReportScheduleGroup {
   label: string;
 }
 
+interface SavedReportEventConcentration {
+  averageImpliedMove: number;
+  elevatedMoveCount: number;
+  estimatedRisk: number;
+  reportDate: string;
+  reports: SavedReport[];
+  totalImpliedMove: number;
+}
+
 interface SavedReportReviewItem {
   daysSince: number;
   report: SavedReport;
@@ -527,6 +536,35 @@ export class ReportDateTableComponent implements OnInit {
         })
       }))
       .filter((group) => group.items.length > 0);
+  }
+
+  getSavedReportEventConcentrations(now: Date = new Date()): SavedReportEventConcentration[] {
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const activeReports = this.savedReports.filter((report) => (
+      this.getSavedReportStatus(report) !== 'skip' && this.getSavedReportDaysUntil(report.reportDate, startOfToday) !== null
+    ));
+    const reportsByDate = activeReports.reduce((groups, report) => {
+      const reports = groups.get(report.reportDate) || [];
+      groups.set(report.reportDate, [...reports, report]);
+      return groups;
+    }, new Map<string, SavedReport[]>());
+    const riskPerReport = this.getEventRiskBudget();
+
+    return Array.from(reportsByDate.entries())
+      .map(([reportDate, reports]) => {
+        const totalImpliedMove = reports.reduce((total, report) => total + report.impliedMove, 0);
+
+        return {
+          averageImpliedMove: totalImpliedMove / reports.length,
+          elevatedMoveCount: reports.filter((report) => report.impliedMove >= 8).length,
+          estimatedRisk: reports.length * riskPerReport,
+          reportDate,
+          reports: [...reports].sort((first, second) => first.ticker.localeCompare(second.ticker)),
+          totalImpliedMove,
+        };
+      })
+      .filter((group) => group.reports.length > 1)
+      .sort((first, second) => first.reportDate.localeCompare(second.reportDate));
   }
 
   getPostEarningsReviewItems(now: Date = new Date()): SavedReportReviewItem[] {

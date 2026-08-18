@@ -346,6 +346,112 @@ tr.example-element-row:not(.example-expanded-row):active {
   padding: 0.65rem 0.85rem;
 }
 
+.saved-report-concentration {
+  margin: 1rem 0;
+  padding: 1rem;
+  border: 1px solid #f2c98b;
+  border-radius: 6px;
+  background: #fffaf0;
+}
+
+.saved-report-concentration__header,
+.saved-report-concentration__card-header,
+.saved-report-concentration__metrics {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.saved-report-concentration__header h3,
+.saved-report-concentration__card-header strong {
+  margin: 0;
+  color: #7a3f00;
+}
+
+.saved-report-concentration__header span,
+.saved-report-concentration__card-header span,
+.saved-report-concentration__card-header small,
+.saved-report-concentration__note,
+.saved-report-concentration__tickers span {
+  color: #7a6650;
+}
+
+.saved-report-concentration__header > strong {
+  color: #7a3f00;
+  white-space: nowrap;
+}
+
+.saved-report-concentration__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.9rem;
+}
+
+.saved-report-concentration__card {
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.85rem;
+  border: 1px solid #f2d2a2;
+  border-radius: 6px;
+  background: #ffffff;
+}
+
+.saved-report-concentration__card--elevated {
+  border-color: #df8e23;
+  box-shadow: inset 3px 0 #df8e23;
+}
+
+.saved-report-concentration__card-header > div,
+.saved-report-concentration__metrics > span,
+.saved-report-concentration__tickers a {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.saved-report-concentration__metrics {
+  padding: 0.7rem 0;
+  border-top: 1px solid #f6dfbc;
+  border-bottom: 1px solid #f6dfbc;
+}
+
+.saved-report-concentration__metrics small {
+  color: #8a7255;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.saved-report-concentration__metrics strong {
+  color: #6b3b06;
+}
+
+.saved-report-concentration__tickers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.saved-report-concentration__tickers a {
+  min-width: 5.75rem;
+  padding: 0.45rem 0.55rem;
+  border: 1px solid #f1d4aa;
+  border-radius: 4px;
+  color: #7a3f00;
+  text-decoration: none;
+}
+
+.saved-report-concentration__tickers a:hover {
+  background: #fff3dd;
+}
+
+.saved-report-concentration__note {
+  display: block;
+  margin-top: 0.8rem;
+  font-size: 0.75rem;
+}
+
 .compare-button {
   min-width: 4.5rem;
   border: 1px solid #3f51b5;
@@ -441,6 +547,13 @@ tr.example-element-row:not(.example-expanded-row):active {
   }
 
   .saved-report-search {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .saved-report-concentration__header,
+  .saved-report-concentration__card-header,
+  .saved-report-concentration__metrics {
     align-items: stretch;
     flex-direction: column;
   }
