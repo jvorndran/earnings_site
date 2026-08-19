@@ -27,6 +27,8 @@ type SavedReportStatus = 'research' | 'watching' | 'ready' | 'skip';
 type SavedReportFilter = 'all' | SavedReportStatus;
 type SavedReportStrategy = 'unassigned' | 'preEvent' | 'postEvent' | 'avoidEvent' | 'longTerm';
 type SavedReportStrategyFilter = 'all' | SavedReportStrategy;
+type SavedReportRole = 'unassigned' | 'primary' | 'satellite' | 'hedge' | 'monitor';
+type SavedReportRoleFilter = 'all' | SavedReportRole;
 type SavedReportPreparationKey = 'estimateReviewed' | 'riskPlanned' | 'timingConfirmed';
 type SavedReportJournalKey = 'thesis' | 'risk' | 'decision';
 type SavedReportReviewOutcome = 'unreviewed' | 'positive' | 'negative' | 'mixed' | 'flat';
@@ -131,6 +133,7 @@ interface SavedReport {
   marketCap: string | number;
   status?: SavedReportStatus;
   strategy?: SavedReportStrategy;
+  role?: SavedReportRole;
   preparation?: Partial<SavedReportPreparation>;
   journal?: Partial<SavedReportJournal>;
   review?: Partial<SavedReportReview>;
@@ -238,6 +241,7 @@ export class ReportDateTableComponent implements OnInit {
   savedReports: SavedReport[] = [];
   savedReportFilter: SavedReportFilter = 'all';
   savedReportStrategyFilter: SavedReportStrategyFilter = 'all';
+  savedReportRoleFilter: SavedReportRoleFilter = 'all';
   savedReportSearchText = '';
   readonly savedReportWorkflowStages: Array<{key: SavedReportStatus; label: string; detail: string}> = [
     {key: 'research', label: 'Research', detail: 'Needs a first review'},
@@ -251,6 +255,13 @@ export class ReportDateTableComponent implements OnInit {
     {key: 'postEvent', label: 'After results', detail: 'Wait for the report reaction'},
     {key: 'avoidEvent', label: 'Avoid event', detail: 'No exposure through results'},
     {key: 'longTerm', label: 'Long-term', detail: 'Research beyond this report'}
+  ];
+  readonly savedReportRoles: Array<{key: SavedReportRole; label: string; detail: string}> = [
+    {key: 'unassigned', label: 'Needs role', detail: 'Classify its place in the portfolio'},
+    {key: 'primary', label: 'Primary idea', detail: 'Highest-conviction event research'},
+    {key: 'satellite', label: 'Satellite', detail: 'Smaller tactical catalyst'},
+    {key: 'hedge', label: 'Hedge', detail: 'Offsets a related exposure'},
+    {key: 'monitor', label: 'Monitor', detail: 'Track without allocating risk'}
   ];
   readonly savedReportReviewOutcomes: Array<{key: SavedReportReviewOutcome; label: string}> = [
     {key: 'unreviewed', label: 'Not reviewed'},
@@ -340,12 +351,14 @@ export class ReportDateTableComponent implements OnInit {
         marketCap: stock['Market Cap'],
         status: 'research' as SavedReportStatus,
         strategy: 'unassigned' as SavedReportStrategy,
+        role: 'unassigned' as SavedReportRole,
         preparation: this.normalizeSavedReportPreparation(),
         review: this.normalizeSavedReportReview()
       }, ...this.savedReports].slice(0, 20);
       this.savedReportMessage = `${stock.Ticker} saved for follow-up.`;
       this.savedReportFilter = 'all';
       this.savedReportStrategyFilter = 'all';
+      this.savedReportRoleFilter = 'all';
       this.savedReportSearchText = '';
     }
 
@@ -364,6 +377,7 @@ export class ReportDateTableComponent implements OnInit {
     this.savedReports = [];
     this.savedReportFilter = 'all';
     this.savedReportStrategyFilter = 'all';
+    this.savedReportRoleFilter = 'all';
     this.savedReportSearchText = '';
     this.savedReportMessage = 'Saved report shortlist cleared.';
     this.persistSavedReports();
@@ -437,6 +451,7 @@ export class ReportDateTableComponent implements OnInit {
     return this.savedReports.filter((report) => (
       (this.savedReportFilter === 'all' || this.getSavedReportStatus(report) === this.savedReportFilter) &&
       (this.savedReportStrategyFilter === 'all' || this.getSavedReportStrategy(report) === this.savedReportStrategyFilter) &&
+      (this.savedReportRoleFilter === 'all' || this.getSavedReportRole(report) === this.savedReportRoleFilter) &&
       (normalizedSearch.length === 0 ||
         report.ticker.toLowerCase().includes(normalizedSearch) ||
         report.name.toLowerCase().includes(normalizedSearch) ||
@@ -688,6 +703,34 @@ export class ReportDateTableComponent implements OnInit {
 
   setSavedReportStrategyFilter(filter: SavedReportStrategyFilter): void {
     this.savedReportStrategyFilter = filter;
+  }
+
+  getSavedReportRole(report: SavedReport): SavedReportRole {
+    return this.normalizeSavedReportRole(report.role);
+  }
+
+  getSavedReportRoleCount(role: SavedReportRole): number {
+    return this.savedReports.filter((report) => this.getSavedReportRole(report) === role).length;
+  }
+
+  setSavedReportRoleFilter(filter: SavedReportRoleFilter): void {
+    this.savedReportRoleFilter = filter;
+  }
+
+  setSavedReportRole(report: SavedReport, role: SavedReportRole): void {
+    const normalizedRole = this.normalizeSavedReportRole(role);
+
+    this.savedReports = this.savedReports.map((savedReport) => (
+      savedReport.ticker === report.ticker && savedReport.reportDate === report.reportDate
+        ? {...savedReport, role: normalizedRole}
+        : savedReport
+    ));
+    this.savedReportMessage = `${report.ticker} assigned to ${this.getSavedReportRoleLabel(normalizedRole)}.`;
+    this.persistSavedReports();
+  }
+
+  getSavedReportRoleLabel(role: SavedReportRole): string {
+    return this.savedReportRoles.find((item) => item.key === role)?.label || 'Needs role';
   }
 
   clearSavedReportSearch(): void {
@@ -1404,6 +1447,7 @@ export class ReportDateTableComponent implements OnInit {
         reportDate: report.reportDate!.trim(),
         status: this.normalizeSavedReportStatus(report.status),
         strategy: this.normalizeSavedReportStrategy(report.strategy),
+        role: this.normalizeSavedReportRole(report.role),
         preparation: this.normalizeSavedReportPreparation(report.preparation),
         journal: this.normalizeSavedReportJournal(report.journal),
         review: this.normalizeSavedReportReview(report.review)
@@ -1419,6 +1463,12 @@ export class ReportDateTableComponent implements OnInit {
   private normalizeSavedReportStrategy(strategy: unknown): SavedReportStrategy {
     return strategy === 'preEvent' || strategy === 'postEvent' || strategy === 'avoidEvent' || strategy === 'longTerm'
       ? strategy
+      : 'unassigned';
+  }
+
+  private normalizeSavedReportRole(role: unknown): SavedReportRole {
+    return role === 'primary' || role === 'satellite' || role === 'hedge' || role === 'monitor'
+      ? role
       : 'unassigned';
   }
 

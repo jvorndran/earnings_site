@@ -557,6 +557,40 @@
     </div>
   </section>
 
+  <section class="saved-report-strategy" aria-labelledby="saved-report-role-title">
+    <div class="saved-report-strategy__header">
+      <div>
+        <h3 id="saved-report-role-title">Portfolio Role Board</h3>
+        <span>Separate primary event ideas, tactical satellites, hedges, and names you only want to monitor.</span>
+      </div>
+      <strong>{{visibleSavedReports.length}} report{{visibleSavedReports.length === 1 ? '' : 's'}} in view</strong>
+    </div>
+
+    <div class="saved-report-strategy__grid">
+      <button
+        (click)="setSavedReportRoleFilter('all')"
+        [attr.aria-pressed]="savedReportRoleFilter === 'all'"
+        [class.saved-report-strategy-card--active]="savedReportRoleFilter === 'all'"
+        class="saved-report-strategy-card"
+        type="button">
+        <span>All roles</span>
+        <strong>{{savedReports.length}}</strong>
+        <small>Full research shortlist</small>
+      </button>
+      <button
+        *ngFor="let role of savedReportRoles"
+        (click)="setSavedReportRoleFilter(role.key)"
+        [attr.aria-pressed]="savedReportRoleFilter === role.key"
+        [class.saved-report-strategy-card--active]="savedReportRoleFilter === role.key"
+        class="saved-report-strategy-card"
+        type="button">
+        <span>{{role.label}}</span>
+        <strong>{{getSavedReportRoleCount(role.key)}}</strong>
+        <small>{{role.detail}}</small>
+      </button>
+    </div>
+  </section>
+
   <section *ngIf="getSavedReportReadiness() as readiness" class="saved-report-readiness" aria-labelledby="saved-report-readiness-title">
     <div class="saved-report-readiness__header">
       <div>
@@ -858,6 +892,14 @@
             <option *ngFor="let strategy of savedReportStrategies" [ngValue]="strategy.key">{{strategy.label}}</option>
           </select>
         </label>
+        <label>
+          <span>Portfolio role</span>
+          <select
+            (ngModelChange)="setSavedReportRole(report, $event)"
+            [ngModel]="getSavedReportRole(report)">
+            <option *ngFor="let role of savedReportRoles" [ngValue]="role.key">{{role.label}}</option>
+          </select>
+        </label>
         <button
           (click)="removeSavedReport(report)"
           [attr.aria-label]="'Remove ' + report.ticker + ' from saved reports'"
@@ -867,7 +909,7 @@
   </div>
 
   <p *ngIf="visibleSavedReports.length === 0" class="saved-report-workflow-empty">
-    No saved reports match the selected preparation stage and event approach yet.
+    No saved reports match the selected preparation stage, event approach, and portfolio role yet.
   </p>
 </section>
 
