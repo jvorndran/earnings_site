@@ -29,6 +29,8 @@ type SavedReportStrategy = 'unassigned' | 'preEvent' | 'postEvent' | 'avoidEvent
 type SavedReportStrategyFilter = 'all' | SavedReportStrategy;
 type SavedReportRole = 'unassigned' | 'primary' | 'satellite' | 'hedge' | 'monitor';
 type SavedReportRoleFilter = 'all' | SavedReportRole;
+type SavedReportConviction = 'unassigned' | 'exploratory' | 'standard' | 'high';
+type SavedReportConvictionFilter = 'all' | SavedReportConviction;
 type SavedReportPreparationKey = 'estimateReviewed' | 'riskPlanned' | 'timingConfirmed';
 type SavedReportJournalKey = 'thesis' | 'risk' | 'decision';
 type SavedReportReviewOutcome = 'unreviewed' | 'positive' | 'negative' | 'mixed' | 'flat';
@@ -135,6 +137,7 @@ interface SavedReport {
   status?: SavedReportStatus;
   strategy?: SavedReportStrategy;
   role?: SavedReportRole;
+  conviction?: SavedReportConviction;
   preparation?: Partial<SavedReportPreparation>;
   journal?: Partial<SavedReportJournal>;
   review?: Partial<SavedReportReview>;
@@ -251,6 +254,7 @@ export class ReportDateTableComponent implements OnInit {
   savedReportFilter: SavedReportFilter = 'all';
   savedReportStrategyFilter: SavedReportStrategyFilter = 'all';
   savedReportRoleFilter: SavedReportRoleFilter = 'all';
+  savedReportConvictionFilter: SavedReportConvictionFilter = 'all';
   savedReportSearchText = '';
   readonly savedReportWorkflowStages: Array<{key: SavedReportStatus; label: string; detail: string}> = [
     {key: 'research', label: 'Research', detail: 'Needs a first review'},
@@ -271,6 +275,12 @@ export class ReportDateTableComponent implements OnInit {
     {key: 'satellite', label: 'Satellite', detail: 'Smaller tactical catalyst'},
     {key: 'hedge', label: 'Hedge', detail: 'Offsets a related exposure'},
     {key: 'monitor', label: 'Monitor', detail: 'Track without allocating risk'}
+  ];
+  readonly savedReportConvictions: Array<{key: SavedReportConviction; label: string; detail: string}> = [
+    {key: 'unassigned', label: 'Needs conviction', detail: 'Set a research confidence level'},
+    {key: 'exploratory', label: 'Exploratory', detail: 'Early thesis or limited evidence'},
+    {key: 'standard', label: 'Standard', detail: 'Evidence supports a normal review'},
+    {key: 'high', label: 'High conviction', detail: 'Strong evidence for priority research'}
   ];
   readonly savedReportRiskAllocations: Array<{percent: number; label: string}> = [
     {percent: 0, label: 'Not planned'},
@@ -368,6 +378,7 @@ export class ReportDateTableComponent implements OnInit {
         status: 'research' as SavedReportStatus,
         strategy: 'unassigned' as SavedReportStrategy,
         role: 'unassigned' as SavedReportRole,
+        conviction: 'unassigned' as SavedReportConviction,
         plannedRiskPercent: 0,
         preparation: this.normalizeSavedReportPreparation(),
         review: this.normalizeSavedReportReview()
@@ -376,6 +387,7 @@ export class ReportDateTableComponent implements OnInit {
       this.savedReportFilter = 'all';
       this.savedReportStrategyFilter = 'all';
       this.savedReportRoleFilter = 'all';
+      this.savedReportConvictionFilter = 'all';
       this.savedReportSearchText = '';
     }
 
@@ -395,6 +407,7 @@ export class ReportDateTableComponent implements OnInit {
     this.savedReportFilter = 'all';
     this.savedReportStrategyFilter = 'all';
     this.savedReportRoleFilter = 'all';
+    this.savedReportConvictionFilter = 'all';
     this.savedReportSearchText = '';
     this.savedReportMessage = 'Saved report shortlist cleared.';
     this.persistSavedReports();
@@ -469,6 +482,7 @@ export class ReportDateTableComponent implements OnInit {
       (this.savedReportFilter === 'all' || this.getSavedReportStatus(report) === this.savedReportFilter) &&
       (this.savedReportStrategyFilter === 'all' || this.getSavedReportStrategy(report) === this.savedReportStrategyFilter) &&
       (this.savedReportRoleFilter === 'all' || this.getSavedReportRole(report) === this.savedReportRoleFilter) &&
+      (this.savedReportConvictionFilter === 'all' || this.getSavedReportConviction(report) === this.savedReportConvictionFilter) &&
       (normalizedSearch.length === 0 ||
         report.ticker.toLowerCase().includes(normalizedSearch) ||
         report.name.toLowerCase().includes(normalizedSearch) ||
@@ -770,6 +784,34 @@ export class ReportDateTableComponent implements OnInit {
 
   setSavedReportRoleFilter(filter: SavedReportRoleFilter): void {
     this.savedReportRoleFilter = filter;
+  }
+
+  getSavedReportConviction(report: SavedReport): SavedReportConviction {
+    return this.normalizeSavedReportConviction(report.conviction);
+  }
+
+  getSavedReportConvictionCount(conviction: SavedReportConviction): number {
+    return this.savedReports.filter((report) => this.getSavedReportConviction(report) === conviction).length;
+  }
+
+  getSavedReportConvictionLabel(conviction: SavedReportConviction): string {
+    return this.savedReportConvictions.find((item) => item.key === conviction)?.label || 'Needs conviction';
+  }
+
+  setSavedReportConvictionFilter(filter: SavedReportConvictionFilter): void {
+    this.savedReportConvictionFilter = filter;
+  }
+
+  setSavedReportConviction(report: SavedReport, conviction: SavedReportConviction): void {
+    const normalizedConviction = this.normalizeSavedReportConviction(conviction);
+
+    this.savedReports = this.savedReports.map((savedReport) => (
+      savedReport.ticker === report.ticker && savedReport.reportDate === report.reportDate
+        ? {...savedReport, conviction: normalizedConviction}
+        : savedReport
+    ));
+    this.savedReportMessage = `${report.ticker} conviction set to ${this.getSavedReportConvictionLabel(normalizedConviction)}.`;
+    this.persistSavedReports();
   }
 
   setSavedReportRole(report: SavedReport, role: SavedReportRole): void {
@@ -1521,6 +1563,7 @@ export class ReportDateTableComponent implements OnInit {
         status: this.normalizeSavedReportStatus(report.status),
         strategy: this.normalizeSavedReportStrategy(report.strategy),
         role: this.normalizeSavedReportRole(report.role),
+        conviction: this.normalizeSavedReportConviction(report.conviction),
         plannedRiskPercent: this.normalizeSavedReportRiskAllocation(report.plannedRiskPercent),
         preparation: this.normalizeSavedReportPreparation(report.preparation),
         journal: this.normalizeSavedReportJournal(report.journal),
@@ -1543,6 +1586,12 @@ export class ReportDateTableComponent implements OnInit {
   private normalizeSavedReportRole(role: unknown): SavedReportRole {
     return role === 'primary' || role === 'satellite' || role === 'hedge' || role === 'monitor'
       ? role
+      : 'unassigned';
+  }
+
+  private normalizeSavedReportConviction(conviction: unknown): SavedReportConviction {
+    return conviction === 'exploratory' || conviction === 'standard' || conviction === 'high'
+      ? conviction
       : 'unassigned';
   }
 

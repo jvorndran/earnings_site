@@ -591,6 +591,40 @@
     </div>
   </section>
 
+  <section class="saved-report-strategy" aria-labelledby="saved-report-conviction-title">
+    <div class="saved-report-strategy__header">
+      <div>
+        <h3 id="saved-report-conviction-title">Research Conviction Board</h3>
+        <span>Separate early ideas from the evidence-backed earnings work that deserves priority attention.</span>
+      </div>
+      <strong>{{visibleSavedReports.length}} report{{visibleSavedReports.length === 1 ? '' : 's'}} in view</strong>
+    </div>
+
+    <div class="saved-report-strategy__grid">
+      <button
+        (click)="setSavedReportConvictionFilter('all')"
+        [attr.aria-pressed]="savedReportConvictionFilter === 'all'"
+        [class.saved-report-strategy-card--active]="savedReportConvictionFilter === 'all'"
+        class="saved-report-strategy-card"
+        type="button">
+        <span>All conviction levels</span>
+        <strong>{{savedReports.length}}</strong>
+        <small>Full research shortlist</small>
+      </button>
+      <button
+        *ngFor="let conviction of savedReportConvictions"
+        (click)="setSavedReportConvictionFilter(conviction.key)"
+        [attr.aria-pressed]="savedReportConvictionFilter === conviction.key"
+        [class.saved-report-strategy-card--active]="savedReportConvictionFilter === conviction.key"
+        class="saved-report-strategy-card"
+        type="button">
+        <span>{{conviction.label}}</span>
+        <strong>{{getSavedReportConvictionCount(conviction.key)}}</strong>
+        <small>{{conviction.detail}}</small>
+      </button>
+    </div>
+  </section>
+
   <section class="saved-report-exposure" aria-labelledby="saved-report-exposure-title">
     <div class="saved-report-exposure__header">
       <div>
@@ -935,6 +969,14 @@
           </select>
         </label>
         <label>
+          <span>Research conviction</span>
+          <select
+            (ngModelChange)="setSavedReportConviction(report, $event)"
+            [ngModel]="getSavedReportConviction(report)">
+            <option *ngFor="let conviction of savedReportConvictions" [ngValue]="conviction.key">{{conviction.label}}</option>
+          </select>
+        </label>
+        <label>
           <span>Event-risk share</span>
           <select
             (ngModelChange)="setSavedReportRiskAllocation(report, $event)"
@@ -951,7 +993,7 @@
   </div>
 
   <p *ngIf="visibleSavedReports.length === 0" class="saved-report-workflow-empty">
-    No saved reports match the selected preparation stage, event approach, and portfolio role yet.
+    No saved reports match the selected preparation stage, event approach, portfolio role, and conviction level yet.
   </p>
 </section>
 
