@@ -591,6 +591,40 @@
     </div>
   </section>
 
+  <section class="saved-report-exposure" aria-labelledby="saved-report-exposure-title">
+    <div class="saved-report-exposure__header">
+      <div>
+        <h3 id="saved-report-exposure-title">Planned Earnings Exposure</h3>
+        <span>Turn selected pre-event research into position limits using the event-risk budget above.</span>
+      </div>
+      <strong>{{getSavedReportExposurePlans().length}} planned event{{getSavedReportExposurePlans().length === 1 ? '' : 's'}}</strong>
+    </div>
+
+    <ng-container *ngIf="getSavedReportExposurePlans().length > 0; else noSavedReportExposurePlans">
+      <div class="saved-report-exposure__summary">
+        <span>Total modeled loss <strong>{{getSavedReportExposureRiskTotal() | currency:'USD':'symbol':'1.0-0'}}</strong></span>
+        <span>Each plan is capped by portfolio value and its company's implied move.</span>
+      </div>
+      <div class="saved-report-exposure__grid">
+        <a *ngFor="let plan of getSavedReportExposurePlans()" [routerLink]="['/', plan.report.reportDate, plan.report.ticker]" class="saved-report-exposure__item">
+          <div>
+            <span>{{formatDate(plan.report.reportDate)}} · {{plan.allocationPercent}}% risk budget</span>
+            <strong>{{plan.report.ticker}}</strong>
+            <small>{{getSavedReportRoleLabel(getSavedReportRole(plan.report))}} · {{plan.impliedMove | number:'1.1-1'}}% implied move</small>
+          </div>
+          <div class="saved-report-exposure__metrics">
+            <span><small>Modeled loss</small><strong>{{plan.plannedEventRisk | currency:'USD':'symbol':'1.0-0'}}</strong></span>
+            <span><small>Position limit</small><strong>{{plan.targetPositionValue | currency:'USD':'symbol':'1.0-0'}}</strong></span>
+          </div>
+        </a>
+      </div>
+    </ng-container>
+
+    <ng-template #noSavedReportExposurePlans>
+      <p class="saved-report-exposure__empty">Choose Pre-event and an event-risk share on a saved report to add it to this plan.</p>
+    </ng-template>
+  </section>
+
   <section *ngIf="getSavedReportReadiness() as readiness" class="saved-report-readiness" aria-labelledby="saved-report-readiness-title">
     <div class="saved-report-readiness__header">
       <div>
@@ -898,6 +932,14 @@
             (ngModelChange)="setSavedReportRole(report, $event)"
             [ngModel]="getSavedReportRole(report)">
             <option *ngFor="let role of savedReportRoles" [ngValue]="role.key">{{role.label}}</option>
+          </select>
+        </label>
+        <label>
+          <span>Event-risk share</span>
+          <select
+            (ngModelChange)="setSavedReportRiskAllocation(report, $event)"
+            [ngModel]="getSavedReportRiskAllocation(report)">
+            <option *ngFor="let allocation of savedReportRiskAllocations" [ngValue]="allocation.percent">{{allocation.label}}</option>
           </select>
         </label>
         <button

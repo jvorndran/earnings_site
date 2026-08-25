@@ -131,6 +131,7 @@ interface SavedReport {
   impliedMove: number;
   shortInterest: number;
   marketCap: string | number;
+  plannedRiskPercent?: number;
   status?: SavedReportStatus;
   strategy?: SavedReportStrategy;
   role?: SavedReportRole;
@@ -145,6 +146,14 @@ interface SavedReportFocus {
   nextAction: string;
   preparationRemaining: number;
   journalRemaining: number;
+}
+
+interface SavedReportExposurePlan {
+  allocationPercent: number;
+  impliedMove: number;
+  plannedEventRisk: number;
+  report: SavedReport;
+  targetPositionValue: number;
 }
 
 interface SavedReportReadiness {
@@ -263,6 +272,13 @@ export class ReportDateTableComponent implements OnInit {
     {key: 'hedge', label: 'Hedge', detail: 'Offsets a related exposure'},
     {key: 'monitor', label: 'Monitor', detail: 'Track without allocating risk'}
   ];
+  readonly savedReportRiskAllocations: Array<{percent: number; label: string}> = [
+    {percent: 0, label: 'Not planned'},
+    {percent: 25, label: '25% of risk budget'},
+    {percent: 50, label: '50% of risk budget'},
+    {percent: 75, label: '75% of risk budget'},
+    {percent: 100, label: '100% of risk budget'}
+  ];
   readonly savedReportReviewOutcomes: Array<{key: SavedReportReviewOutcome; label: string}> = [
     {key: 'unreviewed', label: 'Not reviewed'},
     {key: 'positive', label: 'Positive reaction'},
@@ -352,6 +368,7 @@ export class ReportDateTableComponent implements OnInit {
         status: 'research' as SavedReportStatus,
         strategy: 'unassigned' as SavedReportStrategy,
         role: 'unassigned' as SavedReportRole,
+        plannedRiskPercent: 0,
         preparation: this.normalizeSavedReportPreparation(),
         review: this.normalizeSavedReportReview()
       }, ...this.savedReports].slice(0, 20);
@@ -582,6 +599,44 @@ export class ReportDateTableComponent implements OnInit {
       .sort((first, second) => first.reportDate.localeCompare(second.reportDate));
   }
 
+  getSavedReportExposurePlans(now: Date = new Date()): SavedReportExposurePlan[] {
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const portfolioValue = Math.max(Number(this.portfolioValue) || 0, 0);
+    const riskBudget = this.getEventRiskBudget();
+
+    if (portfolioValue === 0 || riskBudget === 0) {
+      return [];
+    }
+
+    return this.savedReports
+      .filter((report) => {
+        const daysUntil = this.getSavedReportDaysUntil(report.reportDate, startOfToday);
+        return this.getSavedReportStatus(report) !== 'skip' &&
+          this.getSavedReportStrategy(report) === 'preEvent' &&
+          this.getSavedReportRiskAllocation(report) > 0 &&
+          daysUntil !== null && daysUntil >= 0;
+      })
+      .map((report) => {
+        const allocationPercent = this.getSavedReportRiskAllocation(report);
+        const plannedEventRisk = riskBudget * (allocationPercent / 100);
+        const impliedMove = Math.max(Number(report.impliedMove) || 0, 0);
+        const targetPositionValue = impliedMove > 0
+          ? Math.min(plannedEventRisk / (impliedMove / 100), portfolioValue)
+          : 0;
+
+        return {allocationPercent, impliedMove, plannedEventRisk, report, targetPositionValue};
+      })
+      .sort((first, second) => (
+        first.report.reportDate.localeCompare(second.report.reportDate) ||
+        second.plannedEventRisk - first.plannedEventRisk ||
+        first.report.ticker.localeCompare(second.report.ticker)
+      ));
+  }
+
+  getSavedReportExposureRiskTotal(): number {
+    return this.getSavedReportExposurePlans().reduce((total, plan) => total + plan.plannedEventRisk, 0);
+  }
+
   getPostEarningsReviewItems(now: Date = new Date()): SavedReportReviewItem[] {
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
@@ -726,6 +781,24 @@ export class ReportDateTableComponent implements OnInit {
         : savedReport
     ));
     this.savedReportMessage = `${report.ticker} assigned to ${this.getSavedReportRoleLabel(normalizedRole)}.`;
+    this.persistSavedReports();
+  }
+
+  getSavedReportRiskAllocation(report: SavedReport): number {
+    return this.normalizeSavedReportRiskAllocation(report.plannedRiskPercent);
+  }
+
+  setSavedReportRiskAllocation(report: SavedReport, plannedRiskPercent: number): void {
+    const normalizedAllocation = this.normalizeSavedReportRiskAllocation(plannedRiskPercent);
+
+    this.savedReports = this.savedReports.map((savedReport) => (
+      savedReport.ticker === report.ticker && savedReport.reportDate === report.reportDate
+        ? {...savedReport, plannedRiskPercent: normalizedAllocation}
+        : savedReport
+    ));
+    this.savedReportMessage = normalizedAllocation === 0
+      ? `${report.ticker} removed from the event exposure plan.`
+      : `${report.ticker} assigned ${normalizedAllocation}% of the per-report risk budget.`;
     this.persistSavedReports();
   }
 
@@ -1448,6 +1521,7 @@ export class ReportDateTableComponent implements OnInit {
         status: this.normalizeSavedReportStatus(report.status),
         strategy: this.normalizeSavedReportStrategy(report.strategy),
         role: this.normalizeSavedReportRole(report.role),
+        plannedRiskPercent: this.normalizeSavedReportRiskAllocation(report.plannedRiskPercent),
         preparation: this.normalizeSavedReportPreparation(report.preparation),
         journal: this.normalizeSavedReportJournal(report.journal),
         review: this.normalizeSavedReportReview(report.review)
@@ -1470,6 +1544,11 @@ export class ReportDateTableComponent implements OnInit {
     return role === 'primary' || role === 'satellite' || role === 'hedge' || role === 'monitor'
       ? role
       : 'unassigned';
+  }
+
+  private normalizeSavedReportRiskAllocation(value: unknown): number {
+    const allocation = Number(value);
+    return this.savedReportRiskAllocations.some((item) => item.percent === allocation) ? allocation : 0;
   }
 
   private normalizeSavedReportPreparation(preparation?: Partial<SavedReportPreparation>): SavedReportPreparation {

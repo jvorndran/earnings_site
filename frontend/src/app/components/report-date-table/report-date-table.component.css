@@ -521,6 +521,97 @@ tr.example-element-row:not(.example-expanded-row):active {
   opacity: 0.5;
 }
 
+.saved-report-exposure {
+  margin: 1.25rem 0;
+  padding: 1.1rem;
+  border: 1px solid #b9d7d2;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #f3fbf9, #f8fcff);
+}
+
+.saved-report-exposure__header,
+.saved-report-exposure__summary,
+.saved-report-exposure__item,
+.saved-report-exposure__metrics {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.saved-report-exposure__header,
+.saved-report-exposure__summary,
+.saved-report-exposure__item {
+  align-items: center;
+  justify-content: space-between;
+}
+
+.saved-report-exposure__header h3 {
+  margin: 0;
+  color: #175f56;
+}
+
+.saved-report-exposure__header span,
+.saved-report-exposure__header strong,
+.saved-report-exposure__summary,
+.saved-report-exposure__item small,
+.saved-report-exposure__metrics small {
+  color: #42716b;
+}
+
+.saved-report-exposure__header > div,
+.saved-report-exposure__item > div:first-child,
+.saved-report-exposure__metrics > span {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.saved-report-exposure__summary {
+  margin: 0.9rem 0;
+  padding: 0.6rem 0;
+  border-top: 1px solid #cfe6e1;
+  border-bottom: 1px solid #cfe6e1;
+  font-size: 0.82rem;
+}
+
+.saved-report-exposure__summary strong,
+.saved-report-exposure__item strong {
+  color: #0a5349;
+}
+
+.saved-report-exposure__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.7rem;
+}
+
+.saved-report-exposure__item {
+  min-height: 7rem;
+  padding: 0.75rem;
+  border: 1px solid #b9d7d2;
+  border-radius: 6px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.saved-report-exposure__item:hover {
+  border-color: #368f82;
+  box-shadow: 0 2px 8px rgba(15, 93, 83, 0.13);
+}
+
+.saved-report-exposure__metrics {
+  text-align: right;
+}
+
+.saved-report-exposure__metrics small {
+  font-size: 0.66rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.saved-report-exposure__empty {
+  margin: 0.8rem 0 0;
+  color: #42716b;
+}
+
 @media (max-width: 950px) {
   .filter-grid {
     grid-template-columns: repeat(2, minmax(160px, 1fr));
@@ -553,8 +644,16 @@ tr.example-element-row:not(.example-expanded-row):active {
 
   .saved-report-concentration__header,
   .saved-report-concentration__card-header,
-  .saved-report-concentration__metrics {
+  .saved-report-concentration__metrics,
+  .saved-report-exposure__header,
+  .saved-report-exposure__summary,
+  .saved-report-exposure__item {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .saved-report-exposure__metrics {
+    justify-content: space-between;
+    text-align: left;
   }
 }
