@@ -159,6 +159,15 @@ interface SavedReportExposurePlan {
   targetPositionValue: number;
 }
 
+interface SavedReportRoleExposure {
+  averageAllocationPercent: number;
+  plannedEventRisk: number;
+  reportCount: number;
+  role: SavedReportRole;
+  roleLabel: string;
+  targetPositionValue: number;
+}
+
 interface SavedReportReadiness {
   activeCount: number;
   fullyDocumentedCount: number;
@@ -660,6 +669,34 @@ export class ReportDateTableComponent implements OnInit {
 
   getSavedReportExposureRiskTotal(): number {
     return this.getSavedReportExposurePlans().reduce((total, plan) => total + plan.plannedEventRisk, 0);
+  }
+
+  getSavedReportRoleExposure(): SavedReportRoleExposure[] {
+    const plans = this.getSavedReportExposurePlans();
+    const roleOrder = this.savedReportRoles.map((role) => role.key);
+
+    return this.savedReportRoles
+      .map((role) => {
+        const rolePlans = plans.filter((plan) => this.getSavedReportRole(plan.report) === role.key);
+        const plannedEventRisk = rolePlans.reduce((total, plan) => total + plan.plannedEventRisk, 0);
+        const targetPositionValue = rolePlans.reduce((total, plan) => total + plan.targetPositionValue, 0);
+
+        return {
+          averageAllocationPercent: rolePlans.length > 0
+            ? rolePlans.reduce((total, plan) => total + plan.allocationPercent, 0) / rolePlans.length
+            : 0,
+          plannedEventRisk,
+          reportCount: rolePlans.length,
+          role: role.key,
+          roleLabel: role.label,
+          targetPositionValue,
+        };
+      })
+      .filter((summary) => summary.reportCount > 0)
+      .sort((first, second) => (
+        roleOrder.indexOf(first.role) - roleOrder.indexOf(second.role) ||
+        second.plannedEventRisk - first.plannedEventRisk
+      ));
   }
 
   getPostEarningsReviewItems(now: Date = new Date()): SavedReportReviewItem[] {
