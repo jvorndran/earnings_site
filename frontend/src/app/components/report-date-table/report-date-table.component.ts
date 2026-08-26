@@ -209,6 +209,17 @@ interface SavedReportReviewSummary {
   totalCount: number;
 }
 
+interface SavedReportStrategyReviewSummary {
+  completedCount: number;
+  lessonCount: number;
+  negativeCount: number;
+  positiveCount: number;
+  recordedOutcomeCount: number;
+  reportCount: number;
+  strategy: Exclude<SavedReportStrategy, 'unassigned'>;
+  strategyLabel: string;
+}
+
 @Component({
   selector: 'app-report-date-table',
   templateUrl: './report-date-table.component.html',
@@ -711,6 +722,56 @@ export class ReportDateTableComponent implements OnInit {
       recordedOutcomeCount,
       totalCount: reviewItems.length
     };
+  }
+
+  getSavedReportStrategyReviewSummaries(): SavedReportStrategyReviewSummary[] {
+    const pastReports = this.getPostEarningsReviewItems().map((item) => item.report);
+
+    return this.savedReportStrategies
+      .filter((strategy): strategy is {key: Exclude<SavedReportStrategy, 'unassigned'>; label: string; detail: string} => (
+        strategy.key !== 'unassigned'
+      ))
+      .map((strategy) => {
+        const reports = pastReports.filter((report) => this.getSavedReportStrategy(report) === strategy.key);
+        const summary = reports.reduce((totals, report) => {
+          const review = this.getSavedReportReview(report);
+
+          if (this.isSavedReportReviewComplete(report)) {
+            totals.completedCount += 1;
+          }
+          if (review.lesson.trim().length > 0) {
+            totals.lessonCount += 1;
+          }
+          if (review.outcome !== 'unreviewed') {
+            totals.recordedOutcomeCount += 1;
+            if (review.outcome === 'positive') {
+              totals.positiveCount += 1;
+            }
+            if (review.outcome === 'negative') {
+              totals.negativeCount += 1;
+            }
+          }
+
+          return totals;
+        }, {
+          completedCount: 0,
+          lessonCount: 0,
+          negativeCount: 0,
+          positiveCount: 0,
+          recordedOutcomeCount: 0,
+        });
+
+        return {
+          ...summary,
+          reportCount: reports.length,
+          strategy: strategy.key,
+          strategyLabel: strategy.label,
+        };
+      })
+      .filter((summary) => summary.reportCount > 0)
+      .sort((first, second) => (
+        second.reportCount - first.reportCount || first.strategyLabel.localeCompare(second.strategyLabel)
+      ));
   }
 
   isSavedReportReviewDue(report: SavedReport, now: Date = new Date()): boolean {

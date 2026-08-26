@@ -2225,6 +2225,103 @@ body { margin: 0;font-family: sans-serif, "Franklin Gothic Book", Verdana; }
   resize: vertical;
 }
 
+.saved-report-strategy-review {
+  display: grid;
+  gap: 0.85rem;
+  margin: 18px 0;
+  padding: 18px;
+  border: 1px solid #c4b5fd;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #f5f3ff, #fafafa);
+}
+
+.saved-report-strategy-review__header,
+.saved-report-strategy-review__card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.saved-report-strategy-review__header h3 {
+  margin: 0 0 0.2rem;
+  color: #5b21b6;
+  font-size: 1.05rem;
+}
+
+.saved-report-strategy-review__header span,
+.saved-report-strategy-review__card-header span,
+.saved-report-strategy-review__metrics small,
+.saved-report-strategy-review__note {
+  color: #6b7280;
+  font-size: 0.8rem;
+}
+
+.saved-report-strategy-review__header > strong {
+  padding: 0.35rem 0.55rem;
+  border-radius: 999px;
+  background: #6d28d9;
+  color: #fff;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.saved-report-strategy-review__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 0.7rem;
+}
+
+.saved-report-strategy-review__card {
+  display: grid;
+  gap: 0.7rem;
+  padding: 0.8rem;
+  border: 1px solid #ddd6fe;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.saved-report-strategy-review__card[data-strategy="preEvent"] {
+  border-top: 3px solid #7c3aed;
+}
+
+.saved-report-strategy-review__card[data-strategy="postEvent"] {
+  border-top: 3px solid #0284c7;
+}
+
+.saved-report-strategy-review__card[data-strategy="avoidEvent"] {
+  border-top: 3px solid #d97706;
+}
+
+.saved-report-strategy-review__card[data-strategy="longTerm"] {
+  border-top: 3px solid #059669;
+}
+
+.saved-report-strategy-review__card-header strong,
+.saved-report-strategy-review__metrics strong {
+  color: #312e81;
+}
+
+.saved-report-strategy-review__metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.saved-report-strategy-review__metrics span {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.saved-report-strategy-review__metrics small {
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.saved-report-strategy-review__note {
+  line-height: 1.4;
+}
+
 .saved-report-review select:focus,
 .saved-report-review textarea:focus {
   outline: 2px solid rgba(63, 81, 181, 0.25);
@@ -2264,7 +2361,9 @@ body { margin: 0;font-family: sans-serif, "Franklin Gothic Book", Verdana; }
 
   .saved-report-review-queue__header,
   .saved-report-review__header,
-  .saved-report-review-queue__item {
+  .saved-report-review-queue__item,
+  .saved-report-strategy-review__header,
+  .saved-report-strategy-review__card-header {
     align-items: flex-start;
     flex-direction: column;
   }
