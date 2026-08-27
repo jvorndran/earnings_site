@@ -659,6 +659,57 @@
     </ng-template>
   </section>
 
+  <section *ngIf="getSavedReportExposurePlans().length > 0" [class.saved-report-risk-capacity--over]="getSavedReportRiskCapacity().status === 'over'" [class.saved-report-risk-capacity--tight]="getSavedReportRiskCapacity().status === 'tight'" class="saved-report-risk-capacity" aria-labelledby="saved-report-risk-capacity-title">
+    <div class="saved-report-risk-capacity__header">
+      <div>
+        <h3 id="saved-report-risk-capacity-title">Combined Earnings Risk Cap</h3>
+        <span>Keep all upcoming pre-event plans within a portfolio-level event-risk limit.</span>
+      </div>
+      <strong>
+        {{getSavedReportRiskCapacity().status === 'over'
+          ? 'Over risk cap'
+          : getSavedReportRiskCapacity().status === 'tight'
+            ? 'Near risk cap'
+            : getSavedReportRiskCapacity().status === 'open'
+              ? 'Risk capacity available'
+              : 'Set risk cap'}}
+      </strong>
+    </div>
+
+    <label class="saved-report-risk-capacity__control">
+      <span>Combined risk cap (% of portfolio)</span>
+      <input [(ngModel)]="maximumAggregateEventRiskPercent" min="0" step="0.25" type="number">
+    </label>
+
+    <ng-container *ngIf="getSavedReportRiskCapacity() as capacity">
+      <div *ngIf="capacity.hasRiskCap; else noSavedReportRiskCap" class="saved-report-risk-capacity__grid">
+        <article>
+          <span>Planned loss</span>
+          <strong>{{capacity.plannedEventRisk | currency:'USD':'symbol':'1.0-0'}}</strong>
+          <small>Across upcoming saved plans</small>
+        </article>
+        <article>
+          <span>Risk cap</span>
+          <strong>{{capacity.capacity | currency:'USD':'symbol':'1.0-0'}}</strong>
+          <small>{{maximumAggregateEventRiskPercent | number:'1.0-2'}}% of portfolio value</small>
+        </article>
+        <article [class.saved-report-risk-capacity__metric--warning]="capacity.riskOverage > 0" [class.saved-report-risk-capacity__metric--positive]="capacity.riskOverage === 0">
+          <span>{{capacity.riskOverage > 0 ? 'Over risk cap' : 'Risk remaining'}}</span>
+          <strong>{{(capacity.riskOverage || capacity.riskRemaining) | currency:'USD':'symbol':'1.0-0'}}</strong>
+          <small>{{(capacity.utilization * 100) | number:'1.0-1'}}% of combined allowance</small>
+        </article>
+      </div>
+      <div *ngIf="capacity.hasRiskCap" [attr.aria-label]="(capacity.utilization * 100 | number:'1.0-1') + ' percent of combined earnings risk cap allocated'" class="saved-report-risk-capacity__bar" role="img">
+        <span [style.width.%]="capacity.utilization > 1 ? 100 : capacity.utilization * 100"></span>
+      </div>
+    </ng-container>
+
+    <ng-template #noSavedReportRiskCap>
+      <p class="saved-report-risk-capacity__empty">Enter a portfolio value and a combined risk-cap percentage to compare all selected event plans.</p>
+    </ng-template>
+    <small class="saved-report-risk-capacity__note">This checks modeled losses from the selected saved plans. It does not predict correlated gaps, options exposure, or realized losses.</small>
+  </section>
+
   <section *ngIf="getSavedReportRoleExposure().length > 0" class="saved-report-role-exposure" aria-labelledby="saved-report-role-exposure-title">
     <div class="saved-report-role-exposure__header">
       <div>

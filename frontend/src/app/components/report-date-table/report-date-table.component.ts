@@ -168,6 +168,16 @@ interface SavedReportRoleExposure {
   targetPositionValue: number;
 }
 
+interface SavedReportRiskCapacity {
+  capacity: number;
+  hasRiskCap: boolean;
+  plannedEventRisk: number;
+  riskOverage: number;
+  riskRemaining: number;
+  status: 'unavailable' | 'open' | 'tight' | 'over';
+  utilization: number;
+}
+
 interface SavedReportReadiness {
   activeCount: number;
   fullyDocumentedCount: number;
@@ -326,6 +336,7 @@ export class ReportDateTableComponent implements OnInit {
   opportunityZeroLine = 50;
   portfolioValue = 25000;
   maximumEventRiskPercent = 1;
+  maximumAggregateEventRiskPercent = 3;
   private readonly savedReportStorageKey = 'earnings-site-saved-reports';
 
 
@@ -669,6 +680,37 @@ export class ReportDateTableComponent implements OnInit {
 
   getSavedReportExposureRiskTotal(): number {
     return this.getSavedReportExposurePlans().reduce((total, plan) => total + plan.plannedEventRisk, 0);
+  }
+
+  getSavedReportRiskCapacity(): SavedReportRiskCapacity {
+    const portfolioValue = Math.max(Number(this.portfolioValue) || 0, 0);
+    const riskCapPercent = Math.max(Number(this.maximumAggregateEventRiskPercent) || 0, 0);
+    const capacity = portfolioValue * (riskCapPercent / 100);
+    const plannedEventRisk = this.getSavedReportExposureRiskTotal();
+
+    if (capacity === 0) {
+      return {
+        capacity: 0,
+        hasRiskCap: false,
+        plannedEventRisk,
+        riskOverage: 0,
+        riskRemaining: 0,
+        status: 'unavailable',
+        utilization: 0
+      };
+    }
+
+    const utilization = plannedEventRisk / capacity;
+
+    return {
+      capacity,
+      hasRiskCap: true,
+      plannedEventRisk,
+      riskOverage: Math.max(plannedEventRisk - capacity, 0),
+      riskRemaining: Math.max(capacity - plannedEventRisk, 0),
+      status: utilization > 1 ? 'over' : utilization >= 0.8 ? 'tight' : 'open',
+      utilization
+    };
   }
 
   getSavedReportRoleExposure(): SavedReportRoleExposure[] {
