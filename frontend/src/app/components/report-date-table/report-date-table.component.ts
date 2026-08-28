@@ -31,6 +31,7 @@ type SavedReportRole = 'unassigned' | 'primary' | 'satellite' | 'hedge' | 'monit
 type SavedReportRoleFilter = 'all' | SavedReportRole;
 type SavedReportConviction = 'unassigned' | 'exploratory' | 'standard' | 'high';
 type SavedReportConvictionFilter = 'all' | SavedReportConviction;
+type SavedReportDecisionFilter = 'all' | 'needsStrategy' | 'needsRole' | 'needsConviction' | 'needsPreEventRisk';
 type SavedReportPreparationKey = 'estimateReviewed' | 'riskPlanned' | 'timingConfirmed';
 type SavedReportJournalKey = 'thesis' | 'risk' | 'decision';
 type SavedReportReviewOutcome = 'unreviewed' | 'positive' | 'negative' | 'mixed' | 'flat';
@@ -285,6 +286,7 @@ export class ReportDateTableComponent implements OnInit {
   savedReportStrategyFilter: SavedReportStrategyFilter = 'all';
   savedReportRoleFilter: SavedReportRoleFilter = 'all';
   savedReportConvictionFilter: SavedReportConvictionFilter = 'all';
+  savedReportDecisionFilter: SavedReportDecisionFilter = 'all';
   savedReportSearchText = '';
   readonly savedReportWorkflowStages: Array<{key: SavedReportStatus; label: string; detail: string}> = [
     {key: 'research', label: 'Research', detail: 'Needs a first review'},
@@ -311,6 +313,13 @@ export class ReportDateTableComponent implements OnInit {
     {key: 'exploratory', label: 'Exploratory', detail: 'Early thesis or limited evidence'},
     {key: 'standard', label: 'Standard', detail: 'Evidence supports a normal review'},
     {key: 'high', label: 'High conviction', detail: 'Strong evidence for priority research'}
+  ];
+  readonly savedReportDecisionFilters: Array<{key: SavedReportDecisionFilter; label: string; detail: string}> = [
+    {key: 'all', label: 'All saved reports', detail: 'Full research shortlist'},
+    {key: 'needsStrategy', label: 'Needs approach', detail: 'Choose how to handle the event'},
+    {key: 'needsRole', label: 'Needs role', detail: 'Classify the portfolio purpose'},
+    {key: 'needsConviction', label: 'Needs conviction', detail: 'Set research confidence'},
+    {key: 'needsPreEventRisk', label: 'Needs allocation', detail: 'Pre-event plan has no risk share'}
   ];
   readonly savedReportRiskAllocations: Array<{percent: number; label: string}> = [
     {percent: 0, label: 'Not planned'},
@@ -419,6 +428,7 @@ export class ReportDateTableComponent implements OnInit {
       this.savedReportStrategyFilter = 'all';
       this.savedReportRoleFilter = 'all';
       this.savedReportConvictionFilter = 'all';
+      this.savedReportDecisionFilter = 'all';
       this.savedReportSearchText = '';
     }
 
@@ -439,6 +449,7 @@ export class ReportDateTableComponent implements OnInit {
     this.savedReportStrategyFilter = 'all';
     this.savedReportRoleFilter = 'all';
     this.savedReportConvictionFilter = 'all';
+    this.savedReportDecisionFilter = 'all';
     this.savedReportSearchText = '';
     this.savedReportMessage = 'Saved report shortlist cleared.';
     this.persistSavedReports();
@@ -494,6 +505,10 @@ export class ReportDateTableComponent implements OnInit {
 
         this.savedReports = importedReports;
         this.savedReportFilter = 'all';
+        this.savedReportStrategyFilter = 'all';
+        this.savedReportRoleFilter = 'all';
+        this.savedReportConvictionFilter = 'all';
+        this.savedReportDecisionFilter = 'all';
         this.persistSavedReports();
         this.savedReportMessage = `${importedReports.length} saved report${importedReports.length === 1 ? '' : 's'} restored from backup.`;
       } catch (error) {
@@ -514,6 +529,7 @@ export class ReportDateTableComponent implements OnInit {
       (this.savedReportStrategyFilter === 'all' || this.getSavedReportStrategy(report) === this.savedReportStrategyFilter) &&
       (this.savedReportRoleFilter === 'all' || this.getSavedReportRole(report) === this.savedReportRoleFilter) &&
       (this.savedReportConvictionFilter === 'all' || this.getSavedReportConviction(report) === this.savedReportConvictionFilter) &&
+      this.matchesSavedReportDecisionFilter(report, this.savedReportDecisionFilter) &&
       (normalizedSearch.length === 0 ||
         report.ticker.toLowerCase().includes(normalizedSearch) ||
         report.name.toLowerCase().includes(normalizedSearch) ||
@@ -940,6 +956,38 @@ export class ReportDateTableComponent implements OnInit {
 
   setSavedReportConvictionFilter(filter: SavedReportConvictionFilter): void {
     this.savedReportConvictionFilter = filter;
+  }
+
+  setSavedReportDecisionFilter(filter: SavedReportDecisionFilter): void {
+    this.savedReportDecisionFilter = filter;
+  }
+
+  getSavedReportDecisionFilterCount(filter: SavedReportDecisionFilter): number {
+    return this.savedReports.filter((report) => this.matchesSavedReportDecisionFilter(report, filter)).length;
+  }
+
+  getSavedReportDecisionGapCount(): number {
+    return this.savedReports.filter((report) => (
+      this.matchesSavedReportDecisionFilter(report, 'needsStrategy') ||
+      this.matchesSavedReportDecisionFilter(report, 'needsRole') ||
+      this.matchesSavedReportDecisionFilter(report, 'needsConviction') ||
+      this.matchesSavedReportDecisionFilter(report, 'needsPreEventRisk')
+    )).length;
+  }
+
+  private matchesSavedReportDecisionFilter(report: SavedReport, filter: SavedReportDecisionFilter): boolean {
+    switch (filter) {
+      case 'needsStrategy':
+        return this.getSavedReportStrategy(report) === 'unassigned';
+      case 'needsRole':
+        return this.getSavedReportRole(report) === 'unassigned';
+      case 'needsConviction':
+        return this.getSavedReportConviction(report) === 'unassigned';
+      case 'needsPreEventRisk':
+        return this.getSavedReportStrategy(report) === 'preEvent' && this.getSavedReportRiskAllocation(report) === 0;
+      default:
+        return true;
+    }
   }
 
   setSavedReportConviction(report: SavedReport, conviction: SavedReportConviction): void {

@@ -625,6 +625,30 @@
     </div>
   </section>
 
+  <section class="saved-report-strategy" aria-labelledby="saved-report-decision-gaps-title">
+    <div class="saved-report-strategy__header">
+      <div>
+        <h3 id="saved-report-decision-gaps-title">Earnings Decision Gaps</h3>
+        <span>Focus the shortlist on saved reports still missing an approach, portfolio role, conviction level, or pre-event allocation.</span>
+      </div>
+      <strong>{{getSavedReportDecisionGapCount()}} report{{getSavedReportDecisionGapCount() === 1 ? '' : 's'}} need a decision</strong>
+    </div>
+
+    <div class="saved-report-strategy__grid">
+      <button
+        *ngFor="let filter of savedReportDecisionFilters"
+        (click)="setSavedReportDecisionFilter(filter.key)"
+        [attr.aria-pressed]="savedReportDecisionFilter === filter.key"
+        [class.saved-report-strategy-card--active]="savedReportDecisionFilter === filter.key"
+        class="saved-report-strategy-card"
+        type="button">
+        <span>{{filter.label}}</span>
+        <strong>{{getSavedReportDecisionFilterCount(filter.key)}}</strong>
+        <small>{{filter.detail}}</small>
+      </button>
+    </div>
+  </section>
+
   <section class="saved-report-exposure" aria-labelledby="saved-report-exposure-title">
     <div class="saved-report-exposure__header">
       <div>
@@ -1094,7 +1118,7 @@
   </div>
 
   <p *ngIf="visibleSavedReports.length === 0" class="saved-report-workflow-empty">
-    No saved reports match the selected preparation stage, event approach, portfolio role, and conviction level yet.
+    No saved reports match the selected preparation stage, event approach, portfolio role, conviction level, and decision-gap filter yet.
   </p>
 </section>
 
