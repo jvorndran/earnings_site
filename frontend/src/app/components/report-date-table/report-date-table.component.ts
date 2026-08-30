@@ -23,6 +23,7 @@ type EstimateOutlook = 'all' | 'positive' | 'loss' | 'breakEven';
 type CatalystProfile = 'all' | 'volatileCrowded' | 'moveDriven' | 'crowdedOnly' | 'lowerRisk';
 type EarningsQualityProfile = 'all' | 'durable' | 'expectationsHigh' | 'turnaround' | 'fundamentalPressure' | 'mixed';
 type MarketCapCohort = 'all' | 'small' | 'mid' | 'large' | 'mega';
+type EarningsSignalLens = 'balanced' | 'fundamental' | 'squeeze';
 type SavedReportStatus = 'research' | 'watching' | 'ready' | 'skip';
 type SavedReportFilter = 'all' | SavedReportStatus;
 type SavedReportStrategy = 'unassigned' | 'preEvent' | 'postEvent' | 'avoidEvent' | 'longTerm';
@@ -116,6 +117,16 @@ interface CrowdingWatchItem {
   shortInterest: number;
   daysToCover: number;
   impliedMove: number;
+}
+
+interface EarningsSignalItem {
+  daysToCover: number;
+  estimate: number;
+  growth: number;
+  impliedMove: number;
+  score: number;
+  shortInterest: number;
+  stock: StockInfo;
 }
 
 interface OpportunityMapPoint {
@@ -275,6 +286,7 @@ export class ReportDateTableComponent implements OnInit {
   catalystProfile: CatalystProfile = 'all';
   earningsQualityProfile: EarningsQualityProfile = 'all';
   marketCapCohort: MarketCapCohort = 'all';
+  earningsSignalLens: EarningsSignalLens = 'balanced';
   sortField: SortField = 'marketCap';
   sortDirection: SortDirection = 'desc';
   comparisonTickers: string[] = [];
@@ -334,6 +346,11 @@ export class ReportDateTableComponent implements OnInit {
     {key: 'negative', label: 'Negative reaction'},
     {key: 'mixed', label: 'Mixed reaction'},
     {key: 'flat', label: 'Muted reaction'}
+  ];
+  readonly earningsSignalLenses: Array<{key: EarningsSignalLens; label: string; detail: string}> = [
+    {key: 'balanced', label: 'Balanced catalyst', detail: 'Growth, earnings, event move, and positioning share the weight.'},
+    {key: 'fundamental', label: 'Fundamental', detail: 'Prioritize positive earnings power and quarterly growth.'},
+    {key: 'squeeze', label: 'Squeeze setup', detail: 'Prioritize short interest, days to cover, and expected move.'}
   ];
   readonly savedReportPreparationSteps: Array<{key: SavedReportPreparationKey; label: string}> = [
     {key: 'estimateReviewed', label: 'Review the consensus estimate'},
@@ -1206,6 +1223,7 @@ export class ReportDateTableComponent implements OnInit {
     this.catalystProfile = 'all';
     this.earningsQualityProfile = 'all';
     this.marketCapCohort = 'all';
+    this.earningsSignalLens = 'balanced';
     this.sortField = 'marketCap';
     this.sortDirection = 'desc';
     this.applyFilters();
@@ -1225,6 +1243,10 @@ export class ReportDateTableComponent implements OnInit {
     this.marketCapCohort = this.marketCapCohort === cohort ? 'all' : cohort;
     this.minimumMarketCap = 0;
     this.applyFilters();
+  }
+
+  setEarningsSignalLens(lens: EarningsSignalLens): void {
+    this.earningsSignalLens = lens;
   }
 
   clearMarketCapCohort(): void {
@@ -1439,6 +1461,39 @@ export class ReportDateTableComponent implements OnInit {
       .slice(0, 6);
   }
 
+  getEarningsSignalBoard(): EarningsSignalItem[] {
+    return this.filteredStockInfoObjects
+      .map((stock) => {
+        const growth = this.getPercentageValue(stock, 'Quarterly Growth');
+        const impliedMove = this.getPercentageValue(stock, 'Implied Move');
+        const shortInterest = this.getPercentageValue(stock, 'Short Interest');
+        const daysToCover = this.getNumberValue(stock, 'Days To Cover');
+        const estimate = this.getEstimateValue(stock);
+        const growthScore = this.clampSignalScore(((growth + 10) / 50) * 100);
+        const estimateScore = estimate > 0.1 ? 100 : estimate >= -0.1 ? 50 : 0;
+        const moveScore = this.clampSignalScore((impliedMove / 15) * 100);
+        const shortScore = this.clampSignalScore((shortInterest / 20) * 100);
+        const coverScore = this.clampSignalScore((daysToCover / 10) * 100);
+        let score: number;
+
+        if (this.earningsSignalLens === 'fundamental') {
+          score = (growthScore * 0.55) + (estimateScore * 0.3) + (moveScore * 0.1) + (shortScore * 0.05);
+        } else if (this.earningsSignalLens === 'squeeze') {
+          score = (shortScore * 0.35) + (coverScore * 0.3) + (moveScore * 0.25) + (growthScore * 0.1);
+        } else {
+          score = (growthScore * 0.3) + (estimateScore * 0.25) + (moveScore * 0.25) + (shortScore * 0.1) + (coverScore * 0.1);
+        }
+
+        return {stock, score: Math.round(score), growth, estimate, impliedMove, shortInterest, daysToCover} as EarningsSignalItem;
+      })
+      .sort((first, second) => (
+        second.score - first.score ||
+        second.growth - first.growth ||
+        first.stock.Ticker.localeCompare(second.stock.Ticker)
+      ))
+      .slice(0, 8);
+  }
+
   getMarketCapCohorts(): MarketCapCohortSummary[] {
     const normalizedSearch = this.searchText.trim().toLowerCase();
     const candidates = this.stockInfoObjects.filter((stock) => (
@@ -1624,6 +1679,10 @@ export class ReportDateTableComponent implements OnInit {
     }
 
     return this.getMarketCapInBillions(stock['Market Cap']);
+  }
+
+  private clampSignalScore(value: number): number {
+    return Math.min(100, Math.max(0, value));
   }
 
   private getEstimateValue(stock: StockInfo): number {

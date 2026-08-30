@@ -2625,3 +2625,139 @@ body { margin: 0;font-family: sans-serif, "Franklin Gothic Book", Verdana; }
     grid-template-columns: 1fr;
   }
 }
+
+.earnings-signal-board {
+  width: 90%;
+  margin: 0 auto 1.5rem;
+  padding: 1rem;
+  border: 1px solid #c7c8ee;
+  border-radius: 6px;
+  background: #f8f8ff;
+}
+
+.earnings-signal-board__header,
+.earnings-signal-board__card-header,
+.earnings-signal-board__actions {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.earnings-signal-board__header h2,
+.earnings-signal-board__card-header strong {
+  margin: 0 0 0.25rem;
+  color: #30348a;
+}
+
+.earnings-signal-board__header span,
+.earnings-signal-board__card-header span,
+.earnings-signal-board__lenses small,
+.earnings-signal-board__metrics small,
+.earnings-signal-board__empty {
+  color: #5b5f88;
+}
+
+.earnings-signal-board__header > strong {
+  color: #30348a;
+}
+
+.earnings-signal-board__lenses,
+.earnings-signal-board__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.9rem;
+}
+
+.earnings-signal-board__lenses button {
+  display: grid;
+  gap: 0.25rem;
+  border: 1px solid #c7c8ee;
+  border-radius: 6px;
+  background: white;
+  color: #30348a;
+  cursor: pointer;
+  padding: 0.7rem;
+  text-align: left;
+}
+
+.earnings-signal-board__lenses button.earnings-signal-board__lens--active {
+  border-color: #5359c7;
+  box-shadow: 0 0 0 2px #dcdcff;
+}
+
+.earnings-signal-board__grid article {
+  display: grid;
+  gap: 0.7rem;
+  border: 1px solid #d9daf2;
+  border-radius: 6px;
+  background: white;
+  padding: 0.8rem;
+}
+
+.earnings-signal-board__card-header > div,
+.earnings-signal-board__metrics span {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.earnings-signal-board__card-header em {
+  min-width: 2rem;
+  border-radius: 999px;
+  background: #e9e9ff;
+  color: #30348a;
+  font-style: normal;
+  font-weight: 700;
+  padding: 0.3rem;
+  text-align: center;
+}
+
+.earnings-signal-board__track {
+  height: 0.5rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e4e4ef;
+}
+
+.earnings-signal-board__track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #5558c8, #64a3d9);
+}
+
+.earnings-signal-board__metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(90px, 1fr));
+  gap: 0.5rem;
+}
+
+.earnings-signal-board__metrics small {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.earnings-signal-board__metrics strong {
+  color: #292d6d;
+}
+
+.earnings-signal-board__actions button {
+  border: 1px solid #6b70ca;
+  border-radius: 4px;
+  background: white;
+  color: #363b9c;
+  cursor: pointer;
+  font-weight: 600;
+  padding: 0.4rem 0.55rem;
+}
+
+@media (max-width: 560px) {
+  .earnings-signal-board__header,
+  .earnings-signal-board__card-header,
+  .earnings-signal-board__actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

@@ -330,6 +330,54 @@
   </ng-template>
 </section>
 
+<section class="earnings-signal-board" aria-labelledby="earnings-signal-board-title">
+  <div class="earnings-signal-board__header">
+    <div>
+      <h2 id="earnings-signal-board-title">Earnings Signal Board</h2>
+      <span>Rank the filtered report list by a research lens, then compare or save the most relevant names.</span>
+    </div>
+    <strong>{{getEarningsSignalBoard().length}} ranked</strong>
+  </div>
+
+  <div aria-label="Earnings signal ranking lens" class="earnings-signal-board__lenses" role="group">
+    <button
+      *ngFor="let lens of earningsSignalLenses"
+      (click)="setEarningsSignalLens(lens.key)"
+      [attr.aria-pressed]="earningsSignalLens === lens.key"
+      [class.earnings-signal-board__lens--active]="earningsSignalLens === lens.key"
+      type="button">
+      <strong>{{lens.label}}</strong>
+      <small>{{lens.detail}}</small>
+    </button>
+  </div>
+
+  <div *ngIf="getEarningsSignalBoard().length > 0; else noEarningsSignals" class="earnings-signal-board__grid">
+    <article *ngFor="let item of getEarningsSignalBoard()">
+      <div class="earnings-signal-board__card-header">
+        <div><strong>{{item.stock.Ticker}}</strong><span>{{item.stock.Name}}</span></div>
+        <em>{{item.score}}</em>
+      </div>
+      <div class="earnings-signal-board__track" [attr.aria-label]="item.stock.Ticker + ' signal score ' + item.score + ' out of 100'" role="img">
+        <span [style.width.%]="item.score"></span>
+      </div>
+      <div class="earnings-signal-board__metrics">
+        <span><small>Growth</small><strong>{{item.growth | number:'1.1-1'}}%</strong></span>
+        <span><small>EPS est.</small><strong>{{item.estimate | number:'1.2-2'}}</strong></span>
+        <span><small>Implied move</small><strong>{{item.impliedMove | number:'1.1-1'}}%</strong></span>
+        <span><small>Days to cover</small><strong>{{item.daysToCover | number:'1.1-1'}}</strong></span>
+      </div>
+      <div class="earnings-signal-board__actions">
+        <button (click)="toggleComparison(item.stock)" type="button">{{isCompared(item.stock.Ticker) ? 'Selected' : 'Compare'}}</button>
+        <button (click)="toggleSavedReport(item.stock)" type="button">{{isSavedReport(item.stock.Ticker) ? 'Saved' : 'Save report'}}</button>
+      </div>
+    </article>
+  </div>
+
+  <ng-template #noEarningsSignals>
+    <p class="earnings-signal-board__empty">Adjust the report filters to rank matching earnings candidates.</p>
+  </ng-template>
+</section>
+
 <section class="opportunity-map-panel">
   <div class="opportunity-map-header">
     <div>
