@@ -251,6 +251,17 @@ interface SavedReportStrategyReviewSummary {
   strategyLabel: string;
 }
 
+interface SavedReportConvictionReviewSummary {
+  completedCount: number;
+  conviction: Exclude<SavedReportConviction, 'unassigned'>;
+  convictionLabel: string;
+  lessonCount: number;
+  negativeCount: number;
+  positiveCount: number;
+  recordedOutcomeCount: number;
+  reportCount: number;
+}
+
 @Component({
   selector: 'app-report-date-table',
   templateUrl: './report-date-table.component.html',
@@ -883,6 +894,58 @@ export class ReportDateTableComponent implements OnInit {
       .filter((summary) => summary.reportCount > 0)
       .sort((first, second) => (
         second.reportCount - first.reportCount || first.strategyLabel.localeCompare(second.strategyLabel)
+      ));
+  }
+
+  getSavedReportConvictionReviewSummaries(): SavedReportConvictionReviewSummary[] {
+    const pastReports = this.getPostEarningsReviewItems().map((item) => item.report);
+    const convictionOrder = this.savedReportConvictions.map((conviction) => conviction.key);
+
+    return this.savedReportConvictions
+      .filter((conviction): conviction is {key: Exclude<SavedReportConviction, 'unassigned'>; label: string; detail: string} => (
+        conviction.key !== 'unassigned'
+      ))
+      .map((conviction) => {
+        const reports = pastReports.filter((report) => this.getSavedReportConviction(report) === conviction.key);
+        const summary = reports.reduce((totals, report) => {
+          const review = this.getSavedReportReview(report);
+
+          if (this.isSavedReportReviewComplete(report)) {
+            totals.completedCount += 1;
+          }
+          if (review.lesson.trim().length > 0) {
+            totals.lessonCount += 1;
+          }
+          if (review.outcome !== 'unreviewed') {
+            totals.recordedOutcomeCount += 1;
+            if (review.outcome === 'positive') {
+              totals.positiveCount += 1;
+            }
+            if (review.outcome === 'negative') {
+              totals.negativeCount += 1;
+            }
+          }
+
+          return totals;
+        }, {
+          completedCount: 0,
+          lessonCount: 0,
+          negativeCount: 0,
+          positiveCount: 0,
+          recordedOutcomeCount: 0,
+        });
+
+        return {
+          ...summary,
+          conviction: conviction.key,
+          convictionLabel: conviction.label,
+          reportCount: reports.length,
+        };
+      })
+      .filter((summary) => summary.reportCount > 0)
+      .sort((first, second) => (
+        convictionOrder.indexOf(second.conviction) - convictionOrder.indexOf(first.conviction) ||
+        second.reportCount - first.reportCount
       ));
   }
 

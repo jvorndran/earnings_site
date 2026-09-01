@@ -2322,6 +2322,99 @@ body { margin: 0;font-family: sans-serif, "Franklin Gothic Book", Verdana; }
   line-height: 1.4;
 }
 
+.saved-report-conviction-review {
+  display: grid;
+  gap: 0.85rem;
+  margin: 18px 0;
+  padding: 18px;
+  border: 1px solid #f0c978;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #fffbeb, #fffdf7);
+}
+
+.saved-report-conviction-review__header,
+.saved-report-conviction-review__card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.saved-report-conviction-review__header h3 {
+  margin: 0 0 0.2rem;
+  color: #92400e;
+  font-size: 1.05rem;
+}
+
+.saved-report-conviction-review__header span,
+.saved-report-conviction-review__card-header span,
+.saved-report-conviction-review__metrics small,
+.saved-report-conviction-review__note {
+  color: #78654a;
+  font-size: 0.8rem;
+}
+
+.saved-report-conviction-review__header > strong {
+  padding: 0.35rem 0.55rem;
+  border-radius: 999px;
+  background: #b45309;
+  color: #fff;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.saved-report-conviction-review__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 0.7rem;
+}
+
+.saved-report-conviction-review__card {
+  display: grid;
+  gap: 0.7rem;
+  padding: 0.8rem;
+  border: 1px solid #f4dba7;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.saved-report-conviction-review__card[data-conviction="exploratory"] {
+  border-top: 3px solid #64748b;
+}
+
+.saved-report-conviction-review__card[data-conviction="standard"] {
+  border-top: 3px solid #0284c7;
+}
+
+.saved-report-conviction-review__card[data-conviction="high"] {
+  border-top: 3px solid #d97706;
+}
+
+.saved-report-conviction-review__card-header strong,
+.saved-report-conviction-review__metrics strong {
+  color: #78350f;
+}
+
+.saved-report-conviction-review__metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.saved-report-conviction-review__metrics span {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.saved-report-conviction-review__metrics small {
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.saved-report-conviction-review__note {
+  line-height: 1.4;
+}
+
 .saved-report-role-exposure {
   display: grid;
   gap: 0.85rem;
@@ -2469,6 +2562,8 @@ body { margin: 0;font-family: sans-serif, "Franklin Gothic Book", Verdana; }
   .saved-report-review-queue__item,
   .saved-report-strategy-review__header,
   .saved-report-strategy-review__card-header,
+  .saved-report-conviction-review__header,
+  .saved-report-conviction-review__card-header,
   .saved-report-role-exposure__header,
   .saved-report-role-exposure__card > div:first-child {
     align-items: flex-start;
