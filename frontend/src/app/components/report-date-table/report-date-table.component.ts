@@ -517,6 +517,58 @@ export class ReportDateTableComponent implements OnInit {
     this.savedReportMessage = `${this.savedReports.length} saved report${this.savedReports.length === 1 ? '' : 's'} downloaded as a backup.`;
   }
 
+  downloadSavedReportsCsv(): void {
+    if (this.savedReports.length === 0) {
+      this.savedReportMessage = 'Save at least one report before exporting research.';
+      return;
+    }
+
+    const headers = [
+      'Ticker', 'Company', 'Report Date', 'Workflow Status', 'Event Strategy', 'Portfolio Role', 'Conviction',
+      'Implied Move (%)', 'Short Interest (%)', 'EPS Estimate', 'Market Cap', 'Risk Allocation (%)',
+      'Preparation Complete', 'Journal Fields Complete', 'Review Outcome', 'Review Reaction', 'Review Lesson'
+    ];
+    const rows = [...this.savedReports]
+      .sort((first, second) => first.reportDate.localeCompare(second.reportDate) || first.ticker.localeCompare(second.ticker))
+      .map((report) => {
+        const review = this.getSavedReportReview(report);
+
+        return [
+          report.ticker,
+          report.name,
+          report.reportDate,
+          this.getSavedReportStatusLabel(this.getSavedReportStatus(report)),
+          this.getSavedReportStrategyLabel(this.getSavedReportStrategy(report)),
+          this.getSavedReportRoleLabel(this.getSavedReportRole(report)),
+          this.getSavedReportConvictionLabel(this.getSavedReportConviction(report)),
+          report.impliedMove,
+          report.shortInterest,
+          report.estimate,
+          report.marketCap,
+          this.getSavedReportRiskAllocation(report),
+          `${this.getSavedReportPreparationCount(report)}/${this.savedReportPreparationSteps.length}`,
+          `${this.getSavedReportJournalCount(report)}/3`,
+          this.getSavedReportReviewLabel(review.outcome),
+          review.reaction,
+          review.lesson,
+        ];
+      });
+    const csv = [headers, ...rows]
+      .map((row) => row.map((value) => `"${String(value ?? '').replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+    const blob = new Blob([csv], {type: 'text/csv;charset=utf-8'});
+    const downloadUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+
+    link.href = downloadUrl;
+    link.download = `earnings-research-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(downloadUrl);
+    this.savedReportMessage = `${this.savedReports.length} saved report${this.savedReports.length === 1 ? '' : 's'} exported as CSV.`;
+  }
+
   restoreSavedReportsBackup(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.item(0);

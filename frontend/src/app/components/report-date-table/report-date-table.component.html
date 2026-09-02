@@ -526,6 +526,7 @@
     </div>
     <div class="saved-reports-header-actions">
       <button (click)="downloadSavedReportsBackup()" class="saved-report-backup-button" type="button">Download Backup</button>
+      <button (click)="downloadSavedReportsCsv()" class="saved-report-backup-button" type="button">Export Research CSV</button>
       <label class="saved-report-backup-button">
         Restore Backup
         <input (change)="restoreSavedReportsBackup($event)" accept="application/json,.json" class="saved-report-backup-input" type="file">
