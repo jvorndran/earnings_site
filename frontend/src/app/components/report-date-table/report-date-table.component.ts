@@ -180,6 +180,16 @@ interface SavedReportRoleExposure {
   targetPositionValue: number;
 }
 
+interface SavedReportRoleConvictionSummary {
+  activeCount: number;
+  conviction: SavedReportConviction;
+  convictionLabel: string;
+  plannedEventRisk: number;
+  reportCount: number;
+  role: SavedReportRole;
+  roleLabel: string;
+}
+
 interface SavedReportRiskCapacity {
   capacity: number;
   hasRiskCap: boolean;
@@ -785,6 +795,41 @@ export class ReportDateTableComponent implements OnInit {
       ));
   }
 
+  getSavedReportRoleConvictionSummaries(): SavedReportRoleConvictionSummary[] {
+    const roleOrder = this.savedReportRoles.map((role) => role.key);
+    const convictionOrder = this.savedReportConvictions.map((conviction) => conviction.key);
+    const exposurePlans = this.getSavedReportExposurePlans();
+
+    return this.savedReportRoles.flatMap((role) => this.savedReportConvictions.map((conviction) => {
+      const reports = this.savedReports.filter((report) => (
+        this.getSavedReportRole(report) === role.key &&
+        this.getSavedReportConviction(report) === conviction.key
+      ));
+      const plannedEventRisk = exposurePlans
+        .filter((plan) => (
+          this.getSavedReportRole(plan.report) === role.key &&
+          this.getSavedReportConviction(plan.report) === conviction.key
+        ))
+        .reduce((total, plan) => total + plan.plannedEventRisk, 0);
+
+      return {
+        activeCount: reports.filter((report) => this.getSavedReportStatus(report) !== 'skip').length,
+        conviction: conviction.key,
+        convictionLabel: conviction.label,
+        plannedEventRisk,
+        reportCount: reports.length,
+        role: role.key,
+        roleLabel: role.label,
+      };
+    }))
+      .filter((summary) => summary.reportCount > 0)
+      .sort((first, second) => (
+        roleOrder.indexOf(first.role) - roleOrder.indexOf(second.role) ||
+        convictionOrder.indexOf(first.conviction) - convictionOrder.indexOf(second.conviction) ||
+        first.roleLabel.localeCompare(second.roleLabel)
+      ));
+  }
+
   getPostEarningsReviewItems(now: Date = new Date()): SavedReportReviewItem[] {
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
@@ -1036,6 +1081,16 @@ export class ReportDateTableComponent implements OnInit {
 
   setSavedReportConvictionFilter(filter: SavedReportConvictionFilter): void {
     this.savedReportConvictionFilter = filter;
+  }
+
+  focusSavedReportRoleConviction(role: SavedReportRole, conviction: SavedReportConviction): void {
+    this.savedReportFilter = 'all';
+    this.savedReportStrategyFilter = 'all';
+    this.savedReportRoleFilter = role;
+    this.savedReportConvictionFilter = conviction;
+    this.savedReportDecisionFilter = 'all';
+    this.savedReportSearchText = '';
+    this.savedReportMessage = `${this.getSavedReportRoleLabel(role)} / ${this.getSavedReportConvictionLabel(conviction)} is now in view.`;
   }
 
   setSavedReportDecisionFilter(filter: SavedReportDecisionFilter): void {

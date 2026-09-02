@@ -673,6 +673,34 @@
     </div>
   </section>
 
+  <section *ngIf="getSavedReportRoleConvictionSummaries().length > 0" class="saved-report-role-conviction" aria-labelledby="saved-report-role-conviction-title">
+    <div class="saved-report-role-conviction__header">
+      <div>
+        <h3 id="saved-report-role-conviction-title">Role &amp; Conviction Map</h3>
+        <span>See where active earnings research is concentrated across portfolio purpose and evidence level.</span>
+      </div>
+      <strong>{{getSavedReportRoleConvictionSummaries().length}} active combination{{getSavedReportRoleConvictionSummaries().length === 1 ? '' : 's'}}</strong>
+    </div>
+
+    <div class="saved-report-role-conviction__grid">
+      <button
+        *ngFor="let summary of getSavedReportRoleConvictionSummaries()"
+        (click)="focusSavedReportRoleConviction(summary.role, summary.conviction)"
+        [attr.aria-label]="'Show ' + summary.roleLabel + ' reports with ' + summary.convictionLabel + ' conviction'"
+        [attr.data-conviction]="summary.conviction"
+        [attr.data-role]="summary.role"
+        [class.saved-report-role-conviction__card--active]="savedReportRoleFilter === summary.role && savedReportConvictionFilter === summary.conviction"
+        class="saved-report-role-conviction__card"
+        type="button">
+        <span>{{summary.roleLabel}}</span>
+        <strong>{{summary.convictionLabel}}</strong>
+        <small>{{summary.activeCount}} active / {{summary.reportCount}} saved</small>
+        <em>{{summary.plannedEventRisk > 0 ? (summary.plannedEventRisk | currency:'USD':'symbol':'1.0-0') + ' planned risk' : 'No planned event risk'}}</em>
+      </button>
+    </div>
+    <small class="saved-report-role-conviction__note">Select a combination to focus the saved-report cards below. Planned risk includes upcoming Pre-event reports with a selected risk share.</small>
+  </section>
+
   <section class="saved-report-strategy" aria-labelledby="saved-report-decision-gaps-title">
     <div class="saved-report-strategy__header">
       <div>
