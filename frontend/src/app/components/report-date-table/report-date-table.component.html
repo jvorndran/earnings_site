@@ -1078,6 +1078,32 @@
     <small class="saved-report-conviction-review__note">Use the recorded outcomes to calibrate research confidence; these notes do not measure investment performance or predict results.</small>
   </section>
 
+  <section *ngIf="getSavedReportRoleReviewSummaries().length > 0" class="saved-report-role-review" aria-labelledby="saved-report-role-review-title">
+    <div class="saved-report-role-review__header">
+      <div>
+        <h3 id="saved-report-role-review-title">Portfolio Role Outcome Review</h3>
+        <span>Compare recorded earnings reactions and lessons by each idea’s intended portfolio job.</span>
+      </div>
+      <strong>{{getSavedReportRoleReviewSummaries().length}} role{{getSavedReportRoleReviewSummaries().length === 1 ? '' : 's'}} reviewed</strong>
+    </div>
+
+    <div class="saved-report-role-review__grid">
+      <article *ngFor="let summary of getSavedReportRoleReviewSummaries()" [attr.data-role]="summary.role" class="saved-report-role-review__card">
+        <div class="saved-report-role-review__card-header">
+          <strong>{{summary.roleLabel}}</strong>
+          <span>{{summary.reportCount}} past report{{summary.reportCount === 1 ? '' : 's'}}</span>
+        </div>
+        <div class="saved-report-role-review__metrics">
+          <span><small>Recorded reactions</small><strong>{{summary.recordedOutcomeCount}}/{{summary.reportCount}}</strong></span>
+          <span><small>Positive / negative</small><strong>{{summary.positiveCount}} / {{summary.negativeCount}}</strong></span>
+          <span><small>Complete reviews</small><strong>{{summary.completedCount}}/{{summary.reportCount}}</strong></span>
+          <span><small>Lessons captured</small><strong>{{summary.lessonCount}}</strong></span>
+        </div>
+      </article>
+    </div>
+    <small class="saved-report-role-review__note">Use the record to calibrate how you research each role; it is not a performance record or investment recommendation.</small>
+  </section>
+
   <div class="saved-reports-grid">
     <article
       *ngFor="let report of visibleSavedReports"

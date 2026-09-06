@@ -181,6 +181,17 @@ interface SavedReportRoleExposure {
   targetPositionValue: number;
 }
 
+interface SavedReportRoleReviewSummary {
+  completedCount: number;
+  lessonCount: number;
+  negativeCount: number;
+  positiveCount: number;
+  recordedOutcomeCount: number;
+  reportCount: number;
+  role: Exclude<SavedReportRole, 'unassigned'>;
+  roleLabel: string;
+}
+
 interface SavedReportRoleConvictionSummary {
   activeCount: number;
   conviction: SavedReportConviction;
@@ -1028,6 +1039,58 @@ export class ReportDateTableComponent implements OnInit {
       .filter((summary) => summary.reportCount > 0)
       .sort((first, second) => (
         second.reportCount - first.reportCount || first.strategyLabel.localeCompare(second.strategyLabel)
+      ));
+  }
+
+  getSavedReportRoleReviewSummaries(): SavedReportRoleReviewSummary[] {
+    const pastReports = this.getPostEarningsReviewItems().map((item) => item.report);
+    const roleOrder = this.savedReportRoles.map((role) => role.key);
+
+    return this.savedReportRoles
+      .filter((role): role is {key: Exclude<SavedReportRole, 'unassigned'>; label: string; detail: string} => (
+        role.key !== 'unassigned'
+      ))
+      .map((role) => {
+        const reports = pastReports.filter((report) => this.getSavedReportRole(report) === role.key);
+        const summary = reports.reduce((totals, report) => {
+          const review = this.getSavedReportReview(report);
+
+          if (this.isSavedReportReviewComplete(report)) {
+            totals.completedCount += 1;
+          }
+          if (review.lesson.trim().length > 0) {
+            totals.lessonCount += 1;
+          }
+          if (review.outcome !== 'unreviewed') {
+            totals.recordedOutcomeCount += 1;
+            if (review.outcome === 'positive') {
+              totals.positiveCount += 1;
+            }
+            if (review.outcome === 'negative') {
+              totals.negativeCount += 1;
+            }
+          }
+
+          return totals;
+        }, {
+          completedCount: 0,
+          lessonCount: 0,
+          negativeCount: 0,
+          positiveCount: 0,
+          recordedOutcomeCount: 0,
+        });
+
+        return {
+          ...summary,
+          reportCount: reports.length,
+          role: role.key,
+          roleLabel: role.label,
+        };
+      })
+      .filter((summary) => summary.reportCount > 0)
+      .sort((first, second) => (
+        roleOrder.indexOf(first.role) - roleOrder.indexOf(second.role) ||
+        second.reportCount - first.reportCount
       ));
   }
 
