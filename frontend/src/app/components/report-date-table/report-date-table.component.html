@@ -998,8 +998,21 @@
       </article>
     </div>
 
+    <div aria-label="Post-earnings review filter" class="saved-report-review-queue__filters" role="group">
+      <button
+        *ngFor="let filter of postEarningsReviewFilters"
+        (click)="setPostEarningsReviewFilter(filter.key)"
+        [attr.aria-pressed]="postEarningsReviewFilter === filter.key"
+        [class.saved-report-review-queue__filter--active]="postEarningsReviewFilter === filter.key"
+        type="button">
+        <strong>{{filter.label}}</strong>
+        <span>{{getPostEarningsReviewFilterCount(filter.key)}} report{{getPostEarningsReviewFilterCount(filter.key) === 1 ? '' : 's'}}</span>
+        <small>{{filter.detail}}</small>
+      </button>
+    </div>
+
     <div class="saved-report-review-queue__grid">
-      <a *ngFor="let item of getPostEarningsReviewItems()" [routerLink]="['/', item.report.reportDate, item.report.ticker]" class="saved-report-review-queue__item">
+      <a *ngFor="let item of getVisiblePostEarningsReviewItems()" [routerLink]="['/', item.report.reportDate, item.report.ticker]" class="saved-report-review-queue__item">
         <div>
           <span>{{item.daysSince}} day{{item.daysSince === 1 ? '' : 's'}} since report</span>
           <strong>{{item.report.ticker}}</strong>
@@ -1008,6 +1021,9 @@
         <p>{{isSavedReportReviewComplete(item.report) ? getSavedReportReviewLabel(getSavedReportReview(item.report).outcome) : 'Review needed'}}</p>
       </a>
     </div>
+    <p *ngIf="getVisiblePostEarningsReviewItems().length === 0" class="saved-report-review-queue__empty">
+      No past reports match this review view yet.
+    </p>
   </section>
 
   <section *ngIf="getSavedReportStrategyReviewSummaries().length > 0" class="saved-report-strategy-review" aria-labelledby="saved-report-strategy-review-title">

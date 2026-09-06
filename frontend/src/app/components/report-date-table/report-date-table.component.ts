@@ -37,6 +37,7 @@ type SavedReportPreparationKey = 'estimateReviewed' | 'riskPlanned' | 'timingCon
 type SavedReportJournalKey = 'thesis' | 'risk' | 'decision';
 type SavedReportReviewOutcome = 'unreviewed' | 'positive' | 'negative' | 'mixed' | 'flat';
 type SavedReportReviewKey = 'reaction' | 'lesson';
+type PostEarningsReviewFilter = 'all' | 'needsOutcome' | 'needsNotes' | 'complete';
 
 interface SavedReportPreparation {
   estimateReviewed: boolean;
@@ -321,6 +322,7 @@ export class ReportDateTableComponent implements OnInit {
   savedReportConvictionFilter: SavedReportConvictionFilter = 'all';
   savedReportDecisionFilter: SavedReportDecisionFilter = 'all';
   savedReportSearchText = '';
+  postEarningsReviewFilter: PostEarningsReviewFilter = 'all';
   readonly savedReportWorkflowStages: Array<{key: SavedReportStatus; label: string; detail: string}> = [
     {key: 'research', label: 'Research', detail: 'Needs a first review'},
     {key: 'watching', label: 'Watching', detail: 'Catalyst is on deck'},
@@ -367,6 +369,12 @@ export class ReportDateTableComponent implements OnInit {
     {key: 'negative', label: 'Negative reaction'},
     {key: 'mixed', label: 'Mixed reaction'},
     {key: 'flat', label: 'Muted reaction'}
+  ];
+  readonly postEarningsReviewFilters: Array<{key: PostEarningsReviewFilter; label: string; detail: string}> = [
+    {key: 'all', label: 'All past reports', detail: 'See every saved report whose date has passed.'},
+    {key: 'needsOutcome', label: 'Needs outcome', detail: 'Record the initial market reaction.'},
+    {key: 'needsNotes', label: 'Needs notes', detail: 'Finish the reaction and carry-forward lesson.'},
+    {key: 'complete', label: 'Complete', detail: 'Review fully documented event learnings.'}
   ];
   readonly earningsSignalLenses: Array<{key: EarningsSignalLens; label: string; detail: string}> = [
     {key: 'balanced', label: 'Balanced catalyst', detail: 'Growth, earnings, event move, and positioning share the weight.'},
@@ -898,6 +906,35 @@ export class ReportDateTableComponent implements OnInit {
 
   getPostEarningsReviewCompleteCount(): number {
     return this.getPostEarningsReviewItems().filter((item) => this.isSavedReportReviewComplete(item.report)).length;
+  }
+
+  getVisiblePostEarningsReviewItems(): SavedReportReviewItem[] {
+    return this.getPostEarningsReviewItems()
+      .filter((item) => this.matchesPostEarningsReviewFilter(item, this.postEarningsReviewFilter));
+  }
+
+  getPostEarningsReviewFilterCount(filter: PostEarningsReviewFilter): number {
+    return this.getPostEarningsReviewItems()
+      .filter((item) => this.matchesPostEarningsReviewFilter(item, filter))
+      .length;
+  }
+
+  setPostEarningsReviewFilter(filter: PostEarningsReviewFilter): void {
+    this.postEarningsReviewFilter = filter;
+  }
+
+  private matchesPostEarningsReviewFilter(item: SavedReportReviewItem, filter: PostEarningsReviewFilter): boolean {
+    const review = this.getSavedReportReview(item.report);
+
+    if (filter === 'needsOutcome') {
+      return review.outcome === 'unreviewed';
+    }
+
+    if (filter === 'needsNotes') {
+      return review.outcome !== 'unreviewed' && !this.isSavedReportReviewComplete(item.report);
+    }
+
+    return filter !== 'complete' || this.isSavedReportReviewComplete(item.report);
   }
 
   getPostEarningsReviewSummary(): SavedReportReviewSummary {
