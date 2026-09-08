@@ -1082,6 +1082,54 @@
     <small class="saved-report-follow-up__note">Actions are stored with this browser’s saved research and can be reopened from the post-earnings review.</small>
   </section>
 
+  <section *ngIf="getPostEarningsReviewItems().length > 0" class="saved-report-lesson-library" aria-labelledby="saved-report-lesson-library-title">
+    <div class="saved-report-lesson-library__header">
+      <div>
+        <h3 id="saved-report-lesson-library-title">Earnings Lessons Library</h3>
+        <span>Search documented review lessons across past reports before the next event decision.</span>
+      </div>
+      <strong>{{getSavedReportLessonItems().length}} lesson{{getSavedReportLessonItems().length === 1 ? '' : 's'}} in view</strong>
+    </div>
+    <div class="saved-report-lesson-library__controls">
+      <label>
+        <span>Search lessons</span>
+        <input
+          [(ngModel)]="savedReportLessonSearchText"
+          aria-label="Search earnings lessons"
+          placeholder="Ticker, outcome, reaction, or lesson"
+          type="search">
+      </label>
+      <button *ngIf="savedReportLessonSearchText" (click)="clearSavedReportLessonSearch()" type="button">Clear</button>
+    </div>
+    <div aria-label="Earnings lesson outcome filter" class="saved-report-lesson-library__filters" role="group">
+      <button
+        (click)="setSavedReportLessonOutcomeFilter('all')"
+        [attr.aria-pressed]="savedReportLessonOutcomeFilter === 'all'"
+        [class.saved-report-lesson-library__filter--active]="savedReportLessonOutcomeFilter === 'all'"
+        type="button">All outcomes</button>
+      <button
+        *ngFor="let outcome of savedReportLessonOutcomes"
+        (click)="setSavedReportLessonOutcomeFilter(outcome.key)"
+        [attr.aria-pressed]="savedReportLessonOutcomeFilter === outcome.key"
+        [class.saved-report-lesson-library__filter--active]="savedReportLessonOutcomeFilter === outcome.key"
+        type="button">{{outcome.label}}</button>
+    </div>
+    <div *ngIf="getSavedReportLessonItems().length > 0; else noSavedReportLessons" class="saved-report-lesson-library__grid">
+      <a *ngFor="let item of getSavedReportLessonItems()" [routerLink]="['/', item.report.reportDate, item.report.ticker]" class="saved-report-lesson-library__item">
+        <div>
+          <span>{{formatDate(item.report.reportDate)}}</span>
+          <strong>{{item.report.ticker}}</strong>
+          <em [attr.data-outcome]="item.review.outcome">{{getSavedReportReviewLabel(item.review.outcome)}}</em>
+        </div>
+        <p>{{item.review.lesson}}</p>
+        <small *ngIf="item.review.reaction.trim().length > 0">{{item.review.reaction}}</small>
+      </a>
+    </div>
+    <ng-template #noSavedReportLessons>
+      <p class="saved-report-lesson-library__empty">No documented lessons match this search or outcome filter yet.</p>
+    </ng-template>
+  </section>
+
   <section *ngIf="getSavedReportStrategyReviewSummaries().length > 0" class="saved-report-strategy-review" aria-labelledby="saved-report-strategy-review-title">
     <div class="saved-report-strategy-review__header">
       <div>

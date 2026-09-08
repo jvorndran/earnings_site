@@ -39,6 +39,7 @@ type SavedReportJournalKey = 'thesis' | 'risk' | 'decision';
 type SavedReportReviewOutcome = 'unreviewed' | 'positive' | 'negative' | 'mixed' | 'flat';
 type SavedReportReviewKey = 'reaction' | 'lesson' | 'followUp';
 type PostEarningsReviewFilter = 'all' | 'needsOutcome' | 'needsNotes' | 'complete';
+type SavedReportLessonOutcomeFilter = 'all' | Exclude<SavedReportReviewOutcome, 'unreviewed'>;
 
 interface SavedReportPreparation {
   estimateReviewed: boolean;
@@ -269,6 +270,11 @@ interface SavedReportReviewSummary {
   totalCount: number;
 }
 
+interface SavedReportLessonItem {
+  report: SavedReport;
+  review: SavedReportReview;
+}
+
 interface SavedReportStrategyReviewSummary {
   completedCount: number;
   lessonCount: number;
@@ -356,6 +362,8 @@ export class ReportDateTableComponent implements OnInit {
   savedReportResearchLaneFilter: SavedReportResearchLane = 'all';
   savedReportSearchText = '';
   postEarningsReviewFilter: PostEarningsReviewFilter = 'all';
+  savedReportLessonSearchText = '';
+  savedReportLessonOutcomeFilter: SavedReportLessonOutcomeFilter = 'all';
   readonly savedReportWorkflowStages: Array<{key: SavedReportStatus; label: string; detail: string}> = [
     {key: 'research', label: 'Research', detail: 'Needs a first review'},
     {key: 'watching', label: 'Watching', detail: 'Catalyst is on deck'},
@@ -416,6 +424,12 @@ export class ReportDateTableComponent implements OnInit {
     {key: 'needsOutcome', label: 'Needs outcome', detail: 'Record the initial market reaction.'},
     {key: 'needsNotes', label: 'Needs notes', detail: 'Finish the reaction and carry-forward lesson.'},
     {key: 'complete', label: 'Complete', detail: 'Review fully documented event learnings.'}
+  ];
+  readonly savedReportLessonOutcomes: Array<{key: Exclude<SavedReportReviewOutcome, 'unreviewed'>; label: string}> = [
+    {key: 'positive', label: 'Positive'},
+    {key: 'negative', label: 'Negative'},
+    {key: 'mixed', label: 'Mixed'},
+    {key: 'flat', label: 'Muted'}
   ];
   readonly earningsSignalLenses: Array<{key: EarningsSignalLens; label: string; detail: string}> = [
     {key: 'balanced', label: 'Balanced catalyst', detail: 'Growth, earnings, event move, and positioning share the weight.'},
@@ -986,6 +1000,35 @@ export class ReportDateTableComponent implements OnInit {
 
   setPostEarningsReviewFilter(filter: PostEarningsReviewFilter): void {
     this.postEarningsReviewFilter = filter;
+  }
+
+  setSavedReportLessonOutcomeFilter(filter: SavedReportLessonOutcomeFilter): void {
+    this.savedReportLessonOutcomeFilter = filter;
+  }
+
+  clearSavedReportLessonSearch(): void {
+    this.savedReportLessonSearchText = '';
+  }
+
+  getSavedReportLessonItems(): SavedReportLessonItem[] {
+    const normalizedSearch = this.savedReportLessonSearchText.trim().toLowerCase();
+
+    return this.getPostEarningsReviewItems()
+      .map((item) => ({report: item.report, review: this.getSavedReportReview(item.report)}))
+      .filter((item) => (
+        item.review.lesson.trim().length > 0 &&
+        item.review.outcome !== 'unreviewed' &&
+        (this.savedReportLessonOutcomeFilter === 'all' || item.review.outcome === this.savedReportLessonOutcomeFilter) &&
+        (normalizedSearch.length === 0 ||
+          item.report.ticker.toLowerCase().includes(normalizedSearch) ||
+          item.report.name.toLowerCase().includes(normalizedSearch) ||
+          item.review.lesson.toLowerCase().includes(normalizedSearch) ||
+          item.review.reaction.toLowerCase().includes(normalizedSearch))
+      ))
+      .sort((first, second) => (
+        second.report.reportDate.localeCompare(first.report.reportDate) ||
+        first.report.ticker.localeCompare(second.report.ticker)
+      ));
   }
 
   private matchesPostEarningsReviewFilter(item: SavedReportReviewItem, filter: PostEarningsReviewFilter): boolean {
