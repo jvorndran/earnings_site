@@ -559,6 +559,39 @@
     </button>
   </div>
 
+  <section class="saved-report-research-lanes" aria-labelledby="saved-report-research-lanes-title">
+    <div class="saved-report-research-lanes__header">
+      <div>
+        <h3 id="saved-report-research-lanes-title">Execution Readiness Lanes</h3>
+        <span>Move each saved idea from a decision foundation through preflight and a documented execution plan.</span>
+      </div>
+      <strong>{{visibleSavedReports.length}} report{{visibleSavedReports.length === 1 ? '' : 's'}} in view</strong>
+    </div>
+    <div class="saved-report-research-lanes__grid">
+      <button
+        (click)="setSavedReportResearchLaneFilter('all')"
+        [attr.aria-pressed]="savedReportResearchLaneFilter === 'all'"
+        [class.saved-report-research-lanes__card--active]="savedReportResearchLaneFilter === 'all'"
+        class="saved-report-research-lanes__card"
+        type="button">
+        <span>All research</span>
+        <strong>{{savedReports.length}}</strong>
+        <small>Full saved workflow</small>
+      </button>
+      <button
+        *ngFor="let lane of savedReportResearchLanes"
+        (click)="setSavedReportResearchLaneFilter(lane.key)"
+        [attr.aria-pressed]="savedReportResearchLaneFilter === lane.key"
+        [class.saved-report-research-lanes__card--active]="savedReportResearchLaneFilter === lane.key"
+        class="saved-report-research-lanes__card"
+        type="button">
+        <span>{{lane.label}}</span>
+        <strong>{{getSavedReportResearchLaneCount(lane.key)}}</strong>
+        <small>{{lane.detail}}</small>
+      </button>
+    </div>
+  </section>
+
   <div class="saved-report-search">
     <label>
       <span>Search saved research</span>
