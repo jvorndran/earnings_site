@@ -2225,6 +2225,110 @@ body { margin: 0;font-family: sans-serif, "Franklin Gothic Book", Verdana; }
   text-align: right;
 }
 
+.saved-report-follow-up {
+  display: grid;
+  gap: 0.85rem;
+  margin: 18px 0;
+  padding: 18px;
+  border: 1px solid #8fbfb2;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #effcf7, #f8fafc);
+}
+
+.saved-report-follow-up__header,
+.saved-report-follow-up__item > a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.saved-report-follow-up__header h3 {
+  margin: 0 0 0.2rem;
+  color: #086b4c;
+  font-size: 1.05rem;
+}
+
+.saved-report-follow-up__header span,
+.saved-report-follow-up__item span,
+.saved-report-follow-up__item small,
+.saved-report-follow-up__note {
+  color: #52756d;
+  font-size: 0.8rem;
+}
+
+.saved-report-follow-up__header > strong {
+  padding: 0.35rem 0.55rem;
+  border-radius: 999px;
+  background: #08745a;
+  color: #ffffff;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.saved-report-follow-up__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.7rem;
+}
+
+.saved-report-follow-up__item {
+  display: grid;
+  gap: 0.65rem;
+  padding: 0.8rem;
+  border: 1px solid #c5e4d9;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.saved-report-follow-up__item > a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.saved-report-follow-up__item > a:hover strong,
+.saved-report-follow-up__item > a:focus-visible strong {
+  text-decoration: underline;
+}
+
+.saved-report-follow-up__item > a > span,
+.saved-report-follow-up__item > a > small {
+  white-space: nowrap;
+}
+
+.saved-report-follow-up__item strong {
+  color: #075640;
+}
+
+.saved-report-follow-up__item p {
+  margin: 0;
+  color: #344054;
+  font-size: 0.86rem;
+  line-height: 1.4;
+}
+
+.saved-report-follow-up__item button {
+  justify-self: start;
+  padding: 0.45rem 0.65rem;
+  border: 1px solid #62a78f;
+  border-radius: 5px;
+  background: #f0fdf7;
+  color: #075640;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.saved-report-follow-up__item button:hover,
+.saved-report-follow-up__item button:focus-visible {
+  background: #d9f7e9;
+}
+
+.saved-report-follow-up__note {
+  line-height: 1.4;
+}
+
 .saved-report-review {
   border-color: #d7ddef;
   background: #f9fafb;
@@ -2263,6 +2367,18 @@ body { margin: 0;font-family: sans-serif, "Franklin Gothic Book", Verdana; }
 
 .saved-report-review textarea {
   resize: vertical;
+}
+
+.saved-report-review__follow-up {
+  display: flex !important;
+  align-items: center;
+  gap: 0.45rem !important;
+  cursor: pointer;
+}
+
+.saved-report-review__follow-up input {
+  width: auto;
+  margin: 0;
 }
 
 .saved-report-strategy-review {
@@ -2795,6 +2911,8 @@ body { margin: 0;font-family: sans-serif, "Franklin Gothic Book", Verdana; }
   .saved-report-review-queue__header,
   .saved-report-review__header,
   .saved-report-review-queue__item,
+  .saved-report-follow-up__header,
+  .saved-report-follow-up__item > a,
   .saved-report-strategy-review__header,
   .saved-report-strategy-review__card-header,
   .saved-report-move-review__header,

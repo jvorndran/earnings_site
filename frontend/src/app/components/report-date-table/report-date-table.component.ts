@@ -36,7 +36,7 @@ type SavedReportDecisionFilter = 'all' | 'needsStrategy' | 'needsRole' | 'needsC
 type SavedReportPreparationKey = 'estimateReviewed' | 'riskPlanned' | 'timingConfirmed';
 type SavedReportJournalKey = 'thesis' | 'risk' | 'decision';
 type SavedReportReviewOutcome = 'unreviewed' | 'positive' | 'negative' | 'mixed' | 'flat';
-type SavedReportReviewKey = 'reaction' | 'lesson';
+type SavedReportReviewKey = 'reaction' | 'lesson' | 'followUp';
 type PostEarningsReviewFilter = 'all' | 'needsOutcome' | 'needsNotes' | 'complete';
 
 interface SavedReportPreparation {
@@ -52,6 +52,8 @@ interface SavedReportJournal {
 }
 
 interface SavedReportReview {
+  followUp: string;
+  followUpComplete: boolean;
   outcome: SavedReportReviewOutcome;
   reaction: string;
   lesson: string;
@@ -250,6 +252,10 @@ interface SavedReportEventConcentration {
 interface SavedReportReviewItem {
   daysSince: number;
   report: SavedReport;
+}
+
+interface SavedReportFollowUpItem extends SavedReportReviewItem {
+  action: string;
 }
 
 interface SavedReportReviewSummary {
@@ -559,7 +565,8 @@ export class ReportDateTableComponent implements OnInit {
     const headers = [
       'Ticker', 'Company', 'Report Date', 'Workflow Status', 'Event Strategy', 'Portfolio Role', 'Conviction',
       'Implied Move (%)', 'Short Interest (%)', 'EPS Estimate', 'Market Cap', 'Risk Allocation (%)',
-      'Preparation Complete', 'Journal Fields Complete', 'Review Outcome', 'Review Reaction', 'Review Lesson'
+      'Preparation Complete', 'Journal Fields Complete', 'Review Outcome', 'Review Reaction', 'Review Lesson',
+      'Follow-through Action', 'Follow-through Complete'
     ];
     const rows = [...this.savedReports]
       .sort((first, second) => first.reportDate.localeCompare(second.reportDate) || first.ticker.localeCompare(second.ticker))
@@ -584,6 +591,8 @@ export class ReportDateTableComponent implements OnInit {
           this.getSavedReportReviewLabel(review.outcome),
           review.reaction,
           review.lesson,
+          review.followUp,
+          review.followUpComplete ? 'Complete' : 'Open',
         ];
       });
     const csv = [headers, ...rows]
@@ -931,6 +940,23 @@ export class ReportDateTableComponent implements OnInit {
 
   getPostEarningsReviewCompleteCount(): number {
     return this.getPostEarningsReviewItems().filter((item) => this.isSavedReportReviewComplete(item.report)).length;
+  }
+
+  getSavedReportFollowUpItems(): SavedReportFollowUpItem[] {
+    return this.getPostEarningsReviewItems()
+      .map((item) => ({
+        ...item,
+        action: this.getSavedReportReview(item.report).followUp.trim()
+      }))
+      .filter((item) => item.action.length > 0 && !this.isSavedReportFollowUpComplete(item.report))
+      .sort((first, second) => second.daysSince - first.daysSince || first.report.ticker.localeCompare(second.report.ticker));
+  }
+
+  getSavedReportFollowUpCompleteCount(): number {
+    return this.getPostEarningsReviewItems().filter((item) => {
+      const review = this.getSavedReportReview(item.report);
+      return review.followUp.trim().length > 0 && review.followUpComplete;
+    }).length;
   }
 
   getVisiblePostEarningsReviewItems(): SavedReportReviewItem[] {
@@ -1506,7 +1532,29 @@ export class ReportDateTableComponent implements OnInit {
   updateSavedReportReviewNote(report: SavedReport, key: SavedReportReviewKey, value: string): void {
     const review = this.getSavedReportReview(report);
     review[key] = this.normalizeSavedReportJournalText(value);
+    if (key === 'followUp') {
+      review.followUpComplete = false;
+    }
     this.updateSavedReportReview(report, review);
+  }
+
+  isSavedReportFollowUpComplete(report: SavedReport): boolean {
+    return this.getSavedReportReview(report).followUpComplete;
+  }
+
+  setSavedReportFollowUpComplete(report: SavedReport, isComplete: boolean): void {
+    const review = this.getSavedReportReview(report);
+
+    if (review.followUp.trim().length === 0) {
+      this.savedReportMessage = `Add a follow-through action for ${report.ticker} before marking it complete.`;
+      return;
+    }
+
+    review.followUpComplete = isComplete;
+    this.updateSavedReportReview(report, review);
+    this.savedReportMessage = isComplete
+      ? `${report.ticker} follow-through marked complete.`
+      : `${report.ticker} follow-through reopened.`;
   }
 
   private updateSavedReportReview(report: SavedReport, review: SavedReportReview): void {
@@ -2205,6 +2253,8 @@ export class ReportDateTableComponent implements OnInit {
 
   private normalizeSavedReportReview(review?: Partial<SavedReportReview>): SavedReportReview {
     return {
+      followUp: this.normalizeSavedReportJournalText(review?.followUp),
+      followUpComplete: review?.followUpComplete === true,
       outcome: this.normalizeSavedReportReviewOutcome(review?.outcome),
       reaction: this.normalizeSavedReportJournalText(review?.reaction),
       lesson: this.normalizeSavedReportJournalText(review?.lesson)

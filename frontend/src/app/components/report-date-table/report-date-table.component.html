@@ -1026,6 +1026,29 @@
     </p>
   </section>
 
+  <section *ngIf="getSavedReportFollowUpItems().length > 0" class="saved-report-follow-up" aria-labelledby="saved-report-follow-up-title">
+    <div class="saved-report-follow-up__header">
+      <div>
+        <h3 id="saved-report-follow-up-title">Post-earnings Follow-through</h3>
+        <span>Turn saved review lessons into explicit next actions that stay visible until they are complete.</span>
+      </div>
+      <strong>{{getSavedReportFollowUpItems().length}} open · {{getSavedReportFollowUpCompleteCount()}} completed</strong>
+    </div>
+
+    <div class="saved-report-follow-up__grid">
+      <article *ngFor="let item of getSavedReportFollowUpItems()" class="saved-report-follow-up__item">
+        <a [routerLink]="['/', item.report.reportDate, item.report.ticker]">
+          <span>{{item.daysSince}} day{{item.daysSince === 1 ? '' : 's'}} since report</span>
+          <strong>{{item.report.ticker}}</strong>
+          <small>{{formatDate(item.report.reportDate)}}</small>
+        </a>
+        <p>{{item.action}}</p>
+        <button (click)="setSavedReportFollowUpComplete(item.report, true)" type="button">Mark complete</button>
+      </article>
+    </div>
+    <small class="saved-report-follow-up__note">Actions are stored with this browser’s saved research and can be reopened from the post-earnings review.</small>
+  </section>
+
   <section *ngIf="getSavedReportStrategyReviewSummaries().length > 0" class="saved-report-strategy-review" aria-labelledby="saved-report-strategy-review-title">
     <div class="saved-report-strategy-review__header">
       <div>
@@ -1238,6 +1261,22 @@
             maxlength="280"
             placeholder="What would you repeat, change, or avoid next time?"
             rows="2"></textarea>
+        </label>
+        <label>
+          <span>Follow-through action</span>
+          <textarea
+            (ngModelChange)="updateSavedReportReviewNote(report, 'followUp', $event)"
+            [ngModel]="getSavedReportReview(report).followUp"
+            maxlength="280"
+            placeholder="What specific research or portfolio action should happen next?"
+            rows="2"></textarea>
+        </label>
+        <label *ngIf="getSavedReportReview(report).followUp.trim().length > 0" class="saved-report-review__follow-up">
+          <input
+            (change)="setSavedReportFollowUpComplete(report, $any($event.target).checked)"
+            [checked]="isSavedReportFollowUpComplete(report)"
+            type="checkbox">
+          <span>Follow-through action complete</span>
         </label>
       </div>
       <div class="saved-report-actions">
