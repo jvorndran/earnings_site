@@ -2362,6 +2362,104 @@ body { margin: 0;font-family: sans-serif, "Franklin Gothic Book", Verdana; }
   line-height: 1.4;
 }
 
+.saved-report-move-review {
+  display: grid;
+  gap: 0.85rem;
+  margin: 18px 0;
+  padding: 18px;
+  border: 1px solid #9fc7ec;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #f0f8ff, #f8fbff);
+}
+
+.saved-report-move-review__header,
+.saved-report-move-review__card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.saved-report-move-review__header h3 {
+  margin: 0 0 0.2rem;
+  color: #075985;
+  font-size: 1.05rem;
+}
+
+.saved-report-move-review__header span,
+.saved-report-move-review__card-header span,
+.saved-report-move-review__card p,
+.saved-report-move-review__metrics small,
+.saved-report-move-review__note {
+  color: #4d6f85;
+  font-size: 0.8rem;
+}
+
+.saved-report-move-review__header > strong {
+  padding: 0.35rem 0.55rem;
+  border-radius: 999px;
+  background: #0369a1;
+  color: #ffffff;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.saved-report-move-review__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 0.7rem;
+}
+
+.saved-report-move-review__card {
+  display: grid;
+  gap: 0.7rem;
+  padding: 0.8rem;
+  border: 1px solid #c7ddf0;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.saved-report-move-review__card[data-cohort="contained"] {
+  border-top: 3px solid #059669;
+}
+
+.saved-report-move-review__card[data-cohort="expected"] {
+  border-top: 3px solid #0284c7;
+}
+
+.saved-report-move-review__card[data-cohort="elevated"] {
+  border-top: 3px solid #dc2626;
+}
+
+.saved-report-move-review__card-header strong,
+.saved-report-move-review__metrics strong {
+  color: #0c4a6e;
+}
+
+.saved-report-move-review__card p {
+  margin: -0.25rem 0 0;
+}
+
+.saved-report-move-review__metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.saved-report-move-review__metrics span {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.saved-report-move-review__metrics small {
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.saved-report-move-review__note {
+  line-height: 1.4;
+}
+
 .saved-report-conviction-review {
   display: grid;
   gap: 0.85rem;
@@ -2699,6 +2797,8 @@ body { margin: 0;font-family: sans-serif, "Franklin Gothic Book", Verdana; }
   .saved-report-review-queue__item,
   .saved-report-strategy-review__header,
   .saved-report-strategy-review__card-header,
+  .saved-report-move-review__header,
+  .saved-report-move-review__card-header,
   .saved-report-conviction-review__header,
   .saved-report-conviction-review__card-header,
   .saved-report-role-review__header,

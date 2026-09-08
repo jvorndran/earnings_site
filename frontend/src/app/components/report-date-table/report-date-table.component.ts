@@ -284,6 +284,20 @@ interface SavedReportConvictionReviewSummary {
   reportCount: number;
 }
 
+type SavedReportImpliedMoveCohort = 'contained' | 'expected' | 'elevated';
+
+interface SavedReportImpliedMoveReviewSummary {
+  averageImpliedMove: number;
+  completedCount: number;
+  cohort: SavedReportImpliedMoveCohort;
+  cohortLabel: string;
+  detail: string;
+  negativeCount: number;
+  positiveCount: number;
+  recordedOutcomeCount: number;
+  reportCount: number;
+}
+
 @Component({
   selector: 'app-report-date-table',
   templateUrl: './report-date-table.component.html',
@@ -1040,6 +1054,62 @@ export class ReportDateTableComponent implements OnInit {
       .sort((first, second) => (
         second.reportCount - first.reportCount || first.strategyLabel.localeCompare(second.strategyLabel)
       ));
+  }
+
+  getSavedReportImpliedMoveReviewSummaries(): SavedReportImpliedMoveReviewSummary[] {
+    const pastReports = this.getPostEarningsReviewItems().map((item) => item.report);
+    const cohorts: Array<{cohort: SavedReportImpliedMoveCohort; cohortLabel: string; detail: string; matches: (report: SavedReport) => boolean}> = [
+      {
+        cohort: 'contained',
+        cohortLabel: 'Contained move',
+        detail: 'Below 4% implied move before earnings',
+        matches: (report) => report.impliedMove < 4
+      },
+      {
+        cohort: 'expected',
+        cohortLabel: 'Typical move',
+        detail: '4% to under 8% implied move before earnings',
+        matches: (report) => report.impliedMove >= 4 && report.impliedMove < 8
+      },
+      {
+        cohort: 'elevated',
+        cohortLabel: 'Elevated move',
+        detail: '8% or higher implied move before earnings',
+        matches: (report) => report.impliedMove >= 8
+      }
+    ];
+
+    return cohorts
+      .map((cohort) => {
+        const reports = pastReports.filter(cohort.matches);
+        const summary = reports.reduce((totals, report) => {
+          const review = this.getSavedReportReview(report);
+
+          if (this.isSavedReportReviewComplete(report)) {
+            totals.completedCount += 1;
+          }
+          if (review.outcome !== 'unreviewed') {
+            totals.recordedOutcomeCount += 1;
+            if (review.outcome === 'positive') {
+              totals.positiveCount += 1;
+            }
+            if (review.outcome === 'negative') {
+              totals.negativeCount += 1;
+            }
+          }
+
+          return totals;
+        }, {
+          completedCount: 0,
+          negativeCount: 0,
+          positiveCount: 0,
+          recordedOutcomeCount: 0
+        });
+        const averageImpliedMove = reports.reduce((total, report) => total + report.impliedMove, 0) / (reports.length || 1);
+
+        return {...cohort, ...summary, averageImpliedMove, reportCount: reports.length};
+      })
+      .filter((summary) => summary.reportCount > 0);
   }
 
   getSavedReportRoleReviewSummaries(): SavedReportRoleReviewSummary[] {
