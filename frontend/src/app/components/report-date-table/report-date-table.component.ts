@@ -40,6 +40,7 @@ type SavedReportReviewOutcome = 'unreviewed' | 'positive' | 'negative' | 'mixed'
 type SavedReportReviewKey = 'reaction' | 'lesson' | 'followUp';
 type PostEarningsReviewFilter = 'all' | 'needsOutcome' | 'needsNotes' | 'complete';
 type SavedReportLessonOutcomeFilter = 'all' | Exclude<SavedReportReviewOutcome, 'unreviewed'>;
+type SavedReportPlaybookKey = 'preEventStarter' | 'postEventStarter' | 'longTermResearch';
 
 interface SavedReportPreparation {
   estimateReviewed: boolean;
@@ -59,6 +60,17 @@ interface SavedReportReview {
   outcome: SavedReportReviewOutcome;
   reaction: string;
   lesson: string;
+}
+
+interface SavedReportPlaybook {
+  conviction: SavedReportConviction;
+  detail: string;
+  key: SavedReportPlaybookKey;
+  label: string;
+  plannedRiskPercent: number;
+  role: SavedReportRole;
+  status: SavedReportStatus;
+  strategy: SavedReportStrategy;
 }
 
 interface ReportDateSummary {
@@ -411,6 +423,38 @@ export class ReportDateTableComponent implements OnInit {
     {percent: 50, label: '50% of risk budget'},
     {percent: 75, label: '75% of risk budget'},
     {percent: 100, label: '100% of risk budget'}
+  ];
+  readonly savedReportPlaybooks: SavedReportPlaybook[] = [
+    {
+      key: 'preEventStarter',
+      label: 'Pre-event starter',
+      detail: 'Watching · Satellite · Standard · 25% event risk',
+      status: 'watching',
+      strategy: 'preEvent',
+      role: 'satellite',
+      conviction: 'standard',
+      plannedRiskPercent: 25
+    },
+    {
+      key: 'postEventStarter',
+      label: 'Post-event confirmation',
+      detail: 'Watching · Monitor · Standard · no event risk',
+      status: 'watching',
+      strategy: 'postEvent',
+      role: 'monitor',
+      conviction: 'standard',
+      plannedRiskPercent: 0
+    },
+    {
+      key: 'longTermResearch',
+      label: 'Long-term research',
+      detail: 'Research · Primary · High conviction · no event risk',
+      status: 'research',
+      strategy: 'longTerm',
+      role: 'primary',
+      conviction: 'high',
+      plannedRiskPercent: 0
+    }
   ];
   readonly savedReportReviewOutcomes: Array<{key: SavedReportReviewOutcome; label: string}> = [
     {key: 'unreviewed', label: 'Not reviewed'},
@@ -1498,6 +1542,29 @@ export class ReportDateTableComponent implements OnInit {
 
   getSavedReportRiskAllocation(report: SavedReport): number {
     return this.normalizeSavedReportRiskAllocation(report.plannedRiskPercent);
+  }
+
+  applySavedReportPlaybook(report: SavedReport, playbookKey: string): void {
+    const playbook = this.savedReportPlaybooks.find((item) => item.key === playbookKey);
+
+    if (!playbook) {
+      return;
+    }
+
+    this.savedReports = this.savedReports.map((savedReport) => (
+      savedReport.ticker === report.ticker && savedReport.reportDate === report.reportDate
+        ? {
+          ...savedReport,
+          status: playbook.status,
+          strategy: playbook.strategy,
+          role: playbook.role,
+          conviction: playbook.conviction,
+          plannedRiskPercent: playbook.plannedRiskPercent
+        }
+        : savedReport
+    ));
+    this.savedReportMessage = `${report.ticker} initialized with the ${playbook.label.toLowerCase()} playbook. Checklist, journal, and review notes were kept.`;
+    this.persistSavedReports();
   }
 
   setSavedReportRiskAllocation(report: SavedReport, plannedRiskPercent: number): void {

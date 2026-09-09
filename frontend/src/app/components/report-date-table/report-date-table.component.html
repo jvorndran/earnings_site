@@ -1362,6 +1362,15 @@
       </div>
       <div class="saved-report-actions">
         <label>
+          <span>Research playbook</span>
+          <select (change)="applySavedReportPlaybook(report, $any($event.target).value)" [value]="''">
+            <option value="">Apply a planning shortcut</option>
+            <option *ngFor="let playbook of savedReportPlaybooks" [value]="playbook.key">
+              {{playbook.label}} — {{playbook.detail}}
+            </option>
+          </select>
+        </label>
+        <label>
           <span>Preparation</span>
           <select
             (ngModelChange)="setSavedReportStatus(report, $event)"
