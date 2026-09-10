@@ -261,6 +261,101 @@ body { margin: 0;font-family: sans-serif, "Franklin Gothic Book", Verdana; }
   }
 }
 
+.saved-report-risk-window {
+  margin: 1.25rem 0;
+  border: 1px solid #e4cfa7;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #fffaf0, #ffffff);
+  padding: 1rem;
+}
+
+.saved-report-risk-window__header,
+.saved-report-risk-window__range {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.saved-report-risk-window__header h3 {
+  margin: 0;
+  color: #784c0d;
+}
+
+.saved-report-risk-window__header span,
+.saved-report-risk-window__range span,
+.saved-report-risk-window__note,
+.saved-report-risk-window__plans span {
+  color: #77624c;
+  font-size: 0.84rem;
+}
+
+.saved-report-risk-window__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.9rem;
+}
+
+.saved-report-risk-window article {
+  display: grid;
+  gap: 0.7rem;
+  border: 1px solid #ead8b8;
+  border-radius: 6px;
+  background: #fff;
+  padding: 0.8rem;
+}
+
+.saved-report-risk-window__range strong,
+.saved-report-risk-window__metrics strong {
+  color: #71440b;
+}
+
+.saved-report-risk-window__metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.saved-report-risk-window__metrics span,
+.saved-report-risk-window__plans a {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.saved-report-risk-window__metrics small {
+  color: #8a704f;
+  font-size: 0.66rem;
+  text-transform: uppercase;
+}
+
+.saved-report-risk-window__plans {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.saved-report-risk-window__plans a {
+  border-left: 3px solid #d69a3a;
+  background: #fffaf0;
+  color: #70450c;
+  padding: 0.35rem 0.45rem;
+  text-decoration: none;
+}
+
+.saved-report-risk-window__note {
+  display: block;
+  line-height: 1.35;
+  margin-top: 0.8rem;
+}
+
+@media (max-width: 560px) {
+  .saved-report-risk-window__header,
+  .saved-report-risk-window__range {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
+
 .estimate-outlook-panel {
   max-width: 1180px;
   margin: 1.25rem auto;

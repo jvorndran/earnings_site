@@ -1030,6 +1030,35 @@
     <small class="saved-report-concentration__note">Risk budget is the selected per-report event-risk allowance multiplied by active reports on the same date; it is a planning limit, not a loss forecast.</small>
   </section>
 
+  <section *ngIf="getSavedReportRiskWindows().length > 0" class="saved-report-risk-window" aria-labelledby="saved-report-risk-window-title">
+    <div class="saved-report-risk-window__header">
+      <div>
+        <h3 id="saved-report-risk-window-title">Event-Risk Windows</h3>
+        <span>See pre-event plans that place multiple modeled earnings exposures within the same three-day window.</span>
+      </div>
+      <strong>{{getSavedReportRiskWindows().length}} clustered window{{getSavedReportRiskWindows().length === 1 ? '' : 's'}}</strong>
+    </div>
+    <div class="saved-report-risk-window__grid">
+      <article *ngFor="let window of getSavedReportRiskWindows()">
+        <div class="saved-report-risk-window__range">
+          <strong>{{formatDate(window.startDate)}}<ng-container *ngIf="window.endDate !== window.startDate"> – {{formatDate(window.endDate)}}</ng-container></strong>
+          <span>{{window.plans.length}} planned earnings position{{window.plans.length === 1 ? '' : 's'}}</span>
+        </div>
+        <div class="saved-report-risk-window__metrics">
+          <span><small>Planned risk</small><strong>{{window.plannedEventRisk | currency:'USD':'symbol':'1.0-0'}}</strong></span>
+          <span><small>Modeled position value</small><strong>{{window.targetPositionValue | currency:'USD':'symbol':'1.0-0'}}</strong></span>
+        </div>
+        <div class="saved-report-risk-window__plans">
+          <a *ngFor="let plan of window.plans" [routerLink]="['/', plan.report.reportDate, plan.report.ticker]">
+            <strong>{{plan.report.ticker}}</strong>
+            <span>{{formatDate(plan.report.reportDate)}} · {{plan.allocationPercent}}% risk budget</span>
+          </a>
+        </div>
+      </article>
+    </div>
+    <small class="saved-report-risk-window__note">Each window begins with its earliest scheduled report and includes saved pre-event plans occurring within two days. Amounts are planning scenarios, not forecasts.</small>
+  </section>
+
   <section *ngIf="getPostEarningsReviewItems().length > 0" class="saved-report-review-queue" aria-labelledby="saved-report-review-queue-title">
     <div class="saved-report-review-queue__header">
       <div>

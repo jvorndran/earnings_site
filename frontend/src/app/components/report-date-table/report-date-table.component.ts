@@ -263,6 +263,14 @@ interface SavedReportEventConcentration {
   totalImpliedMove: number;
 }
 
+interface SavedReportRiskWindow {
+  endDate: string;
+  plannedEventRisk: number;
+  plans: SavedReportExposurePlan[];
+  targetPositionValue: number;
+  startDate: string;
+}
+
 interface SavedReportReviewItem {
   daysSince: number;
   report: SavedReport;
@@ -921,6 +929,46 @@ export class ReportDateTableComponent implements OnInit {
       })
       .filter((group) => group.reports.length > 1)
       .sort((first, second) => first.reportDate.localeCompare(second.reportDate));
+  }
+
+  getSavedReportRiskWindows(now: Date = new Date()): SavedReportRiskWindow[] {
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const plans = this.getSavedReportExposurePlans(now)
+      .sort((first, second) => first.report.reportDate.localeCompare(second.report.reportDate) || first.report.ticker.localeCompare(second.report.ticker));
+    const windows: SavedReportExposurePlan[][] = [];
+    let activeWindow: SavedReportExposurePlan[] = [];
+    let windowStartDay: number | null = null;
+
+    plans.forEach((plan) => {
+      const daysUntil = this.getSavedReportDaysUntil(plan.report.reportDate, startOfToday);
+      const isWithinWindow = windowStartDay !== null && daysUntil !== null && daysUntil - windowStartDay <= 2;
+
+      if (activeWindow.length > 0 && !isWithinWindow) {
+        windows.push(activeWindow);
+        activeWindow = [];
+        windowStartDay = null;
+      }
+
+      if (activeWindow.length === 0) {
+        windowStartDay = daysUntil;
+      }
+
+      activeWindow.push(plan);
+    });
+
+    if (activeWindow.length > 0) {
+      windows.push(activeWindow);
+    }
+
+    return windows
+      .filter((window) => window.length > 1)
+      .map((window) => ({
+        startDate: window[0].report.reportDate,
+        endDate: window[window.length - 1].report.reportDate,
+        plans: window,
+        plannedEventRisk: window.reduce((total, plan) => total + plan.plannedEventRisk, 0),
+        targetPositionValue: window.reduce((total, plan) => total + plan.targetPositionValue, 0)
+      }));
   }
 
   getSavedReportExposurePlans(now: Date = new Date()): SavedReportExposurePlan[] {
