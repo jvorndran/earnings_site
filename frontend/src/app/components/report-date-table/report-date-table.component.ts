@@ -28,6 +28,7 @@ type SavedReportStatus = 'research' | 'watching' | 'ready' | 'skip';
 type SavedReportFilter = 'all' | SavedReportStatus;
 type SavedReportStrategy = 'unassigned' | 'preEvent' | 'postEvent' | 'avoidEvent' | 'longTerm';
 type SavedReportStrategyFilter = 'all' | SavedReportStrategy;
+type SavedReportEventTiming = 'unconfirmed' | 'beforeOpen' | 'afterClose' | 'duringMarket';
 type SavedReportRole = 'unassigned' | 'primary' | 'satellite' | 'hedge' | 'monitor';
 type SavedReportRoleFilter = 'all' | SavedReportRole;
 type SavedReportConviction = 'unassigned' | 'exploratory' | 'standard' | 'high';
@@ -159,6 +160,7 @@ interface SavedReport {
   name: string;
   reportDate: string;
   estimate: number;
+  eventTiming?: SavedReportEventTiming;
   impliedMove: number;
   shortInterest: number;
   marketCap: string | number;
@@ -407,6 +409,12 @@ export class ReportDateTableComponent implements OnInit {
     {key: 'avoidEvent', label: 'Avoid event', detail: 'No exposure through results'},
     {key: 'longTerm', label: 'Long-term', detail: 'Research beyond this report'}
   ];
+  readonly savedReportEventTimings: Array<{key: SavedReportEventTiming; label: string; detail: string}> = [
+    {key: 'unconfirmed', label: 'Confirm timing', detail: 'Report session has not been recorded.'},
+    {key: 'beforeOpen', label: 'Before open', detail: 'Plan research and orders before the market opens.'},
+    {key: 'afterClose', label: 'After close', detail: 'Plan for an after-hours catalyst and next-session review.'},
+    {key: 'duringMarket', label: 'During market', detail: 'Keep an intraday response plan ready.'}
+  ];
   readonly savedReportRoles: Array<{key: SavedReportRole; label: string; detail: string}> = [
     {key: 'unassigned', label: 'Needs role', detail: 'Classify its place in the portfolio'},
     {key: 'primary', label: 'Primary idea', detail: 'Highest-conviction event research'},
@@ -651,7 +659,7 @@ export class ReportDateTableComponent implements OnInit {
     }
 
     const headers = [
-      'Ticker', 'Company', 'Report Date', 'Workflow Status', 'Event Strategy', 'Portfolio Role', 'Conviction',
+      'Ticker', 'Company', 'Report Date', 'Report Timing', 'Workflow Status', 'Event Strategy', 'Portfolio Role', 'Conviction',
       'Implied Move (%)', 'Short Interest (%)', 'EPS Estimate', 'Market Cap', 'Risk Allocation (%)',
       'Preparation Complete', 'Journal Fields Complete', 'Review Outcome', 'Review Reaction', 'Review Lesson',
       'Follow-through Action', 'Follow-through Complete'
@@ -665,6 +673,7 @@ export class ReportDateTableComponent implements OnInit {
           report.ticker,
           report.name,
           report.reportDate,
+          this.getSavedReportEventTimingLabel(this.getSavedReportEventTiming(report)),
           this.getSavedReportStatusLabel(this.getSavedReportStatus(report)),
           this.getSavedReportStrategyLabel(this.getSavedReportStrategy(report)),
           this.getSavedReportRoleLabel(this.getSavedReportRole(report)),
@@ -1497,6 +1506,32 @@ export class ReportDateTableComponent implements OnInit {
 
   getSavedReportStrategy(report: SavedReport): SavedReportStrategy {
     return this.normalizeSavedReportStrategy(report.strategy);
+  }
+
+  getSavedReportEventTiming(report: SavedReport): SavedReportEventTiming {
+    return this.normalizeSavedReportEventTiming(report.eventTiming);
+  }
+
+  getSavedReportEventTimingLabel(timing: SavedReportEventTiming): string {
+    return this.savedReportEventTimings.find((item) => item.key === timing)?.label || 'Confirm timing';
+  }
+
+  getSavedReportEventTimingDetail(timing: SavedReportEventTiming): string {
+    return this.savedReportEventTimings.find((item) => item.key === timing)?.detail || 'Report session has not been recorded.';
+  }
+
+  setSavedReportEventTiming(report: SavedReport, timing: SavedReportEventTiming): void {
+    const normalizedTiming = this.normalizeSavedReportEventTiming(timing);
+
+    this.savedReports = this.savedReports.map((savedReport) => (
+      savedReport.ticker === report.ticker && savedReport.reportDate === report.reportDate
+        ? {...savedReport, eventTiming: normalizedTiming}
+        : savedReport
+    ));
+    this.savedReportMessage = normalizedTiming === 'unconfirmed'
+      ? `${report.ticker} report session needs confirmation.`
+      : `${report.ticker} report timing set to ${this.getSavedReportEventTimingLabel(normalizedTiming).toLowerCase()}.`;
+    this.persistSavedReports();
   }
 
   getSavedReportStrategyCount(strategy: SavedReportStrategy): number {
@@ -2468,6 +2503,7 @@ export class ReportDateTableComponent implements OnInit {
         ...report,
         ticker: report.ticker!.trim().toUpperCase(),
         reportDate: report.reportDate!.trim(),
+        eventTiming: this.normalizeSavedReportEventTiming(report.eventTiming),
         status: this.normalizeSavedReportStatus(report.status),
         strategy: this.normalizeSavedReportStrategy(report.strategy),
         role: this.normalizeSavedReportRole(report.role),
@@ -2489,6 +2525,12 @@ export class ReportDateTableComponent implements OnInit {
     return strategy === 'preEvent' || strategy === 'postEvent' || strategy === 'avoidEvent' || strategy === 'longTerm'
       ? strategy
       : 'unassigned';
+  }
+
+  private normalizeSavedReportEventTiming(timing: unknown): SavedReportEventTiming {
+    return timing === 'beforeOpen' || timing === 'afterClose' || timing === 'duringMarket'
+      ? timing
+      : 'unconfirmed';
   }
 
   private normalizeSavedReportRole(role: unknown): SavedReportRole {

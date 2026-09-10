@@ -985,7 +985,7 @@
           <div>
             <span>{{formatSavedReportCountdown(item.daysUntil)}}</span>
             <strong>{{item.report.ticker}}</strong>
-            <small>{{formatDate(item.report.reportDate)}} - {{getSavedReportStatusLabel(getSavedReportStatus(item.report))}}</small>
+            <small>{{formatDate(item.report.reportDate)}} - {{getSavedReportEventTimingLabel(getSavedReportEventTiming(item.report))}} - {{getSavedReportStatusLabel(getSavedReportStatus(item.report))}}</small>
           </div>
           <p>{{item.preparationRemaining}} prep - {{item.journalRemaining}} journal</p>
         </a>
@@ -1445,6 +1445,15 @@
             [ngModel]="getSavedReportStrategy(report)">
             <option *ngFor="let strategy of savedReportStrategies" [ngValue]="strategy.key">{{strategy.label}}</option>
           </select>
+        </label>
+        <label>
+          <span>Report timing</span>
+          <select
+            (ngModelChange)="setSavedReportEventTiming(report, $event)"
+            [ngModel]="getSavedReportEventTiming(report)">
+            <option *ngFor="let timing of savedReportEventTimings" [ngValue]="timing.key">{{timing.label}}</option>
+          </select>
+          <small>{{getSavedReportEventTimingDetail(getSavedReportEventTiming(report))}}</small>
         </label>
         <label>
           <span>Portfolio role</span>
