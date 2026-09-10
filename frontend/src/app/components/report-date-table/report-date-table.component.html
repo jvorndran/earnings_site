@@ -605,6 +605,37 @@
     <button *ngIf="savedReportSearchText" (click)="clearSavedReportSearch()" type="button">Clear Search</button>
   </div>
 
+  <section class="saved-report-ticker-memory" aria-labelledby="saved-report-ticker-memory-title">
+    <div class="saved-report-ticker-memory__header">
+      <div>
+        <h3 id="saved-report-ticker-memory-title">Ticker Research Memory</h3>
+        <span>Keep upcoming catalysts connected to the reviews and lessons already captured for the same company.</span>
+      </div>
+      <strong>{{getSavedReportTickerMemories().length}} compan{{getSavedReportTickerMemories().length === 1 ? 'y' : 'ies'}} tracked</strong>
+    </div>
+    <div class="saved-report-ticker-memory__grid">
+      <article *ngFor="let memory of getSavedReportTickerMemories()">
+        <div>
+          <strong>{{memory.ticker}}</strong>
+          <span>{{memory.name}}</span>
+        </div>
+        <dl>
+          <div><dt>Saved reports</dt><dd>{{memory.reportCount}}</dd></div>
+          <div><dt>Reviewed</dt><dd>{{memory.documentedReviewCount}}/{{memory.pastReportCount}}</dd></div>
+          <div><dt>Lessons</dt><dd>{{memory.lessonCount}}</dd></div>
+        </dl>
+        <p *ngIf="memory.nextReport; else noUpcomingTickerReport">
+          Next report {{formatDate(memory.nextReport.reportDate)}} · {{formatSavedReportCountdown(getSavedReportDaysUntil(memory.nextReport.reportDate))}}
+        </p>
+        <ng-template #noUpcomingTickerReport><p>No upcoming saved report</p></ng-template>
+        <div class="saved-report-ticker-memory__actions">
+          <button (click)="focusSavedReportTicker(memory.ticker)" type="button">View history</button>
+          <a *ngIf="memory.nextReport" [routerLink]="['/', memory.nextReport.reportDate, memory.nextReport.ticker]">Open next report</a>
+        </div>
+      </article>
+    </div>
+  </section>
+
   <section class="saved-report-strategy" aria-labelledby="saved-report-strategy-title">
     <div class="saved-report-strategy__header">
       <div>

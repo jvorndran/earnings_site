@@ -323,6 +323,16 @@ interface SavedReportImpliedMoveReviewSummary {
   reportCount: number;
 }
 
+interface SavedReportTickerMemory {
+  documentedReviewCount: number;
+  lessonCount: number;
+  name: string;
+  nextReport: SavedReport | null;
+  pastReportCount: number;
+  reportCount: number;
+  ticker: string;
+}
+
 @Component({
   selector: 'app-report-date-table',
   templateUrl: './report-date-table.component.html',
@@ -739,6 +749,55 @@ export class ReportDateTableComponent implements OnInit {
         report.name.toLowerCase().includes(normalizedSearch) ||
         report.reportDate.toLowerCase().includes(normalizedSearch))
     ));
+  }
+
+  getSavedReportTickerMemories(now: Date = new Date()): SavedReportTickerMemory[] {
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const reportsByTicker = this.savedReports.reduce((groups, report) => {
+      const ticker = report.ticker.trim().toUpperCase();
+      const reports = groups.get(ticker) || [];
+      reports.push(report);
+      groups.set(ticker, reports);
+      return groups;
+    }, new Map<string, SavedReport[]>());
+
+    return Array.from(reportsByTicker.entries())
+      .map(([ticker, reports]) => {
+        const datedReports = reports.map((report) => ({
+          report,
+          daysUntil: this.getSavedReportDaysUntil(report.reportDate, startOfToday)
+        }));
+        const nextReport = datedReports
+          .filter((item) => item.daysUntil !== null && item.daysUntil >= 0)
+          .sort((left, right) => (left.daysUntil || 0) - (right.daysUntil || 0))[0]?.report || null;
+        const pastReports = datedReports.filter((item) => item.daysUntil !== null && item.daysUntil < 0);
+
+        return {
+          ticker,
+          name: reports[0].name,
+          nextReport,
+          reportCount: reports.length,
+          pastReportCount: pastReports.length,
+          documentedReviewCount: pastReports.filter((item) => this.isSavedReportReviewComplete(item.report)).length,
+          lessonCount: reports.filter((report) => this.getSavedReportReview(report).lesson.trim().length > 0).length
+        };
+      })
+      .sort((left, right) => {
+        const leftDays = left.nextReport ? this.getSavedReportDaysUntil(left.nextReport.reportDate, startOfToday) : Number.MAX_SAFE_INTEGER;
+        const rightDays = right.nextReport ? this.getSavedReportDaysUntil(right.nextReport.reportDate, startOfToday) : Number.MAX_SAFE_INTEGER;
+        return (leftDays || 0) - (rightDays || 0) || left.ticker.localeCompare(right.ticker);
+      });
+  }
+
+  focusSavedReportTicker(ticker: string): void {
+    this.savedReportFilter = 'all';
+    this.savedReportStrategyFilter = 'all';
+    this.savedReportRoleFilter = 'all';
+    this.savedReportConvictionFilter = 'all';
+    this.savedReportDecisionFilter = 'all';
+    this.savedReportResearchLaneFilter = 'all';
+    this.savedReportSearchText = ticker;
+    this.savedReportMessage = `Showing every saved ${ticker} report and its research history.`;
   }
 
   getSavedReportFocusItems(): SavedReportFocus[] {
