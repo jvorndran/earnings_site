@@ -348,6 +348,134 @@ body { margin: 0;font-family: sans-serif, "Franklin Gothic Book", Verdana; }
   margin-top: 0.8rem;
 }
 
+.saved-report-timing-plan {
+  display: grid;
+  gap: 0.85rem;
+  margin: 18px 0;
+  padding: 1rem;
+  border: 1px solid #b8d7d2;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #effcf8, #f8fafc);
+}
+
+.saved-report-timing-plan__header,
+.saved-report-timing-plan__card-header {
+  align-items: center;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+}
+
+.saved-report-timing-plan__header h3 {
+  color: #115e59;
+  font-size: 1.05rem;
+  margin: 0 0 0.2rem;
+}
+
+.saved-report-timing-plan__header span,
+.saved-report-timing-plan__card-header span,
+.saved-report-timing-plan__reports span,
+.saved-report-timing-plan__note {
+  color: #4b6a68;
+  font-size: 0.8rem;
+}
+
+.saved-report-timing-plan__header > strong {
+  border-radius: 999px;
+  background: #0f766e;
+  color: #fff;
+  font-size: 0.78rem;
+  padding: 0.4rem 0.65rem;
+  white-space: nowrap;
+}
+
+.saved-report-timing-plan__grid {
+  display: grid;
+  gap: 0.7rem;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+}
+
+.saved-report-timing-plan article {
+  display: grid;
+  gap: 0.7rem;
+  padding: 0.8rem;
+  border: 1px solid #c6e2dc;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.saved-report-timing-plan article[data-timing="unconfirmed"] {
+  border-top: 3px solid #d97706;
+}
+
+.saved-report-timing-plan article[data-timing="beforeOpen"] {
+  border-top: 3px solid #0284c7;
+}
+
+.saved-report-timing-plan article[data-timing="afterClose"] {
+  border-top: 3px solid #7c3aed;
+}
+
+.saved-report-timing-plan article[data-timing="duringMarket"] {
+  border-top: 3px solid #059669;
+}
+
+.saved-report-timing-plan__card-header strong,
+.saved-report-timing-plan__metrics strong {
+  color: #134e4a;
+}
+
+.saved-report-timing-plan__card-header > strong {
+  display: grid;
+  min-width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 50%;
+  background: #ccfbf1;
+}
+
+.saved-report-timing-plan__metrics {
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.saved-report-timing-plan__metrics span {
+  display: grid;
+  gap: 0.12rem;
+}
+
+.saved-report-timing-plan__metrics small {
+  color: #5b7673;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+}
+
+.saved-report-timing-plan__reports {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.saved-report-timing-plan__reports a {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.45rem 0.55rem;
+  border-left: 3px solid #14b8a6;
+  background: #f0fdfa;
+  color: #115e59;
+  text-decoration: none;
+}
+
+.saved-report-timing-plan__reports a:hover,
+.saved-report-timing-plan__reports a:focus-visible {
+  background: #ccfbf1;
+}
+
+.saved-report-timing-plan__note {
+  display: block;
+  line-height: 1.35;
+}
+
 @media (max-width: 560px) {
   .saved-report-risk-window__header,
   .saved-report-risk-window__range {

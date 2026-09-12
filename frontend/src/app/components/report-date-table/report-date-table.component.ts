@@ -273,6 +273,17 @@ interface SavedReportRiskWindow {
   startDate: string;
 }
 
+interface SavedReportTimingPlan {
+  plannedEventRisk: number;
+  preparationRemaining: number;
+  readyCount: number;
+  reports: SavedReport[];
+  targetPositionValue: number;
+  timing: SavedReportEventTiming;
+  timingDetail: string;
+  timingLabel: string;
+}
+
 interface SavedReportReviewItem {
   daysSince: number;
   report: SavedReport;
@@ -978,6 +989,38 @@ export class ReportDateTableComponent implements OnInit {
         plannedEventRisk: window.reduce((total, plan) => total + plan.plannedEventRisk, 0),
         targetPositionValue: window.reduce((total, plan) => total + plan.targetPositionValue, 0)
       }));
+  }
+
+  getSavedReportTimingPlans(now: Date = new Date()): SavedReportTimingPlan[] {
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const activeReports = this.savedReports
+      .filter((report) => {
+        const daysUntil = this.getSavedReportDaysUntil(report.reportDate, startOfToday);
+        return this.getSavedReportStatus(report) !== 'skip' && daysUntil !== null && daysUntil >= 0;
+      });
+    const exposurePlans = this.getSavedReportExposurePlans(now);
+
+    return this.savedReportEventTimings
+      .map((timing) => {
+        const reports = activeReports
+          .filter((report) => this.getSavedReportEventTiming(report) === timing.key)
+          .sort((first, second) => first.reportDate.localeCompare(second.reportDate) || first.ticker.localeCompare(second.ticker));
+        const plans = exposurePlans.filter((plan) => this.getSavedReportEventTiming(plan.report) === timing.key);
+
+        return {
+          plannedEventRisk: plans.reduce((total, plan) => total + plan.plannedEventRisk, 0),
+          preparationRemaining: reports.reduce((total, report) => (
+            total + this.savedReportPreparationSteps.length - this.getSavedReportPreparationCount(report)
+          ), 0),
+          readyCount: reports.filter((report) => this.getSavedReportStatus(report) === 'ready').length,
+          reports,
+          targetPositionValue: plans.reduce((total, plan) => total + plan.targetPositionValue, 0),
+          timing: timing.key,
+          timingDetail: timing.detail,
+          timingLabel: timing.label,
+        };
+      })
+      .filter((plan) => plan.reports.length > 0);
   }
 
   getSavedReportExposurePlans(now: Date = new Date()): SavedReportExposurePlan[] {
