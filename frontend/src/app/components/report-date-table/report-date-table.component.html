@@ -1250,6 +1250,32 @@
     <small class="saved-report-strategy-review__note">This is a research journal summary of your saved outcomes, not a performance record or a recommendation.</small>
   </section>
 
+  <section *ngIf="getSavedReportTimingReviewSummaries().length > 0" class="saved-report-timing-review" aria-labelledby="saved-report-timing-review-title">
+    <div class="saved-report-timing-review__header">
+      <div>
+        <h3 id="saved-report-timing-review-title">Report Session Outcome Check</h3>
+        <span>Calibrate review habits and recorded reactions by the session in which results were released.</span>
+      </div>
+      <strong>{{getSavedReportTimingReviewSummaries().length}} session{{getSavedReportTimingReviewSummaries().length === 1 ? '' : 's'}} reviewed</strong>
+    </div>
+    <div class="saved-report-timing-review__grid">
+      <article *ngFor="let summary of getSavedReportTimingReviewSummaries()" [attr.data-timing]="summary.timing">
+        <div class="saved-report-timing-review__card-header">
+          <strong>{{summary.timingLabel}}</strong>
+          <span>{{summary.reportCount}} past report{{summary.reportCount === 1 ? '' : 's'}}</span>
+        </div>
+        <p>{{summary.timingDetail}}</p>
+        <div class="saved-report-timing-review__metrics">
+          <span><small>Recorded reactions</small><strong>{{summary.recordedOutcomeCount}}/{{summary.reportCount}}</strong></span>
+          <span><small>Positive / negative</small><strong>{{summary.positiveCount}} / {{summary.negativeCount}}</strong></span>
+          <span><small>Complete reviews</small><strong>{{summary.completedCount}}/{{summary.reportCount}}</strong></span>
+          <span><small>Lessons captured</small><strong>{{summary.lessonCount}}</strong></span>
+        </div>
+      </article>
+    </div>
+    <small class="saved-report-timing-review__note">Use this research journal to improve session-specific preparation and review discipline; it is not a performance record or a recommendation.</small>
+  </section>
+
   <section *ngIf="getSavedReportImpliedMoveReviewSummaries().length > 0" class="saved-report-move-review" aria-labelledby="saved-report-move-review-title">
     <div class="saved-report-move-review__header">
       <div>

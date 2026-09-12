@@ -2780,6 +2780,109 @@ body { margin: 0;font-family: sans-serif, "Franklin Gothic Book", Verdana; }
   border-top: 3px solid #059669;
 }
 
+.saved-report-timing-review {
+  display: grid;
+  gap: 0.85rem;
+  margin: 18px 0;
+  padding: 18px;
+  border: 1px solid #bcd8ee;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #eff8ff, #f8fafc);
+}
+
+.saved-report-timing-review__header,
+.saved-report-timing-review__card-header {
+  align-items: center;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+}
+
+.saved-report-timing-review__header h3 {
+  color: #0c4a6e;
+  font-size: 1.05rem;
+  margin: 0 0 0.2rem;
+}
+
+.saved-report-timing-review__header span,
+.saved-report-timing-review__card-header span,
+.saved-report-timing-review__card p,
+.saved-report-timing-review__metrics small,
+.saved-report-timing-review__note {
+  color: #516d82;
+  font-size: 0.8rem;
+}
+
+.saved-report-timing-review__header > strong {
+  padding: 0.35rem 0.55rem;
+  border-radius: 999px;
+  background: #0369a1;
+  color: #fff;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.saved-report-timing-review__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 0.7rem;
+}
+
+.saved-report-timing-review article {
+  display: grid;
+  gap: 0.7rem;
+  padding: 0.8rem;
+  border: 1px solid #c7dfef;
+  border-radius: 9px;
+  background: #fff;
+}
+
+.saved-report-timing-review article[data-timing="unconfirmed"] {
+  border-top: 3px solid #d97706;
+}
+
+.saved-report-timing-review article[data-timing="beforeOpen"] {
+  border-top: 3px solid #0284c7;
+}
+
+.saved-report-timing-review article[data-timing="afterClose"] {
+  border-top: 3px solid #7c3aed;
+}
+
+.saved-report-timing-review article[data-timing="duringMarket"] {
+  border-top: 3px solid #059669;
+}
+
+.saved-report-timing-review__card-header strong,
+.saved-report-timing-review__metrics strong {
+  color: #0c4a6e;
+}
+
+.saved-report-timing-review__card p {
+  margin: 0;
+  line-height: 1.4;
+}
+
+.saved-report-timing-review__metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.saved-report-timing-review__metrics span {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.saved-report-timing-review__metrics small {
+  font-size: 0.66rem;
+  text-transform: uppercase;
+}
+
+.saved-report-timing-review__note {
+  line-height: 1.4;
+}
+
 .saved-report-strategy-review__card-header strong,
 .saved-report-strategy-review__metrics strong {
   color: #312e81;

@@ -319,6 +319,18 @@ interface SavedReportStrategyReviewSummary {
   strategyLabel: string;
 }
 
+interface SavedReportTimingReviewSummary {
+  completedCount: number;
+  lessonCount: number;
+  negativeCount: number;
+  positiveCount: number;
+  recordedOutcomeCount: number;
+  reportCount: number;
+  timing: SavedReportEventTiming;
+  timingDetail: string;
+  timingLabel: string;
+}
+
 interface SavedReportConvictionReviewSummary {
   completedCount: number;
   conviction: Exclude<SavedReportConviction, 'unassigned'>;
@@ -1340,6 +1352,51 @@ export class ReportDateTableComponent implements OnInit {
       .sort((first, second) => (
         second.reportCount - first.reportCount || first.strategyLabel.localeCompare(second.strategyLabel)
       ));
+  }
+
+  getSavedReportTimingReviewSummaries(): SavedReportTimingReviewSummary[] {
+    const pastReports = this.getPostEarningsReviewItems().map((item) => item.report);
+
+    return this.savedReportEventTimings
+      .map((timing) => {
+        const reports = pastReports.filter((report) => this.getSavedReportEventTiming(report) === timing.key);
+        const summary = reports.reduce((totals, report) => {
+          const review = this.getSavedReportReview(report);
+
+          if (this.isSavedReportReviewComplete(report)) {
+            totals.completedCount += 1;
+          }
+          if (review.lesson.trim().length > 0) {
+            totals.lessonCount += 1;
+          }
+          if (review.outcome !== 'unreviewed') {
+            totals.recordedOutcomeCount += 1;
+            if (review.outcome === 'positive') {
+              totals.positiveCount += 1;
+            }
+            if (review.outcome === 'negative') {
+              totals.negativeCount += 1;
+            }
+          }
+
+          return totals;
+        }, {
+          completedCount: 0,
+          lessonCount: 0,
+          negativeCount: 0,
+          positiveCount: 0,
+          recordedOutcomeCount: 0,
+        });
+
+        return {
+          ...summary,
+          reportCount: reports.length,
+          timing: timing.key,
+          timingDetail: timing.detail,
+          timingLabel: timing.label,
+        };
+      })
+      .filter((summary) => summary.reportCount > 0);
   }
 
   getSavedReportImpliedMoveReviewSummaries(): SavedReportImpliedMoveReviewSummary[] {
