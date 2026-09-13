@@ -1148,6 +1148,33 @@
       </article>
     </div>
 
+    <div *ngIf="getSavedReportReviewCadenceSummaries().length > 0" class="saved-report-review-cadence" aria-labelledby="saved-report-review-cadence-title">
+      <div class="saved-report-review-cadence__header">
+        <div>
+          <h4 id="saved-report-review-cadence-title">Review Age Lanes</h4>
+          <span>Keep research observations timely by separating fresh follow-up from stalled post-earnings notes.</span>
+        </div>
+        <button *ngIf="savedReportReviewCadenceFilter !== 'all'" (click)="clearSavedReportReviewCadence()" type="button">Show all ages</button>
+      </div>
+      <div class="saved-report-review-cadence__grid">
+        <button
+          *ngFor="let summary of getSavedReportReviewCadenceSummaries()"
+          (click)="focusSavedReportReviewCadence(summary.key)"
+          [attr.aria-pressed]="savedReportReviewCadenceFilter === summary.key"
+          [class.saved-report-review-cadence__card--active]="savedReportReviewCadenceFilter === summary.key"
+          [attr.data-cadence]="summary.key"
+          class="saved-report-review-cadence__card"
+          type="button">
+          <span>{{summary.label}}</span>
+          <strong>{{summary.completeCount}}/{{summary.totalCount}} complete</strong>
+          <small>{{summary.detail}}</small>
+          <em *ngIf="summary.needsOutcomeCount > 0">{{summary.needsOutcomeCount}} need{{summary.needsOutcomeCount === 1 ? 's' : ''}} outcome</em>
+          <em *ngIf="summary.needsNotesCount > 0">{{summary.needsNotesCount}} need{{summary.needsNotesCount === 1 ? 's' : ''}} notes</em>
+          <em *ngIf="summary.needsOutcomeCount === 0 && summary.needsNotesCount === 0">All reviews closed</em>
+        </button>
+      </div>
+    </div>
+
     <div aria-label="Post-earnings review filter" class="saved-report-review-queue__filters" role="group">
       <button
         *ngFor="let filter of postEarningsReviewFilters"

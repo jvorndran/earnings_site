@@ -40,6 +40,8 @@ type SavedReportJournalKey = 'thesis' | 'risk' | 'decision';
 type SavedReportReviewOutcome = 'unreviewed' | 'positive' | 'negative' | 'mixed' | 'flat';
 type SavedReportReviewKey = 'reaction' | 'lesson' | 'followUp';
 type PostEarningsReviewFilter = 'all' | 'needsOutcome' | 'needsNotes' | 'complete';
+type SavedReportReviewCadence = 'fresh' | 'aging' | 'overdue';
+type SavedReportReviewCadenceFilter = 'all' | SavedReportReviewCadence;
 type SavedReportLessonOutcomeFilter = 'all' | Exclude<SavedReportReviewOutcome, 'unreviewed'>;
 type SavedReportPlaybookKey = 'preEventStarter' | 'postEventStarter' | 'longTermResearch';
 
@@ -308,6 +310,16 @@ interface SavedReportReviewSummary {
   totalCount: number;
 }
 
+interface SavedReportReviewCadenceSummary {
+  completeCount: number;
+  detail: string;
+  key: SavedReportReviewCadence;
+  label: string;
+  needsNotesCount: number;
+  needsOutcomeCount: number;
+  totalCount: number;
+}
+
 interface SavedReportLessonItem {
   report: SavedReport;
   review: SavedReportReview;
@@ -422,6 +434,7 @@ export class ReportDateTableComponent implements OnInit {
   savedReportResearchLaneFilter: SavedReportResearchLane = 'all';
   savedReportSearchText = '';
   postEarningsReviewFilter: PostEarningsReviewFilter = 'all';
+  savedReportReviewCadenceFilter: SavedReportReviewCadenceFilter = 'all';
   savedReportLessonSearchText = '';
   savedReportLessonOutcomeFilter: SavedReportLessonOutcomeFilter = 'all';
   readonly savedReportWorkflowStages: Array<{key: SavedReportStatus; label: string; detail: string}> = [
@@ -629,6 +642,7 @@ export class ReportDateTableComponent implements OnInit {
       this.savedReportConvictionFilter = 'all';
       this.savedReportDecisionFilter = 'all';
       this.savedReportResearchLaneFilter = 'all';
+      this.savedReportReviewCadenceFilter = 'all';
       this.savedReportSearchText = '';
     }
 
@@ -651,6 +665,7 @@ export class ReportDateTableComponent implements OnInit {
     this.savedReportConvictionFilter = 'all';
     this.savedReportDecisionFilter = 'all';
     this.savedReportResearchLaneFilter = 'all';
+    this.savedReportReviewCadenceFilter = 'all';
     this.savedReportSearchText = '';
     this.savedReportMessage = 'Saved report shortlist cleared.';
     this.persistSavedReports();
@@ -767,6 +782,7 @@ export class ReportDateTableComponent implements OnInit {
         this.savedReportConvictionFilter = 'all';
         this.savedReportDecisionFilter = 'all';
         this.savedReportResearchLaneFilter = 'all';
+        this.savedReportReviewCadenceFilter = 'all';
         this.persistSavedReports();
         this.savedReportMessage = `${importedReports.length} saved report${importedReports.length === 1 ? '' : 's'} restored from backup.`;
       } catch (error) {
@@ -1268,7 +1284,10 @@ export class ReportDateTableComponent implements OnInit {
 
   getVisiblePostEarningsReviewItems(): SavedReportReviewItem[] {
     return this.getPostEarningsReviewItems()
-      .filter((item) => this.matchesPostEarningsReviewFilter(item, this.postEarningsReviewFilter));
+      .filter((item) => (
+        this.matchesPostEarningsReviewFilter(item, this.postEarningsReviewFilter) &&
+        (this.savedReportReviewCadenceFilter === 'all' || this.getSavedReportReviewCadence(item) === this.savedReportReviewCadenceFilter)
+      ));
   }
 
   getPostEarningsReviewFilterCount(filter: PostEarningsReviewFilter): number {
@@ -1279,6 +1298,72 @@ export class ReportDateTableComponent implements OnInit {
 
   setPostEarningsReviewFilter(filter: PostEarningsReviewFilter): void {
     this.postEarningsReviewFilter = filter;
+  }
+
+  getSavedReportReviewCadenceSummaries(): SavedReportReviewCadenceSummary[] {
+    const summaries: SavedReportReviewCadenceSummary[] = [
+      {
+        key: 'fresh',
+        label: 'Fresh review',
+        detail: 'One to two days since results',
+        totalCount: 0,
+        completeCount: 0,
+        needsOutcomeCount: 0,
+        needsNotesCount: 0,
+      },
+      {
+        key: 'aging',
+        label: 'Aging review',
+        detail: 'Three to seven days since results',
+        totalCount: 0,
+        completeCount: 0,
+        needsOutcomeCount: 0,
+        needsNotesCount: 0,
+      },
+      {
+        key: 'overdue',
+        label: 'Overdue review',
+        detail: 'Eight or more days since results',
+        totalCount: 0,
+        completeCount: 0,
+        needsOutcomeCount: 0,
+        needsNotesCount: 0,
+      }
+    ];
+
+    this.getPostEarningsReviewItems().forEach((item) => {
+      const summary = summaries.find((candidate) => candidate.key === this.getSavedReportReviewCadence(item));
+
+      if (!summary) {
+        return;
+      }
+
+      summary.totalCount += 1;
+      if (this.isSavedReportReviewComplete(item.report)) {
+        summary.completeCount += 1;
+        return;
+      }
+
+      if (this.getSavedReportReview(item.report).outcome === 'unreviewed') {
+        summary.needsOutcomeCount += 1;
+      } else {
+        summary.needsNotesCount += 1;
+      }
+    });
+
+    return summaries.filter((summary) => summary.totalCount > 0);
+  }
+
+  focusSavedReportReviewCadence(cadence: SavedReportReviewCadence): void {
+    this.postEarningsReviewFilter = 'all';
+    this.savedReportReviewCadenceFilter = cadence;
+    const label = this.getSavedReportReviewCadenceSummaries().find((summary) => summary.key === cadence)?.label || 'selected';
+    this.savedReportMessage = `Showing the ${label.toLowerCase()} queue.`;
+  }
+
+  clearSavedReportReviewCadence(): void {
+    this.savedReportReviewCadenceFilter = 'all';
+    this.savedReportMessage = 'Showing every post-earnings review.';
   }
 
   setSavedReportLessonOutcomeFilter(filter: SavedReportLessonOutcomeFilter): void {
@@ -1322,6 +1407,14 @@ export class ReportDateTableComponent implements OnInit {
     }
 
     return filter !== 'complete' || this.isSavedReportReviewComplete(item.report);
+  }
+
+  private getSavedReportReviewCadence(item: SavedReportReviewItem): SavedReportReviewCadence {
+    if (item.daysSince >= 8) {
+      return 'overdue';
+    }
+
+    return item.daysSince >= 3 ? 'aging' : 'fresh';
   }
 
   getPostEarningsReviewSummary(): SavedReportReviewSummary {

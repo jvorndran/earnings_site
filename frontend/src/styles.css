@@ -3604,12 +3604,111 @@ body { margin: 0;font-family: sans-serif, "Franklin Gothic Book", Verdana; }
   line-height: 1.4;
 }
 
+.saved-report-review-cadence {
+  display: grid;
+  gap: 0.75rem;
+  margin: 1rem 0;
+  padding: 0.9rem;
+  border: 1px solid #e4cdac;
+  border-radius: 7px;
+  background: linear-gradient(135deg, #fffaf2, #fffdf9);
+}
+
+.saved-report-review-cadence__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.saved-report-review-cadence__header h4 {
+  margin: 0;
+  color: #73450d;
+}
+
+.saved-report-review-cadence__header span,
+.saved-report-review-cadence__card small {
+  color: #806744;
+}
+
+.saved-report-review-cadence__header button {
+  flex: 0 0 auto;
+  border: 1px solid #b2782d;
+  border-radius: 4px;
+  background: #fff;
+  color: #75490f;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  padding: 0.45rem 0.6rem;
+}
+
+.saved-report-review-cadence__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+  gap: 0.6rem;
+}
+
+.saved-report-review-cadence__card {
+  display: grid;
+  gap: 0.25rem;
+  min-height: 8.5rem;
+  padding: 0.75rem;
+  border: 1px solid #ecdabc;
+  border-radius: 6px;
+  background: #fff;
+  color: #693e0b;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.saved-report-review-cadence__card:hover,
+.saved-report-review-cadence__card:focus-visible,
+.saved-report-review-cadence__card--active {
+  border-color: #b2782d;
+  box-shadow: 0 2px 8px rgba(121, 73, 14, 0.14);
+}
+
+.saved-report-review-cadence__card span {
+  color: #845415;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.saved-report-review-cadence__card strong {
+  color: #643a08;
+  font-size: 1.15rem;
+}
+
+.saved-report-review-cadence__card em {
+  justify-self: start;
+  border-radius: 999px;
+  background: #fff1dc;
+  color: #9b5b06;
+  font-size: 0.7rem;
+  font-style: normal;
+  font-weight: 700;
+  padding: 0.2rem 0.45rem;
+}
+
+.saved-report-review-cadence__card[data-cadence='overdue'] em {
+  background: #fde7e5;
+  color: #a43c31;
+}
+
 @media (max-width: 640px) {
   .saved-report-risk-capacity__header {
     grid-template-columns: 1fr;
   }
 
   .saved-report-desk-brief__header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .saved-report-review-cadence__header {
     align-items: stretch;
     flex-direction: column;
   }
