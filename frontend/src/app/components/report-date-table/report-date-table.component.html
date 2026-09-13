@@ -993,6 +993,29 @@
     </div>
   </section>
 
+  <section *ngIf="getSavedReportDeskBrief().length > 0" class="saved-report-desk-brief" aria-labelledby="saved-report-desk-brief-title">
+    <div class="saved-report-desk-brief__header">
+      <div>
+        <h3 id="saved-report-desk-brief-title">Upcoming Earnings Desk Brief</h3>
+        <span>Bring the next seven days of active catalysts, session plans, and unfinished research into one handoff-ready view.</span>
+      </div>
+      <button (click)="copySavedReportDeskBrief()" type="button">Copy desk brief</button>
+    </div>
+    <div class="saved-report-desk-brief__grid">
+      <a *ngFor="let item of getSavedReportDeskBrief()" [routerLink]="['/', item.report.reportDate, item.report.ticker]" class="saved-report-desk-brief__item">
+        <div>
+          <span>{{formatSavedReportCountdown(item.daysUntil)}}</span>
+          <strong>{{item.report.ticker}}</strong>
+          <small>{{formatDate(item.report.reportDate)}} · {{getSavedReportEventTimingLabel(getSavedReportEventTiming(item.report))}}</small>
+        </div>
+        <p>{{item.nextAction}}</p>
+        <small>{{getSavedReportStrategyLabel(getSavedReportStrategy(item.report))}} · {{getSavedReportRoleLabel(getSavedReportRole(item.report))}}</small>
+        <em>{{savedReportPreparationSteps.length - item.preparationRemaining}}/{{savedReportPreparationSteps.length}} prep · {{3 - item.journalRemaining}}/3 journal</em>
+      </a>
+    </div>
+    <small class="saved-report-desk-brief__note">The copied brief reflects the active saved research in this browser and is a planning aid, not investment advice.</small>
+  </section>
+
   <section *ngIf="getSavedReportTimingPlans().length > 0" class="saved-report-timing-plan" aria-labelledby="saved-report-timing-plan-title">
     <div class="saved-report-timing-plan__header">
       <div>

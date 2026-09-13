@@ -3502,9 +3502,116 @@ body { margin: 0;font-family: sans-serif, "Franklin Gothic Book", Verdana; }
   line-height: 1.4;
 }
 
+.saved-report-desk-brief {
+  display: grid;
+  gap: 0.85rem;
+  margin: 1.25rem 0;
+  padding: 1.1rem;
+  border: 1px solid #a9d7cb;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #f2fcf8, #f8fffc);
+}
+
+.saved-report-desk-brief__header,
+.saved-report-desk-brief__item > div {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.saved-report-desk-brief__header h3 {
+  margin: 0;
+  color: #145344;
+}
+
+.saved-report-desk-brief__header span,
+.saved-report-desk-brief__item span,
+.saved-report-desk-brief__item small,
+.saved-report-desk-brief__note {
+  color: #49766b;
+}
+
+.saved-report-desk-brief__header button {
+  flex: 0 0 auto;
+  border: 1px solid #27846c;
+  border-radius: 5px;
+  background: #fff;
+  color: #145344;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  padding: 0.55rem 0.75rem;
+}
+
+.saved-report-desk-brief__header button:hover,
+.saved-report-desk-brief__header button:focus-visible {
+  background: #145344;
+  color: #fff;
+}
+
+.saved-report-desk-brief__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(225px, 1fr));
+  gap: 0.65rem;
+}
+
+.saved-report-desk-brief__item {
+  display: grid;
+  gap: 0.45rem;
+  min-height: 9.3rem;
+  padding: 0.8rem;
+  border: 1px solid #bde0d6;
+  border-radius: 6px;
+  background: #fff;
+  color: inherit;
+  text-decoration: none;
+}
+
+.saved-report-desk-brief__item:hover {
+  border-color: #27846c;
+  box-shadow: 0 2px 8px rgba(20, 83, 68, 0.14);
+}
+
+.saved-report-desk-brief__item > div {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.saved-report-desk-brief__item strong {
+  color: #145344;
+}
+
+.saved-report-desk-brief__item p {
+  margin: 0;
+  color: #1e4a40;
+  font-weight: 650;
+  line-height: 1.35;
+}
+
+.saved-report-desk-brief__item em {
+  justify-self: start;
+  border-radius: 999px;
+  background: #e5f6f0;
+  color: #176854;
+  font-size: 0.72rem;
+  font-style: normal;
+  font-weight: 700;
+  padding: 0.25rem 0.5rem;
+}
+
+.saved-report-desk-brief__note {
+  line-height: 1.4;
+}
+
 @media (max-width: 640px) {
   .saved-report-risk-capacity__header {
     grid-template-columns: 1fr;
+  }
+
+  .saved-report-desk-brief__header {
+    align-items: stretch;
+    flex-direction: column;
   }
 }
 

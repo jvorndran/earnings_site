@@ -256,6 +256,11 @@ interface SavedReportScheduleGroup {
   label: string;
 }
 
+interface SavedReportDeskBriefItem extends SavedReportScheduleItem {
+  daysUntil: number;
+  nextAction: string;
+}
+
 interface SavedReportEventConcentration {
   averageImpliedMove: number;
   elevatedMoveCount: number;
@@ -932,6 +937,65 @@ export class ReportDateTableComponent implements OnInit {
         })
       }))
       .filter((group) => group.items.length > 0);
+  }
+
+  getSavedReportDeskBrief(now: Date = new Date()): SavedReportDeskBriefItem[] {
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    return this.savedReports
+      .filter((report) => this.getSavedReportStatus(report) !== 'skip')
+      .map((report) => {
+        const daysUntil = this.getSavedReportDaysUntil(report.reportDate, startOfToday);
+        const preparationRemaining = this.savedReportPreparationSteps.length - this.getSavedReportPreparationCount(report);
+        const journalRemaining = 3 - this.getSavedReportJournalCount(report);
+        const nextChecklistStep = this.savedReportPreparationSteps.find((step) => (
+          !this.isSavedReportPreparationComplete(report, step.key)
+        ));
+
+        return {
+          report,
+          daysUntil,
+          preparationRemaining,
+          journalRemaining,
+          nextAction: nextChecklistStep
+            ? nextChecklistStep.label
+            : journalRemaining > 0
+              ? 'Capture the remaining decision journal fields'
+              : this.getSavedReportStatus(report) === 'ready'
+                ? 'Review the ready event plan'
+                : 'Set the event workflow stage'
+        };
+      })
+      .filter((item): item is SavedReportDeskBriefItem => item.daysUntil !== null && item.daysUntil >= 0 && item.daysUntil <= 7)
+      .sort((first, second) => first.daysUntil - second.daysUntil || first.report.ticker.localeCompare(second.report.ticker))
+      .slice(0, 8);
+  }
+
+  async copySavedReportDeskBrief(): Promise<void> {
+    const briefItems = this.getSavedReportDeskBrief();
+
+    if (briefItems.length === 0) {
+      this.savedReportMessage = 'Save an active report in the next seven days before copying a desk brief.';
+      return;
+    }
+
+    const lines = [
+      'Earnings desk brief — next 7 days',
+      ...briefItems.map((item) => {
+        const report = item.report;
+        const researchProgress = `${this.savedReportPreparationSteps.length - item.preparationRemaining}/${this.savedReportPreparationSteps.length} prep · ${3 - item.journalRemaining}/3 journal`;
+        const plan = `${this.getSavedReportEventTimingLabel(this.getSavedReportEventTiming(report))} · ${this.getSavedReportStrategyLabel(this.getSavedReportStrategy(report))} · ${this.getSavedReportRoleLabel(this.getSavedReportRole(report))}`;
+
+        return `${this.formatDate(report.reportDate)} — ${report.ticker} (${this.formatSavedReportCountdown(item.daysUntil)}): ${plan}. ${researchProgress}. Next: ${item.nextAction}.`;
+      })
+    ];
+
+    try {
+      await navigator.clipboard.writeText(lines.join('\n'));
+      this.savedReportMessage = `${briefItems.length} upcoming earnings brief item${briefItems.length === 1 ? '' : 's'} copied to the clipboard.`;
+    } catch (error) {
+      this.savedReportMessage = 'The desk brief could not be copied. Check browser clipboard permission and try again.';
+    }
   }
 
   getSavedReportEventConcentrations(now: Date = new Date()): SavedReportEventConcentration[] {
