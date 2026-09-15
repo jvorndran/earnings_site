@@ -1300,6 +1300,32 @@
     <small class="saved-report-strategy-review__note">This is a research journal summary of your saved outcomes, not a performance record or a recommendation.</small>
   </section>
 
+  <section *ngIf="getSavedReportHypothesisReviewSummaries().length > 0" class="saved-report-hypothesis-review" aria-labelledby="saved-report-hypothesis-review-title">
+    <div class="saved-report-hypothesis-review__header">
+      <div>
+        <h3 id="saved-report-hypothesis-review-title">Research Hypothesis Calibration</h3>
+        <span>Compare the saved post-earnings record by the specific business question each report was meant to test.</span>
+      </div>
+      <strong>{{getSavedReportHypothesisReviewSummaries().length}} hypothesis{{getSavedReportHypothesisReviewSummaries().length === 1 ? '' : 'es'}} reviewed</strong>
+    </div>
+
+    <div class="saved-report-hypothesis-review__grid">
+      <article *ngFor="let summary of getSavedReportHypothesisReviewSummaries()" [attr.data-hypothesis]="summary.hypothesis">
+        <div class="saved-report-hypothesis-review__card-header">
+          <strong>{{summary.hypothesisLabel}}</strong>
+          <span>{{summary.reportCount}} past report{{summary.reportCount === 1 ? '' : 's'}}</span>
+        </div>
+        <div class="saved-report-hypothesis-review__metrics">
+          <span><small>Recorded reactions</small><strong>{{summary.recordedOutcomeCount}}/{{summary.reportCount}}</strong></span>
+          <span><small>Positive / negative</small><strong>{{summary.positiveCount}} / {{summary.negativeCount}}</strong></span>
+          <span><small>Complete reviews</small><strong>{{summary.completedCount}}/{{summary.reportCount}}</strong></span>
+          <span><small>Lessons captured</small><strong>{{summary.lessonCount}}</strong></span>
+        </div>
+      </article>
+    </div>
+    <small class="saved-report-hypothesis-review__note">This records research observations by hypothesis; it is not a performance record or investment recommendation.</small>
+  </section>
+
   <section *ngIf="getSavedReportTimingReviewSummaries().length > 0" class="saved-report-timing-review" aria-labelledby="saved-report-timing-review-title">
     <div class="saved-report-timing-review__header">
       <div>
@@ -1555,6 +1581,15 @@
             [ngModel]="getSavedReportStrategy(report)">
             <option *ngFor="let strategy of savedReportStrategies" [ngValue]="strategy.key">{{strategy.label}}</option>
           </select>
+        </label>
+        <label>
+          <span>Research hypothesis</span>
+          <select
+            (ngModelChange)="setSavedReportHypothesis(report, $event)"
+            [ngModel]="getSavedReportHypothesis(report)">
+            <option *ngFor="let hypothesis of savedReportHypotheses" [ngValue]="hypothesis.key">{{hypothesis.label}}</option>
+          </select>
+          <small>{{getSavedReportHypothesisDetail(getSavedReportHypothesis(report))}}</small>
         </label>
         <label>
           <span>Report timing</span>

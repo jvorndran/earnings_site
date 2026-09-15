@@ -28,6 +28,7 @@ type SavedReportStatus = 'research' | 'watching' | 'ready' | 'skip';
 type SavedReportFilter = 'all' | SavedReportStatus;
 type SavedReportStrategy = 'unassigned' | 'preEvent' | 'postEvent' | 'avoidEvent' | 'longTerm';
 type SavedReportStrategyFilter = 'all' | SavedReportStrategy;
+type SavedReportHypothesis = 'unassigned' | 'earningsPower' | 'guidance' | 'shortSqueeze' | 'valuation' | 'turnaround';
 type SavedReportEventTiming = 'unconfirmed' | 'beforeOpen' | 'afterClose' | 'duringMarket';
 type SavedReportRole = 'unassigned' | 'primary' | 'satellite' | 'hedge' | 'monitor';
 type SavedReportRoleFilter = 'all' | SavedReportRole;
@@ -169,6 +170,7 @@ interface SavedReport {
   plannedRiskPercent?: number;
   status?: SavedReportStatus;
   strategy?: SavedReportStrategy;
+  hypothesis?: SavedReportHypothesis;
   role?: SavedReportRole;
   conviction?: SavedReportConviction;
   preparation?: Partial<SavedReportPreparation>;
@@ -336,6 +338,17 @@ interface SavedReportStrategyReviewSummary {
   strategyLabel: string;
 }
 
+interface SavedReportHypothesisReviewSummary {
+  completedCount: number;
+  hypothesis: Exclude<SavedReportHypothesis, 'unassigned'>;
+  hypothesisLabel: string;
+  lessonCount: number;
+  negativeCount: number;
+  positiveCount: number;
+  recordedOutcomeCount: number;
+  reportCount: number;
+}
+
 interface SavedReportTimingReviewSummary {
   completedCount: number;
   lessonCount: number;
@@ -449,6 +462,14 @@ export class ReportDateTableComponent implements OnInit {
     {key: 'postEvent', label: 'After results', detail: 'Wait for the report reaction'},
     {key: 'avoidEvent', label: 'Avoid event', detail: 'No exposure through results'},
     {key: 'longTerm', label: 'Long-term', detail: 'Research beyond this report'}
+  ];
+  readonly savedReportHypotheses: Array<{key: SavedReportHypothesis; label: string; detail: string}> = [
+    {key: 'unassigned', label: 'Needs hypothesis', detail: 'Name the earnings question you are testing'},
+    {key: 'earningsPower', label: 'Earnings power', detail: 'Results need to validate profit or estimate strength'},
+    {key: 'guidance', label: 'Guidance trajectory', detail: 'Outlook needs to improve, hold, or reset expectations'},
+    {key: 'shortSqueeze', label: 'Short squeeze', detail: 'Crowded positioning could amplify the reaction'},
+    {key: 'valuation', label: 'Valuation reset', detail: 'Results need to change how the market values the business'},
+    {key: 'turnaround', label: 'Turnaround proof', detail: 'Execution needs to show a durable inflection'}
   ];
   readonly savedReportEventTimings: Array<{key: SavedReportEventTiming; label: string; detail: string}> = [
     {key: 'unconfirmed', label: 'Confirm timing', detail: 'Report session has not been recorded.'},
@@ -629,6 +650,7 @@ export class ReportDateTableComponent implements OnInit {
         marketCap: stock['Market Cap'],
         status: 'research' as SavedReportStatus,
         strategy: 'unassigned' as SavedReportStrategy,
+        hypothesis: 'unassigned' as SavedReportHypothesis,
         role: 'unassigned' as SavedReportRole,
         conviction: 'unassigned' as SavedReportConviction,
         plannedRiskPercent: 0,
@@ -702,7 +724,7 @@ export class ReportDateTableComponent implements OnInit {
     }
 
     const headers = [
-      'Ticker', 'Company', 'Report Date', 'Report Timing', 'Workflow Status', 'Event Strategy', 'Portfolio Role', 'Conviction',
+      'Ticker', 'Company', 'Report Date', 'Report Timing', 'Workflow Status', 'Event Strategy', 'Research Hypothesis', 'Portfolio Role', 'Conviction',
       'Implied Move (%)', 'Short Interest (%)', 'EPS Estimate', 'Market Cap', 'Risk Allocation (%)',
       'Preparation Complete', 'Journal Fields Complete', 'Review Outcome', 'Review Reaction', 'Review Lesson',
       'Follow-through Action', 'Follow-through Complete'
@@ -719,6 +741,7 @@ export class ReportDateTableComponent implements OnInit {
           this.getSavedReportEventTimingLabel(this.getSavedReportEventTiming(report)),
           this.getSavedReportStatusLabel(this.getSavedReportStatus(report)),
           this.getSavedReportStrategyLabel(this.getSavedReportStrategy(report)),
+          this.getSavedReportHypothesisLabel(this.getSavedReportHypothesis(report)),
           this.getSavedReportRoleLabel(this.getSavedReportRole(report)),
           this.getSavedReportConvictionLabel(this.getSavedReportConviction(report)),
           report.impliedMove,
@@ -1511,6 +1534,58 @@ export class ReportDateTableComponent implements OnInit {
       ));
   }
 
+  getSavedReportHypothesisReviewSummaries(): SavedReportHypothesisReviewSummary[] {
+    const pastReports = this.getPostEarningsReviewItems().map((item) => item.report);
+    const hypothesisOrder = this.savedReportHypotheses.map((hypothesis) => hypothesis.key);
+
+    return this.savedReportHypotheses
+      .filter((hypothesis): hypothesis is {key: Exclude<SavedReportHypothesis, 'unassigned'>; label: string; detail: string} => (
+        hypothesis.key !== 'unassigned'
+      ))
+      .map((hypothesis) => {
+        const reports = pastReports.filter((report) => this.getSavedReportHypothesis(report) === hypothesis.key);
+        const summary = reports.reduce((totals, report) => {
+          const review = this.getSavedReportReview(report);
+
+          if (this.isSavedReportReviewComplete(report)) {
+            totals.completedCount += 1;
+          }
+          if (review.lesson.trim().length > 0) {
+            totals.lessonCount += 1;
+          }
+          if (review.outcome !== 'unreviewed') {
+            totals.recordedOutcomeCount += 1;
+            if (review.outcome === 'positive') {
+              totals.positiveCount += 1;
+            }
+            if (review.outcome === 'negative') {
+              totals.negativeCount += 1;
+            }
+          }
+
+          return totals;
+        }, {
+          completedCount: 0,
+          lessonCount: 0,
+          negativeCount: 0,
+          positiveCount: 0,
+          recordedOutcomeCount: 0,
+        });
+
+        return {
+          ...summary,
+          hypothesis: hypothesis.key,
+          hypothesisLabel: hypothesis.label,
+          reportCount: reports.length,
+        };
+      })
+      .filter((summary) => summary.reportCount > 0)
+      .sort((first, second) => (
+        hypothesisOrder.indexOf(first.hypothesis) - hypothesisOrder.indexOf(second.hypothesis) ||
+        second.reportCount - first.reportCount
+      ));
+  }
+
   getSavedReportTimingReviewSummaries(): SavedReportTimingReviewSummary[] {
     const pastReports = this.getPostEarningsReviewItems().map((item) => item.report);
 
@@ -1763,6 +1838,10 @@ export class ReportDateTableComponent implements OnInit {
 
   getSavedReportStrategy(report: SavedReport): SavedReportStrategy {
     return this.normalizeSavedReportStrategy(report.strategy);
+  }
+
+  getSavedReportHypothesis(report: SavedReport): SavedReportHypothesis {
+    return this.normalizeSavedReportHypothesis(report.hypothesis);
   }
 
   getSavedReportEventTiming(report: SavedReport): SavedReportEventTiming {
@@ -2018,6 +2097,28 @@ export class ReportDateTableComponent implements OnInit {
 
   getSavedReportStrategyLabel(strategy: SavedReportStrategy): string {
     return this.savedReportStrategies.find((item) => item.key === strategy)?.label || 'Needs decision';
+  }
+
+  setSavedReportHypothesis(report: SavedReport, hypothesis: SavedReportHypothesis): void {
+    const normalizedHypothesis = this.normalizeSavedReportHypothesis(hypothesis);
+
+    this.savedReports = this.savedReports.map((savedReport) => (
+      savedReport.ticker === report.ticker && savedReport.reportDate === report.reportDate
+        ? {...savedReport, hypothesis: normalizedHypothesis}
+        : savedReport
+    ));
+    this.savedReportMessage = normalizedHypothesis === 'unassigned'
+      ? `${report.ticker} needs a research hypothesis.`
+      : `${report.ticker} hypothesis set to ${this.getSavedReportHypothesisLabel(normalizedHypothesis)}.`;
+    this.persistSavedReports();
+  }
+
+  getSavedReportHypothesisLabel(hypothesis: SavedReportHypothesis): string {
+    return this.savedReportHypotheses.find((item) => item.key === hypothesis)?.label || 'Needs hypothesis';
+  }
+
+  getSavedReportHypothesisDetail(hypothesis: SavedReportHypothesis): string {
+    return this.savedReportHypotheses.find((item) => item.key === hypothesis)?.detail || 'Name the earnings question you are testing';
   }
 
   isSavedReportPreparationComplete(report: SavedReport, key: SavedReportPreparationKey): boolean {
@@ -2763,6 +2864,7 @@ export class ReportDateTableComponent implements OnInit {
         eventTiming: this.normalizeSavedReportEventTiming(report.eventTiming),
         status: this.normalizeSavedReportStatus(report.status),
         strategy: this.normalizeSavedReportStrategy(report.strategy),
+        hypothesis: this.normalizeSavedReportHypothesis(report.hypothesis),
         role: this.normalizeSavedReportRole(report.role),
         conviction: this.normalizeSavedReportConviction(report.conviction),
         plannedRiskPercent: this.normalizeSavedReportRiskAllocation(report.plannedRiskPercent),
@@ -2781,6 +2883,13 @@ export class ReportDateTableComponent implements OnInit {
   private normalizeSavedReportStrategy(strategy: unknown): SavedReportStrategy {
     return strategy === 'preEvent' || strategy === 'postEvent' || strategy === 'avoidEvent' || strategy === 'longTerm'
       ? strategy
+      : 'unassigned';
+  }
+
+  private normalizeSavedReportHypothesis(hypothesis: unknown): SavedReportHypothesis {
+    return hypothesis === 'earningsPower' || hypothesis === 'guidance' || hypothesis === 'shortSqueeze' ||
+      hypothesis === 'valuation' || hypothesis === 'turnaround'
+      ? hypothesis
       : 'unassigned';
   }
 

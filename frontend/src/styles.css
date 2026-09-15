@@ -3841,10 +3841,101 @@ body { margin: 0;font-family: sans-serif, "Franklin Gothic Book", Verdana; }
   padding: 0.4rem 0.55rem;
 }
 
+.saved-report-hypothesis-review {
+  width: 90%;
+  margin: 0 auto 1.5rem;
+  padding: 1rem;
+  border: 1px solid #b9d9cf;
+  border-radius: 7px;
+  background: linear-gradient(135deg, #f4fbf8, #fbfefd);
+}
+
+.saved-report-hypothesis-review__header,
+.saved-report-hypothesis-review__card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.saved-report-hypothesis-review__header h3,
+.saved-report-hypothesis-review__card-header strong {
+  margin: 0;
+  color: #0e5c4d;
+}
+
+.saved-report-hypothesis-review__header span,
+.saved-report-hypothesis-review__card-header span,
+.saved-report-hypothesis-review__metrics small,
+.saved-report-hypothesis-review__note {
+  color: #47776c;
+}
+
+.saved-report-hypothesis-review__header > strong {
+  color: #0e5c4d;
+  text-align: right;
+}
+
+.saved-report-hypothesis-review__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(205px, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.9rem;
+}
+
+.saved-report-hypothesis-review__grid article {
+  display: grid;
+  gap: 0.8rem;
+  padding: 0.85rem;
+  border: 1px solid #c8e4db;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.saved-report-hypothesis-review__grid article[data-hypothesis='shortSqueeze'] {
+  border-top: 4px solid #c6781e;
+}
+
+.saved-report-hypothesis-review__grid article[data-hypothesis='turnaround'] {
+  border-top: 4px solid #4b8a6d;
+}
+
+.saved-report-hypothesis-review__metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(92px, 1fr));
+  gap: 0.65rem;
+}
+
+.saved-report-hypothesis-review__metrics span {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.saved-report-hypothesis-review__metrics small {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.saved-report-hypothesis-review__metrics strong {
+  color: #124f43;
+}
+
+.saved-report-hypothesis-review__note {
+  display: block;
+  margin-top: 0.85rem;
+}
+
 @media (max-width: 560px) {
   .earnings-signal-board__header,
   .earnings-signal-board__card-header,
   .earnings-signal-board__actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .saved-report-hypothesis-review__header,
+  .saved-report-hypothesis-review__card-header {
     align-items: stretch;
     flex-direction: column;
   }
