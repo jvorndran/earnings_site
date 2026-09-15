@@ -3926,6 +3926,120 @@ body { margin: 0;font-family: sans-serif, "Franklin Gothic Book", Verdana; }
   margin-top: 0.85rem;
 }
 
+.saved-report-research-load {
+  width: 90%;
+  margin: 0 auto 1.5rem;
+  padding: 1rem;
+  border: 1px solid #cbd5e9;
+  border-radius: 7px;
+  background: linear-gradient(135deg, #f7f9fd, #ffffff);
+}
+
+.saved-report-research-load__header,
+.saved-report-research-load__card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.saved-report-research-load__header h3,
+.saved-report-research-load__card-header strong {
+  margin: 0;
+  color: #283b6f;
+}
+
+.saved-report-research-load__header span,
+.saved-report-research-load__card-header span,
+.saved-report-research-load__metrics small,
+.saved-report-research-load__note {
+  color: #596b93;
+}
+
+.saved-report-research-load__header > strong {
+  color: #283b6f;
+  text-align: right;
+}
+
+.saved-report-research-load__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.9rem;
+}
+
+.saved-report-research-load__grid article {
+  display: grid;
+  gap: 0.8rem;
+  padding: 0.85rem;
+  border: 1px solid #d9e1f0;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.saved-report-research-load__card--needs-time {
+  border-top: 4px solid #c8832f !important;
+}
+
+.saved-report-research-load__card-header em {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: #e8eefb;
+  color: #324b87;
+  font-size: 0.72rem;
+  font-style: normal;
+  font-weight: 700;
+  padding: 0.28rem 0.45rem;
+}
+
+.saved-report-research-load__metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(70px, 1fr));
+  gap: 0.55rem;
+}
+
+.saved-report-research-load__metrics span {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.saved-report-research-load__metrics small {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.saved-report-research-load__metrics strong {
+  color: #283b6f;
+}
+
+.saved-report-research-load__reports {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.saved-report-research-load__reports a {
+  border-radius: 4px;
+  background: #eef3fe;
+  color: #2d4783;
+  font-size: 0.76rem;
+  font-weight: 700;
+  padding: 0.35rem 0.45rem;
+  text-decoration: none;
+}
+
+.saved-report-research-load__reports a:hover,
+.saved-report-research-load__reports a:focus-visible {
+  background: #dfe9fc;
+  text-decoration: underline;
+}
+
+.saved-report-research-load__note {
+  display: block;
+  margin-top: 0.85rem;
+}
+
 @media (max-width: 560px) {
   .earnings-signal-board__header,
   .earnings-signal-board__card-header,
@@ -3938,5 +4052,15 @@ body { margin: 0;font-family: sans-serif, "Franklin Gothic Book", Verdana; }
   .saved-report-hypothesis-review__card-header {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .saved-report-research-load__header,
+  .saved-report-research-load__card-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .saved-report-research-load__metrics {
+    grid-template-columns: repeat(2, minmax(90px, 1fr));
   }
 }
