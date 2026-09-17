@@ -1022,21 +1022,40 @@
         <h3 id="saved-report-research-load-title">Upcoming Research Load</h3>
         <span>Reserve a realistic review window for every active catalyst in the next seven days.</span>
       </div>
-      <strong>{{getSavedReportResearchLoad().length}} scheduled day{{getSavedReportResearchLoad().length === 1 ? '' : 's'}}</strong>
+      <strong>{{getSavedReportResearchCapacitySummary().totalMinutes}} / {{getSavedReportResearchCapacitySummary().totalCapacityMinutes}} min booked</strong>
+    </div>
+    <div class="saved-report-research-load__capacity">
+      <label>
+        <span>Daily research capacity</span>
+        <select
+          (ngModelChange)="setSavedReportResearchCapacity($event)"
+          [ngModel]="researchCapacityPerDayMinutes">
+          <option *ngFor="let option of savedReportResearchCapacityOptions" [ngValue]="option.minutes">{{option.label}}</option>
+        </select>
+      </label>
+      <span *ngIf="getSavedReportResearchCapacitySummary().overCapacityDayCount > 0" class="saved-report-research-load__capacity-alert">
+        {{getSavedReportResearchCapacitySummary().overCapacityDayCount}} day{{getSavedReportResearchCapacitySummary().overCapacityDayCount === 1 ? '' : 's'}} over capacity
+      </span>
+      <span *ngIf="getSavedReportResearchCapacitySummary().overCapacityDayCount === 0">
+        {{getSavedReportResearchCapacitySummary().availableMinutes}} minutes still available across {{getSavedReportResearchCapacitySummary().plannedDayCount}} scheduled day{{getSavedReportResearchCapacitySummary().plannedDayCount === 1 ? '' : 's'}}
+      </span>
     </div>
     <div class="saved-report-research-load__grid">
-      <article *ngFor="let load of getSavedReportResearchLoad()" [class.saved-report-research-load__card--needs-time]="load.unplannedCount > 0">
+      <article
+        *ngFor="let load of getSavedReportResearchLoad()"
+        [class.saved-report-research-load__card--needs-time]="load.unplannedCount > 0"
+        [class.saved-report-research-load__card--over-capacity]="load.isOverCapacity">
         <div class="saved-report-research-load__card-header">
           <div>
             <strong>{{formatDate(load.reportDate)}}</strong>
             <span>{{load.reports.length}} active report{{load.reports.length === 1 ? '' : 's'}}</span>
           </div>
-          <em>{{load.totalMinutes}} min planned</em>
+          <em>{{load.totalMinutes}} / {{load.capacityMinutes}} min</em>
         </div>
         <div class="saved-report-research-load__metrics">
           <span><small>Time budgeted</small><strong>{{load.scheduledCount}}/{{load.reports.length}}</strong></span>
           <span><small>Ready to stage</small><strong>{{load.readyCount}}/{{load.reports.length}}</strong></span>
-          <span><small>Needs a time slot</small><strong>{{load.unplannedCount}}</strong></span>
+          <span><small>{{load.isOverCapacity ? 'Over capacity' : 'Open capacity'}}</small><strong>{{load.isOverCapacity ? load.totalMinutes - load.capacityMinutes : load.remainingMinutes}} min</strong></span>
         </div>
         <div class="saved-report-research-load__reports">
           <a *ngFor="let report of load.reports" [routerLink]="['/', report.reportDate, report.ticker]">

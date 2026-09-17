@@ -351,12 +351,24 @@ interface SavedReportHypothesisReviewSummary {
 }
 
 interface SavedReportResearchLoad {
+  capacityMinutes: number;
+  isOverCapacity: boolean;
   readyCount: number;
+  remainingMinutes: number;
   reportDate: string;
   reports: SavedReport[];
   scheduledCount: number;
   totalMinutes: number;
   unplannedCount: number;
+}
+
+interface SavedReportResearchCapacitySummary {
+  availableMinutes: number;
+  dailyCapacityMinutes: number;
+  overCapacityDayCount: number;
+  plannedDayCount: number;
+  totalCapacityMinutes: number;
+  totalMinutes: number;
 }
 
 interface SavedReportTimingReviewSummary {
@@ -489,6 +501,13 @@ export class ReportDateTableComponent implements OnInit {
     {minutes: 60, label: '1 hour'},
     {minutes: 90, label: '90 minutes'}
   ];
+  readonly savedReportResearchCapacityOptions: Array<{minutes: number; label: string}> = [
+    {minutes: 30, label: '30 minutes per day'},
+    {minutes: 60, label: '1 hour per day'},
+    {minutes: 90, label: '90 minutes per day'},
+    {minutes: 120, label: '2 hours per day'},
+    {minutes: 180, label: '3 hours per day'}
+  ];
   readonly savedReportEventTimings: Array<{key: SavedReportEventTiming; label: string; detail: string}> = [
     {key: 'unconfirmed', label: 'Confirm timing', detail: 'Report session has not been recorded.'},
     {key: 'beforeOpen', label: 'Before open', detail: 'Plan research and orders before the market opens.'},
@@ -597,13 +616,16 @@ export class ReportDateTableComponent implements OnInit {
   portfolioValue = 25000;
   maximumEventRiskPercent = 1;
   maximumAggregateEventRiskPercent = 3;
+  researchCapacityPerDayMinutes = 90;
   private readonly savedReportStorageKey = 'earnings-site-saved-reports';
+  private readonly savedReportResearchCapacityStorageKey = 'earnings-site-research-capacity-per-day';
 
 
   constructor(private route: ActivatedRoute, private http: HttpClient) { }
 
   ngOnInit(): void {
     this.savedReports = this.loadSavedReports();
+    this.researchCapacityPerDayMinutes = this.loadSavedReportResearchCapacity();
     this.route.params.subscribe(params => {
       this.date = params['date'];
       this.fetchStockInfoByDate(this.date)
@@ -1609,6 +1631,7 @@ export class ReportDateTableComponent implements OnInit {
   getSavedReportResearchLoad(now: Date = new Date()): SavedReportResearchLoad[] {
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const loads = new Map<string, SavedReportResearchLoad>();
+    const capacityMinutes = this.getSavedReportResearchCapacityPerDay();
 
     this.savedReports
       .filter((report) => this.getSavedReportStatus(report) !== 'skip')
@@ -1620,7 +1643,10 @@ export class ReportDateTableComponent implements OnInit {
         }
 
         const existing = loads.get(report.reportDate) || {
+          capacityMinutes,
+          isOverCapacity: false,
           readyCount: 0,
+          remainingMinutes: capacityMinutes,
           reportDate: report.reportDate,
           reports: [],
           scheduledCount: 0,
@@ -1634,11 +1660,40 @@ export class ReportDateTableComponent implements OnInit {
         existing.scheduledCount += researchMinutes > 0 ? 1 : 0;
         existing.unplannedCount += researchMinutes === 0 ? 1 : 0;
         existing.readyCount += this.getSavedReportStatus(report) === 'ready' ? 1 : 0;
+        existing.remainingMinutes = Math.max(capacityMinutes - existing.totalMinutes, 0);
+        existing.isOverCapacity = existing.totalMinutes > capacityMinutes;
         loads.set(report.reportDate, existing);
       });
 
     return Array.from(loads.values())
       .sort((first, second) => first.reportDate.localeCompare(second.reportDate));
+  }
+
+  getSavedReportResearchCapacitySummary(): SavedReportResearchCapacitySummary {
+    const loads = this.getSavedReportResearchLoad();
+    const totalMinutes = loads.reduce((total, load) => total + load.totalMinutes, 0);
+    const totalCapacityMinutes = loads.reduce((total, load) => total + load.capacityMinutes, 0);
+
+    return {
+      availableMinutes: Math.max(totalCapacityMinutes - totalMinutes, 0),
+      dailyCapacityMinutes: this.getSavedReportResearchCapacityPerDay(),
+      overCapacityDayCount: loads.filter((load) => load.isOverCapacity).length,
+      plannedDayCount: loads.length,
+      totalCapacityMinutes,
+      totalMinutes,
+    };
+  }
+
+  setSavedReportResearchCapacity(minutes: number): void {
+    const normalizedMinutes = this.normalizeSavedReportResearchCapacity(minutes);
+    this.researchCapacityPerDayMinutes = normalizedMinutes;
+
+    try {
+      localStorage.setItem(this.savedReportResearchCapacityStorageKey, String(normalizedMinutes));
+      this.savedReportMessage = `Daily research capacity set to ${normalizedMinutes} minutes.`;
+    } catch (error) {
+      this.savedReportMessage = 'Daily research capacity could not be saved in this browser.';
+    }
   }
 
   getSavedReportTimingReviewSummaries(): SavedReportTimingReviewSummary[] {
@@ -2970,6 +3025,23 @@ export class ReportDateTableComponent implements OnInit {
   private normalizeSavedReportResearchMinutes(value: unknown): number {
     const minutes = Number(value);
     return this.savedReportResearchTimeOptions.some((item) => item.minutes === minutes) ? minutes : 0;
+  }
+
+  private loadSavedReportResearchCapacity(): number {
+    try {
+      return this.normalizeSavedReportResearchCapacity(localStorage.getItem(this.savedReportResearchCapacityStorageKey));
+    } catch (error) {
+      return 90;
+    }
+  }
+
+  private getSavedReportResearchCapacityPerDay(): number {
+    return this.normalizeSavedReportResearchCapacity(this.researchCapacityPerDayMinutes);
+  }
+
+  private normalizeSavedReportResearchCapacity(value: unknown): number {
+    const minutes = Number(value);
+    return this.savedReportResearchCapacityOptions.some((item) => item.minutes === minutes) ? minutes : 90;
   }
 
   private normalizeSavedReportEventTiming(timing: unknown): SavedReportEventTiming {
