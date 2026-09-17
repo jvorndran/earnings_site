@@ -4075,6 +4075,113 @@ body { margin: 0;font-family: sans-serif, "Franklin Gothic Book", Verdana; }
   margin-top: 0.85rem;
 }
 
+.saved-report-seasonality {
+  width: 90%;
+  margin: 0 auto 1.5rem;
+  padding: 1rem;
+  border: 1px solid #c8dcce;
+  border-radius: 7px;
+  background: linear-gradient(135deg, #f5fbf6, #ffffff);
+}
+
+.saved-report-seasonality__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.saved-report-seasonality__header h3 {
+  margin: 0;
+  color: #245e3d;
+}
+
+.saved-report-seasonality__header span,
+.saved-report-seasonality__card small,
+.saved-report-seasonality__note {
+  color: #5e7868;
+}
+
+.saved-report-seasonality__header button {
+  flex: 0 0 auto;
+  border: 1px solid #a7c9b2;
+  border-radius: 4px;
+  background: #fff;
+  color: #245e3d;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 700;
+  padding: 0.38rem 0.55rem;
+}
+
+.saved-report-seasonality__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.9rem;
+}
+
+.saved-report-seasonality__card {
+  display: grid;
+  gap: 0.75rem;
+  width: 100%;
+  border: 1px solid #cce0d1;
+  border-radius: 6px;
+  background: #fff;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  padding: 0.8rem;
+  text-align: left;
+}
+
+.saved-report-seasonality__card:hover,
+.saved-report-seasonality__card:focus-visible,
+.saved-report-seasonality__card--active {
+  border-color: #4e9670;
+  box-shadow: 0 0 0 2px rgba(78, 150, 112, 0.16);
+}
+
+.saved-report-seasonality__card[data-season='q4'] {
+  border-top: 4px solid #a069a5;
+}
+
+.saved-report-seasonality__card-header,
+.saved-report-seasonality__metrics,
+.saved-report-seasonality__metrics > span {
+  display: grid;
+}
+
+.saved-report-seasonality__card-header {
+  gap: 0.2rem;
+}
+
+.saved-report-seasonality__card-header strong,
+.saved-report-seasonality__metrics strong {
+  color: #245e3d;
+}
+
+.saved-report-seasonality__metrics {
+  grid-template-columns: repeat(2, minmax(75px, 1fr));
+  gap: 0.6rem;
+}
+
+.saved-report-seasonality__metrics > span {
+  gap: 0.2rem;
+}
+
+.saved-report-seasonality__metrics small {
+  font-size: 0.63rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.saved-report-seasonality__note {
+  display: block;
+  margin-top: 0.85rem;
+}
+
 @media (max-width: 560px) {
   .earnings-signal-board__header,
   .earnings-signal-board__card-header,
@@ -4100,6 +4207,11 @@ body { margin: 0;font-family: sans-serif, "Franklin Gothic Book", Verdana; }
   }
 
   .saved-report-research-load__capacity {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .saved-report-seasonality__header {
     align-items: stretch;
     flex-direction: column;
   }

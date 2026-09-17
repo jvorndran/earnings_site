@@ -43,6 +43,8 @@ type SavedReportReviewKey = 'reaction' | 'lesson' | 'followUp';
 type PostEarningsReviewFilter = 'all' | 'needsOutcome' | 'needsNotes' | 'complete';
 type SavedReportReviewCadence = 'fresh' | 'aging' | 'overdue';
 type SavedReportReviewCadenceFilter = 'all' | SavedReportReviewCadence;
+type SavedReportSeason = 'q1' | 'q2' | 'q3' | 'q4';
+type SavedReportSeasonFilter = 'all' | SavedReportSeason;
 type SavedReportLessonOutcomeFilter = 'all' | Exclude<SavedReportReviewOutcome, 'unreviewed'>;
 type SavedReportPlaybookKey = 'preEventStarter' | 'postEventStarter' | 'longTermResearch';
 
@@ -323,6 +325,18 @@ interface SavedReportReviewCadenceSummary {
   totalCount: number;
 }
 
+interface SavedReportSeasonalityReviewSummary {
+  completeCount: number;
+  detail: string;
+  key: SavedReportSeason;
+  label: string;
+  lessonCount: number;
+  negativeCount: number;
+  positiveCount: number;
+  recordedOutcomeCount: number;
+  reportCount: number;
+}
+
 interface SavedReportLessonItem {
   report: SavedReport;
   review: SavedReportReview;
@@ -470,6 +484,7 @@ export class ReportDateTableComponent implements OnInit {
   savedReportSearchText = '';
   postEarningsReviewFilter: PostEarningsReviewFilter = 'all';
   savedReportReviewCadenceFilter: SavedReportReviewCadenceFilter = 'all';
+  savedReportSeasonalityFilter: SavedReportSeasonFilter = 'all';
   savedReportLessonSearchText = '';
   savedReportLessonOutcomeFilter: SavedReportLessonOutcomeFilter = 'all';
   readonly savedReportWorkflowStages: Array<{key: SavedReportStatus; label: string; detail: string}> = [
@@ -1351,7 +1366,8 @@ export class ReportDateTableComponent implements OnInit {
     return this.getPostEarningsReviewItems()
       .filter((item) => (
         this.matchesPostEarningsReviewFilter(item, this.postEarningsReviewFilter) &&
-        (this.savedReportReviewCadenceFilter === 'all' || this.getSavedReportReviewCadence(item) === this.savedReportReviewCadenceFilter)
+        (this.savedReportReviewCadenceFilter === 'all' || this.getSavedReportReviewCadence(item) === this.savedReportReviewCadenceFilter) &&
+        (this.savedReportSeasonalityFilter === 'all' || this.getSavedReportSeason(item.report) === this.savedReportSeasonalityFilter)
       ));
   }
 
@@ -1431,6 +1447,64 @@ export class ReportDateTableComponent implements OnInit {
     this.savedReportMessage = 'Showing every post-earnings review.';
   }
 
+  getSavedReportSeasonalityReviewSummaries(): SavedReportSeasonalityReviewSummary[] {
+    const seasons: Array<{key: SavedReportSeason; label: string; detail: string}> = [
+      {key: 'q1', label: 'Jan–Mar reports', detail: 'First calendar-quarter reviews'},
+      {key: 'q2', label: 'Apr–Jun reports', detail: 'Second calendar-quarter reviews'},
+      {key: 'q3', label: 'Jul–Sep reports', detail: 'Third calendar-quarter reviews'},
+      {key: 'q4', label: 'Oct–Dec reports', detail: 'Fourth calendar-quarter reviews'}
+    ];
+    const pastReports = this.getPostEarningsReviewItems().map((item) => item.report);
+
+    return seasons
+      .map((season) => {
+        const reports = pastReports.filter((report) => this.getSavedReportSeason(report) === season.key);
+        const summary = reports.reduce((totals, report) => {
+          const review = this.getSavedReportReview(report);
+
+          if (this.isSavedReportReviewComplete(report)) {
+            totals.completeCount += 1;
+          }
+          if (review.lesson.trim().length > 0) {
+            totals.lessonCount += 1;
+          }
+          if (review.outcome !== 'unreviewed') {
+            totals.recordedOutcomeCount += 1;
+            if (review.outcome === 'positive') {
+              totals.positiveCount += 1;
+            }
+            if (review.outcome === 'negative') {
+              totals.negativeCount += 1;
+            }
+          }
+
+          return totals;
+        }, {
+          completeCount: 0,
+          lessonCount: 0,
+          negativeCount: 0,
+          positiveCount: 0,
+          recordedOutcomeCount: 0,
+        });
+
+        return {...season, ...summary, reportCount: reports.length};
+      })
+      .filter((summary) => summary.reportCount > 0);
+  }
+
+  focusSavedReportSeasonality(season: SavedReportSeason): void {
+    this.postEarningsReviewFilter = 'all';
+    this.savedReportReviewCadenceFilter = 'all';
+    this.savedReportSeasonalityFilter = season;
+    const label = this.getSavedReportSeasonalityReviewSummaries().find((summary) => summary.key === season)?.label || 'selected season';
+    this.savedReportMessage = `Showing ${label.toLowerCase()} reviews.`;
+  }
+
+  clearSavedReportSeasonality(): void {
+    this.savedReportSeasonalityFilter = 'all';
+    this.savedReportMessage = 'Showing every post-earnings review season.';
+  }
+
   setSavedReportLessonOutcomeFilter(filter: SavedReportLessonOutcomeFilter): void {
     this.savedReportLessonOutcomeFilter = filter;
   }
@@ -1480,6 +1554,16 @@ export class ReportDateTableComponent implements OnInit {
     }
 
     return item.daysSince >= 3 ? 'aging' : 'fresh';
+  }
+
+  private getSavedReportSeason(report: SavedReport): SavedReportSeason | null {
+    const reportDate = new Date(`${report.reportDate}T12:00:00`);
+
+    if (Number.isNaN(reportDate.getTime())) {
+      return null;
+    }
+
+    return (`q${Math.floor(reportDate.getMonth() / 3) + 1}` as SavedReportSeason);
   }
 
   getPostEarningsReviewSummary(): SavedReportReviewSummary {

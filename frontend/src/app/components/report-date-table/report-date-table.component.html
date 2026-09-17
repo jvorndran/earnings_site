@@ -1430,6 +1430,42 @@
     <small class="saved-report-move-review__note">Use this saved research record to calibrate event expectations; it does not measure actual returns or predict future reactions.</small>
   </section>
 
+  <section *ngIf="getSavedReportSeasonalityReviewSummaries().length > 0" class="saved-report-seasonality" aria-labelledby="saved-report-seasonality-title">
+    <div class="saved-report-seasonality__header">
+      <div>
+        <h3 id="saved-report-seasonality-title">Earnings Seasonality Journal</h3>
+        <span>Compare saved review coverage and recorded reactions across the four earnings seasons.</span>
+      </div>
+      <button
+        *ngIf="savedReportSeasonalityFilter !== 'all'"
+        (click)="clearSavedReportSeasonality()"
+        type="button">Show all seasons</button>
+    </div>
+
+    <div class="saved-report-seasonality__grid">
+      <button
+        *ngFor="let summary of getSavedReportSeasonalityReviewSummaries()"
+        (click)="focusSavedReportSeasonality(summary.key)"
+        [attr.aria-pressed]="savedReportSeasonalityFilter === summary.key"
+        [class.saved-report-seasonality__card--active]="savedReportSeasonalityFilter === summary.key"
+        [attr.data-season]="summary.key"
+        class="saved-report-seasonality__card"
+        type="button">
+        <span class="saved-report-seasonality__card-header">
+          <strong>{{summary.label}}</strong>
+          <small>{{summary.detail}}</small>
+        </span>
+        <span class="saved-report-seasonality__metrics">
+          <span><small>Recorded reactions</small><strong>{{summary.recordedOutcomeCount}}/{{summary.reportCount}}</strong></span>
+          <span><small>Positive / negative</small><strong>{{summary.positiveCount}} / {{summary.negativeCount}}</strong></span>
+          <span><small>Complete reviews</small><strong>{{summary.completeCount}}/{{summary.reportCount}}</strong></span>
+          <span><small>Lessons captured</small><strong>{{summary.lessonCount}}</strong></span>
+        </span>
+      </button>
+    </div>
+    <small class="saved-report-seasonality__note">Select a season to focus the post-earnings review queue. These are research-journal observations, not performance results or predictions.</small>
+  </section>
+
   <section *ngIf="getSavedReportConvictionReviewSummaries().length > 0" class="saved-report-conviction-review" aria-labelledby="saved-report-conviction-review-title">
     <div class="saved-report-conviction-review__header">
       <div>
