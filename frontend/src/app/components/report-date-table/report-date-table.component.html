@@ -670,6 +670,36 @@
     </div>
   </section>
 
+  <section *ngIf="getSavedReportPlaybookSummaries().length > 0" class="saved-report-playbook-journal" aria-labelledby="saved-report-playbook-journal-title">
+    <div class="saved-report-playbook-journal__header">
+      <div>
+        <h3 id="saved-report-playbook-journal-title">Research Playbook Journal</h3>
+        <span>Track which planning shortcut started each report, then review its documented outcomes over time.</span>
+      </div>
+      <button
+        (click)="setSavedReportPlaybookFilter('all')"
+        [attr.aria-pressed]="savedReportPlaybookFilter === 'all'"
+        [class.saved-report-playbook-journal__reset--active]="savedReportPlaybookFilter === 'all'"
+        type="button">All playbooks</button>
+    </div>
+
+    <div class="saved-report-playbook-journal__grid">
+      <button
+        *ngFor="let summary of getSavedReportPlaybookSummaries()"
+        (click)="setSavedReportPlaybookFilter(summary.playbook)"
+        [attr.aria-label]="'Show reports initialized with the ' + summary.playbookLabel + ' playbook'"
+        [attr.aria-pressed]="savedReportPlaybookFilter === summary.playbook"
+        [class.saved-report-playbook-journal__card--active]="savedReportPlaybookFilter === summary.playbook"
+        class="saved-report-playbook-journal__card"
+        type="button">
+        <span>{{summary.playbookLabel}}</span>
+        <strong>{{summary.activeCount}} active / {{summary.reportCount}} saved</strong>
+        <small>{{summary.completedCount}} reviewed · {{summary.positiveCount}} positive · {{summary.negativeCount}} negative</small>
+      </button>
+    </div>
+    <small class="saved-report-playbook-journal__note">A playbook records the planning shortcut originally applied; later adjustments remain visible in each report’s current plan.</small>
+  </section>
+
   <section class="saved-report-strategy" aria-labelledby="saved-report-role-title">
     <div class="saved-report-strategy__header">
       <div>
@@ -1652,6 +1682,7 @@
               {{playbook.label}} — {{playbook.detail}}
             </option>
           </select>
+          <small *ngIf="getSavedReportPlaybook(report) !== 'unassigned'">Originally applied: {{getSavedReportPlaybookLabel(getSavedReportPlaybook(report))}}</small>
         </label>
         <label>
           <span>Preparation</span>
