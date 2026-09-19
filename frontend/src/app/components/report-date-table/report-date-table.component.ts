@@ -48,6 +48,8 @@ type SavedReportSeasonFilter = 'all' | SavedReportSeason;
 type SavedReportLessonOutcomeFilter = 'all' | Exclude<SavedReportReviewOutcome, 'unreviewed'>;
 type SavedReportPlaybookKey = 'preEventStarter' | 'postEventStarter' | 'longTermResearch';
 type SavedReportPlaybookFilter = 'all' | SavedReportPlaybookKey;
+type SavedReportTheme = 'unassigned' | 'technology' | 'consumer' | 'financials' | 'healthcare' | 'industrials' | 'energyMaterials';
+type SavedReportThemeFilter = 'all' | SavedReportTheme;
 
 interface SavedReportPreparation {
   estimateReviewed: boolean;
@@ -88,6 +90,15 @@ interface SavedReportPlaybookSummary {
   playbookLabel: string;
   positiveCount: number;
   reportCount: number;
+}
+
+interface SavedReportThemeSummary {
+  activeCount: number;
+  plannedEventRisk: number;
+  reportCount: number;
+  researchMinutes: number;
+  theme: SavedReportTheme;
+  themeLabel: string;
 }
 
 interface ReportDateSummary {
@@ -182,6 +193,7 @@ interface SavedReport {
   marketCap: string | number;
   plannedRiskPercent?: number;
   playbook?: SavedReportPlaybookKey;
+  theme?: SavedReportTheme;
   status?: SavedReportStatus;
   strategy?: SavedReportStrategy;
   hypothesis?: SavedReportHypothesis;
@@ -500,6 +512,7 @@ export class ReportDateTableComponent implements OnInit {
   savedReportLessonSearchText = '';
   savedReportLessonOutcomeFilter: SavedReportLessonOutcomeFilter = 'all';
   savedReportPlaybookFilter: SavedReportPlaybookFilter = 'all';
+  savedReportThemeFilter: SavedReportThemeFilter = 'all';
   readonly savedReportWorkflowStages: Array<{key: SavedReportStatus; label: string; detail: string}> = [
     {key: 'research', label: 'Research', detail: 'Needs a first review'},
     {key: 'watching', label: 'Watching', detail: 'Catalyst is on deck'},
@@ -608,6 +621,14 @@ export class ReportDateTableComponent implements OnInit {
       conviction: 'high',
       plannedRiskPercent: 0
     }
+  ];
+  readonly savedReportThemes: Array<{key: Exclude<SavedReportTheme, 'unassigned'>; label: string; detail: string}> = [
+    {key: 'technology', label: 'Technology', detail: 'Software, internet, semiconductors, and digital platforms'},
+    {key: 'consumer', label: 'Consumer', detail: 'Retail, media, travel, and consumer-facing brands'},
+    {key: 'financials', label: 'Financials', detail: 'Banks, payments, insurers, and market infrastructure'},
+    {key: 'healthcare', label: 'Healthcare', detail: 'Biotech, pharma, medical devices, and care providers'},
+    {key: 'industrials', label: 'Industrials', detail: 'Manufacturing, transport, defense, and business services'},
+    {key: 'energyMaterials', label: 'Energy & materials', detail: 'Energy, utilities, chemicals, metals, and mining'}
   ];
   readonly savedReportReviewOutcomes: Array<{key: SavedReportReviewOutcome; label: string}> = [
     {key: 'unreviewed', label: 'Not reviewed'},
@@ -735,6 +756,7 @@ export class ReportDateTableComponent implements OnInit {
       this.savedReportResearchLaneFilter = 'all';
       this.savedReportReviewCadenceFilter = 'all';
       this.savedReportPlaybookFilter = 'all';
+      this.savedReportThemeFilter = 'all';
       this.savedReportSearchText = '';
     }
 
@@ -759,6 +781,7 @@ export class ReportDateTableComponent implements OnInit {
     this.savedReportResearchLaneFilter = 'all';
     this.savedReportReviewCadenceFilter = 'all';
     this.savedReportPlaybookFilter = 'all';
+    this.savedReportThemeFilter = 'all';
     this.savedReportSearchText = '';
     this.savedReportMessage = 'Saved report shortlist cleared.';
     this.persistSavedReports();
@@ -795,7 +818,7 @@ export class ReportDateTableComponent implements OnInit {
     }
 
     const headers = [
-      'Ticker', 'Company', 'Report Date', 'Report Timing', 'Workflow Status', 'Research Playbook', 'Event Strategy', 'Research Hypothesis', 'Research Time (minutes)', 'Portfolio Role', 'Conviction',
+      'Ticker', 'Company', 'Report Date', 'Report Timing', 'Workflow Status', 'Research Playbook', 'Research Theme', 'Event Strategy', 'Research Hypothesis', 'Research Time (minutes)', 'Portfolio Role', 'Conviction',
       'Implied Move (%)', 'Short Interest (%)', 'EPS Estimate', 'Market Cap', 'Risk Allocation (%)',
       'Preparation Complete', 'Journal Fields Complete', 'Review Outcome', 'Review Reaction', 'Review Lesson',
       'Follow-through Action', 'Follow-through Complete'
@@ -812,6 +835,7 @@ export class ReportDateTableComponent implements OnInit {
           this.getSavedReportEventTimingLabel(this.getSavedReportEventTiming(report)),
           this.getSavedReportStatusLabel(this.getSavedReportStatus(report)),
           this.getSavedReportPlaybookLabel(this.getSavedReportPlaybook(report)),
+          this.getSavedReportThemeLabel(this.getSavedReportTheme(report)),
           this.getSavedReportStrategyLabel(this.getSavedReportStrategy(report)),
           this.getSavedReportHypothesisLabel(this.getSavedReportHypothesis(report)),
           this.getSavedReportResearchMinutes(report),
@@ -880,6 +904,7 @@ export class ReportDateTableComponent implements OnInit {
         this.savedReportResearchLaneFilter = 'all';
         this.savedReportReviewCadenceFilter = 'all';
         this.savedReportPlaybookFilter = 'all';
+        this.savedReportThemeFilter = 'all';
         this.persistSavedReports();
         this.savedReportMessage = `${importedReports.length} saved report${importedReports.length === 1 ? '' : 's'} restored from backup.`;
       } catch (error) {
@@ -901,6 +926,7 @@ export class ReportDateTableComponent implements OnInit {
       (this.savedReportRoleFilter === 'all' || this.getSavedReportRole(report) === this.savedReportRoleFilter) &&
       (this.savedReportConvictionFilter === 'all' || this.getSavedReportConviction(report) === this.savedReportConvictionFilter) &&
       (this.savedReportPlaybookFilter === 'all' || this.getSavedReportPlaybook(report) === this.savedReportPlaybookFilter) &&
+      (this.savedReportThemeFilter === 'all' || this.getSavedReportTheme(report) === this.savedReportThemeFilter) &&
       this.matchesSavedReportDecisionFilter(report, this.savedReportDecisionFilter) &&
       this.matchesSavedReportResearchLane(report, this.savedReportResearchLaneFilter) &&
       (normalizedSearch.length === 0 ||
@@ -955,6 +981,7 @@ export class ReportDateTableComponent implements OnInit {
     this.savedReportConvictionFilter = 'all';
     this.savedReportDecisionFilter = 'all';
     this.savedReportResearchLaneFilter = 'all';
+    this.savedReportThemeFilter = 'all';
     this.savedReportSearchText = ticker;
     this.savedReportMessage = `Showing every saved ${ticker} report and its research history.`;
   }
@@ -1359,6 +1386,39 @@ export class ReportDateTableComponent implements OnInit {
           playbookLabel: playbook.label,
           positiveCount: reviewedReports.filter((report) => this.getSavedReportReview(report).outcome === 'positive').length,
           reportCount: reports.length,
+        };
+      })
+      .filter((summary) => summary.reportCount > 0);
+  }
+
+  getSavedReportThemeSummaries(now: Date = new Date()): SavedReportThemeSummary[] {
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const themes: Array<{key: SavedReportTheme; label: string}> = [
+      ...this.savedReportThemes,
+      {key: 'unassigned', label: 'Unclassified'}
+    ];
+    const exposurePlans = this.getSavedReportExposurePlans(now);
+
+    return themes
+      .map((theme) => {
+        const reports = this.savedReports.filter((report) => this.getSavedReportTheme(report) === theme.key);
+        const researchMinutes = reports
+          .filter((report) => {
+            const daysUntil = this.getSavedReportDaysUntil(report.reportDate, startOfToday);
+            return this.getSavedReportStatus(report) !== 'skip' && daysUntil !== null && daysUntil >= 0;
+          })
+          .reduce((total, report) => total + this.getSavedReportResearchMinutes(report), 0);
+        const plannedEventRisk = exposurePlans
+          .filter((plan) => this.getSavedReportTheme(plan.report) === theme.key)
+          .reduce((total, plan) => total + plan.plannedEventRisk, 0);
+
+        return {
+          activeCount: reports.filter((report) => this.getSavedReportStatus(report) !== 'skip').length,
+          plannedEventRisk,
+          reportCount: reports.length,
+          researchMinutes,
+          theme: theme.key,
+          themeLabel: theme.label
         };
       })
       .filter((summary) => summary.reportCount > 0);
@@ -2079,6 +2139,14 @@ export class ReportDateTableComponent implements OnInit {
     return this.savedReportPlaybooks.find((item) => item.key === playbook)?.label || 'No playbook recorded';
   }
 
+  getSavedReportTheme(report: SavedReport): SavedReportTheme {
+    return this.normalizeSavedReportTheme(report.theme);
+  }
+
+  getSavedReportThemeLabel(theme: SavedReportTheme): string {
+    return this.savedReportThemes.find((item) => item.key === theme)?.label || 'Unclassified';
+  }
+
   getSavedReportHypothesis(report: SavedReport): SavedReportHypothesis {
     return this.normalizeSavedReportHypothesis(report.hypothesis);
   }
@@ -2125,6 +2193,10 @@ export class ReportDateTableComponent implements OnInit {
     this.savedReportPlaybookFilter = filter;
   }
 
+  setSavedReportThemeFilter(filter: SavedReportThemeFilter): void {
+    this.savedReportThemeFilter = filter;
+  }
+
   getSavedReportRole(report: SavedReport): SavedReportRole {
     return this.normalizeSavedReportRole(report.role);
   }
@@ -2160,6 +2232,7 @@ export class ReportDateTableComponent implements OnInit {
     this.savedReportConvictionFilter = conviction;
     this.savedReportDecisionFilter = 'all';
     this.savedReportResearchLaneFilter = 'all';
+    this.savedReportThemeFilter = 'all';
     this.savedReportSearchText = '';
     this.savedReportMessage = `${this.getSavedReportRoleLabel(role)} / ${this.getSavedReportConvictionLabel(conviction)} is now in view.`;
   }
@@ -2258,6 +2331,20 @@ export class ReportDateTableComponent implements OnInit {
         : savedReport
     ));
     this.savedReportMessage = `${report.ticker} assigned to ${this.getSavedReportRoleLabel(normalizedRole)}.`;
+    this.persistSavedReports();
+  }
+
+  setSavedReportTheme(report: SavedReport, theme: SavedReportTheme): void {
+    const normalizedTheme = this.normalizeSavedReportTheme(theme);
+
+    this.savedReports = this.savedReports.map((savedReport) => (
+      savedReport.ticker === report.ticker && savedReport.reportDate === report.reportDate
+        ? {...savedReport, theme: normalizedTheme}
+        : savedReport
+    ));
+    this.savedReportMessage = normalizedTheme === 'unassigned'
+      ? `${report.ticker} is no longer classified by business theme.`
+      : `${report.ticker} assigned to the ${this.getSavedReportThemeLabel(normalizedTheme)} theme.`;
     this.persistSavedReports();
   }
 
@@ -3126,6 +3213,7 @@ export class ReportDateTableComponent implements OnInit {
         eventTiming: this.normalizeSavedReportEventTiming(report.eventTiming),
         status: this.normalizeSavedReportStatus(report.status),
         playbook: this.normalizeSavedReportPlaybook(report.playbook),
+        theme: this.normalizeSavedReportTheme(report.theme),
         strategy: this.normalizeSavedReportStrategy(report.strategy),
         hypothesis: this.normalizeSavedReportHypothesis(report.hypothesis),
         researchMinutes: this.normalizeSavedReportResearchMinutes(report.researchMinutes),
@@ -3148,6 +3236,13 @@ export class ReportDateTableComponent implements OnInit {
     return playbook === 'preEventStarter' || playbook === 'postEventStarter' || playbook === 'longTermResearch'
       ? playbook
       : undefined;
+  }
+
+  private normalizeSavedReportTheme(theme: unknown): SavedReportTheme {
+    return theme === 'technology' || theme === 'consumer' || theme === 'financials' || theme === 'healthcare' ||
+      theme === 'industrials' || theme === 'energyMaterials'
+      ? theme
+      : 'unassigned';
   }
 
   private normalizeSavedReportStrategy(strategy: unknown): SavedReportStrategy {

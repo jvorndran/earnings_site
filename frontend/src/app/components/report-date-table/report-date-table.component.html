@@ -734,6 +734,37 @@
     </div>
   </section>
 
+  <section *ngIf="getSavedReportThemeSummaries().length > 0" class="saved-report-theme" aria-labelledby="saved-report-theme-title">
+    <div class="saved-report-theme__header">
+      <div>
+        <h3 id="saved-report-theme-title">Earnings Theme Mix</h3>
+        <span>Classify business exposure to spot where upcoming research time and planned event risk are clustering.</span>
+      </div>
+      <button
+        (click)="setSavedReportThemeFilter('all')"
+        [attr.aria-pressed]="savedReportThemeFilter === 'all'"
+        [class.saved-report-theme__reset--active]="savedReportThemeFilter === 'all'"
+        type="button">All themes</button>
+    </div>
+
+    <div class="saved-report-theme__grid">
+      <button
+        *ngFor="let summary of getSavedReportThemeSummaries()"
+        (click)="setSavedReportThemeFilter(summary.theme)"
+        [attr.aria-label]="'Show saved reports in the ' + summary.themeLabel + ' theme'"
+        [attr.aria-pressed]="savedReportThemeFilter === summary.theme"
+        [class.saved-report-theme__card--active]="savedReportThemeFilter === summary.theme"
+        [attr.data-theme]="summary.theme"
+        class="saved-report-theme__card"
+        type="button">
+        <span>{{summary.themeLabel}}</span>
+        <strong>{{summary.activeCount}} active / {{summary.reportCount}} saved</strong>
+        <small>{{summary.researchMinutes}} min upcoming research · {{summary.plannedEventRisk | currency:'USD':'symbol':'1.0-0'}} planned risk</small>
+      </button>
+    </div>
+    <small class="saved-report-theme__note">Theme labels are saved with the local research workflow and make concentration visible; they are not market classifications or investment recommendations.</small>
+  </section>
+
   <section class="saved-report-strategy" aria-labelledby="saved-report-conviction-title">
     <div class="saved-report-strategy__header">
       <div>
@@ -1701,6 +1732,16 @@
           </select>
         </label>
         <label>
+          <span>Business theme</span>
+          <select
+            (ngModelChange)="setSavedReportTheme(report, $event)"
+            [ngModel]="getSavedReportTheme(report)">
+            <option value="unassigned">Unclassified</option>
+            <option *ngFor="let theme of savedReportThemes" [ngValue]="theme.key">{{theme.label}}</option>
+          </select>
+          <small>{{getSavedReportTheme(report) === 'unassigned' ? 'Add a theme to track portfolio concentration.' : 'Included in the ' + getSavedReportThemeLabel(getSavedReportTheme(report)) + ' mix.'}}</small>
+        </label>
+        <label>
           <span>Research hypothesis</span>
           <select
             (ngModelChange)="setSavedReportHypothesis(report, $event)"
@@ -1759,7 +1800,7 @@
   </div>
 
   <p *ngIf="visibleSavedReports.length === 0" class="saved-report-workflow-empty">
-    No saved reports match the selected preparation stage, event approach, portfolio role, conviction level, and decision-gap filter yet.
+    No saved reports match the selected preparation stage, event approach, business theme, portfolio role, conviction level, and decision-gap filter yet.
   </p>
 </section>
 
