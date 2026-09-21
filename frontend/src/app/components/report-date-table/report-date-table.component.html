@@ -789,6 +789,38 @@
     <small class="saved-report-theme__note">Theme labels are saved with the local research workflow and make concentration visible; they are not market classifications or investment recommendations.</small>
   </section>
 
+  <section *ngIf="getSavedReportHypothesisPlans().length > 0" class="saved-report-hypothesis-plan" aria-labelledby="saved-report-hypothesis-plan-title">
+    <div class="saved-report-hypothesis-plan__header">
+      <div>
+        <h3 id="saved-report-hypothesis-plan-title">Upcoming Hypothesis Board</h3>
+        <span>Organize the active earnings workload by the business question each report is meant to test.</span>
+      </div>
+      <button
+        (click)="setSavedReportHypothesisFilter('all')"
+        [attr.aria-pressed]="savedReportHypothesisFilter === 'all'"
+        [class.saved-report-hypothesis-plan__reset--active]="savedReportHypothesisFilter === 'all'"
+        type="button">All hypotheses</button>
+    </div>
+
+    <div class="saved-report-hypothesis-plan__grid">
+      <button
+        *ngFor="let plan of getSavedReportHypothesisPlans()"
+        (click)="setSavedReportHypothesisFilter(plan.hypothesis)"
+        [attr.aria-label]="'Show saved reports testing ' + plan.hypothesisLabel"
+        [attr.aria-pressed]="savedReportHypothesisFilter === plan.hypothesis"
+        [attr.data-hypothesis]="plan.hypothesis"
+        [class.saved-report-hypothesis-plan__card--active]="savedReportHypothesisFilter === plan.hypothesis"
+        class="saved-report-hypothesis-plan__card"
+        type="button">
+        <span>{{plan.hypothesisLabel}}</span>
+        <strong>{{plan.activeCount}} active / {{plan.reportCount}} saved</strong>
+        <small>{{plan.evidenceCompleteCount}}/{{plan.activeCount}} evidence-ready · {{plan.researchMinutes}} min upcoming research</small>
+        <em>{{plan.plannedEventRisk > 0 ? (plan.plannedEventRisk | currency:'USD':'symbol':'1.0-0') + ' planned risk' : 'No planned event risk'}}</em>
+      </button>
+    </div>
+    <small class="saved-report-hypothesis-plan__note">Select a hypothesis to focus the saved-report cards below. Counts and research time include active upcoming reports; planned risk includes only saved pre-event allocations.</small>
+  </section>
+
   <section class="saved-report-strategy" aria-labelledby="saved-report-conviction-title">
     <div class="saved-report-strategy__header">
       <div>

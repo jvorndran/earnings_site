@@ -4379,6 +4379,116 @@ body { margin: 0;font-family: sans-serif, "Franklin Gothic Book", Verdana; }
   line-height: 1.4;
 }
 
+.saved-report-hypothesis-plan {
+  margin: 1.25rem 0;
+  padding: 1.1rem;
+  border: 1px solid #c9d5e7;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #f4f8fe, #fdfefe);
+}
+
+.saved-report-hypothesis-plan__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.saved-report-hypothesis-plan__header > div,
+.saved-report-hypothesis-plan__card {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.saved-report-hypothesis-plan__header h3,
+.saved-report-hypothesis-plan__card strong {
+  margin: 0;
+  color: #334b78;
+}
+
+.saved-report-hypothesis-plan__header span,
+.saved-report-hypothesis-plan__card small,
+.saved-report-hypothesis-plan__note {
+  color: #627496;
+}
+
+.saved-report-hypothesis-plan__header button {
+  border: 1px solid #617eae;
+  border-radius: 4px;
+  background: #ffffff;
+  color: #334b78;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+  padding: 0.55rem 0.7rem;
+}
+
+.saved-report-hypothesis-plan__header button:hover,
+.saved-report-hypothesis-plan__header button:focus-visible,
+.saved-report-hypothesis-plan__reset--active {
+  background: #334b78 !important;
+  color: #ffffff !important;
+}
+
+.saved-report-hypothesis-plan__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(205px, 1fr));
+  gap: 0.7rem;
+  margin-top: 0.9rem;
+}
+
+.saved-report-hypothesis-plan__card {
+  min-height: 8.1rem;
+  padding: 0.75rem;
+  border: 1px solid #c9d5e7;
+  border-radius: 6px;
+  background: #ffffff;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.saved-report-hypothesis-plan__card span {
+  color: #46679d;
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.saved-report-hypothesis-plan__card em {
+  align-self: end;
+  color: #405a89;
+  font-size: 0.72rem;
+  font-style: normal;
+  font-weight: 700;
+}
+
+.saved-report-hypothesis-plan__card:hover,
+.saved-report-hypothesis-plan__card:focus-visible,
+.saved-report-hypothesis-plan__card--active {
+  border-color: #617eae;
+  box-shadow: 0 2px 8px rgba(69, 99, 152, 0.18);
+}
+
+.saved-report-hypothesis-plan__card[data-hypothesis='unassigned'] {
+  border-style: dashed;
+}
+
+.saved-report-hypothesis-plan__card[data-hypothesis='shortSqueeze'] {
+  border-top: 4px solid #bf7a31;
+}
+
+.saved-report-hypothesis-plan__card[data-hypothesis='turnaround'] {
+  border-top: 4px solid #4e9670;
+}
+
+.saved-report-hypothesis-plan__note {
+  display: block;
+  margin-top: 0.85rem;
+  line-height: 1.4;
+}
+
 @media (max-width: 560px) {
   .earnings-signal-board__header,
   .earnings-signal-board__card-header,
@@ -4414,6 +4524,11 @@ body { margin: 0;font-family: sans-serif, "Franklin Gothic Book", Verdana; }
   }
 
   .saved-report-theme__header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .saved-report-hypothesis-plan__header {
     align-items: stretch;
     flex-direction: column;
   }

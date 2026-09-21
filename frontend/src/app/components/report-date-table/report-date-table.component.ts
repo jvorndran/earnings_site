@@ -29,6 +29,7 @@ type SavedReportFilter = 'all' | SavedReportStatus;
 type SavedReportStrategy = 'unassigned' | 'preEvent' | 'postEvent' | 'avoidEvent' | 'longTerm';
 type SavedReportStrategyFilter = 'all' | SavedReportStrategy;
 type SavedReportHypothesis = 'unassigned' | 'earningsPower' | 'guidance' | 'shortSqueeze' | 'valuation' | 'turnaround';
+type SavedReportHypothesisFilter = 'all' | SavedReportHypothesis;
 type SavedReportEventTiming = 'unconfirmed' | 'beforeOpen' | 'afterClose' | 'duringMarket';
 type SavedReportRole = 'unassigned' | 'primary' | 'satellite' | 'hedge' | 'monitor';
 type SavedReportRoleFilter = 'all' | SavedReportRole;
@@ -108,6 +109,16 @@ interface SavedReportThemeSummary {
   researchMinutes: number;
   theme: SavedReportTheme;
   themeLabel: string;
+}
+
+interface SavedReportHypothesisPlan {
+  activeCount: number;
+  evidenceCompleteCount: number;
+  hypothesis: SavedReportHypothesis;
+  hypothesisLabel: string;
+  plannedEventRisk: number;
+  reportCount: number;
+  researchMinutes: number;
 }
 
 interface ReportDateSummary {
@@ -524,6 +535,7 @@ export class ReportDateTableComponent implements OnInit {
   savedReportLessonOutcomeFilter: SavedReportLessonOutcomeFilter = 'all';
   savedReportPlaybookFilter: SavedReportPlaybookFilter = 'all';
   savedReportThemeFilter: SavedReportThemeFilter = 'all';
+  savedReportHypothesisFilter: SavedReportHypothesisFilter = 'all';
   readonly savedReportWorkflowStages: Array<{key: SavedReportStatus; label: string; detail: string}> = [
     {key: 'research', label: 'Research', detail: 'Needs a first review'},
     {key: 'watching', label: 'Watching', detail: 'Catalyst is on deck'},
@@ -781,6 +793,7 @@ export class ReportDateTableComponent implements OnInit {
       this.savedReportReviewCadenceFilter = 'all';
       this.savedReportPlaybookFilter = 'all';
       this.savedReportThemeFilter = 'all';
+      this.savedReportHypothesisFilter = 'all';
       this.savedReportSearchText = '';
     }
 
@@ -807,6 +820,7 @@ export class ReportDateTableComponent implements OnInit {
     this.savedReportReviewCadenceFilter = 'all';
     this.savedReportPlaybookFilter = 'all';
     this.savedReportThemeFilter = 'all';
+    this.savedReportHypothesisFilter = 'all';
     this.savedReportSearchText = '';
     this.savedReportMessage = 'Saved report shortlist cleared.';
     this.persistSavedReports();
@@ -932,6 +946,7 @@ export class ReportDateTableComponent implements OnInit {
         this.savedReportReviewCadenceFilter = 'all';
         this.savedReportPlaybookFilter = 'all';
         this.savedReportThemeFilter = 'all';
+        this.savedReportHypothesisFilter = 'all';
         this.persistSavedReports();
         this.savedReportMessage = `${importedReports.length} saved report${importedReports.length === 1 ? '' : 's'} restored from backup.`;
       } catch (error) {
@@ -954,6 +969,7 @@ export class ReportDateTableComponent implements OnInit {
       (this.savedReportConvictionFilter === 'all' || this.getSavedReportConviction(report) === this.savedReportConvictionFilter) &&
       (this.savedReportPlaybookFilter === 'all' || this.getSavedReportPlaybook(report) === this.savedReportPlaybookFilter) &&
       (this.savedReportThemeFilter === 'all' || this.getSavedReportTheme(report) === this.savedReportThemeFilter) &&
+      (this.savedReportHypothesisFilter === 'all' || this.getSavedReportHypothesis(report) === this.savedReportHypothesisFilter) &&
       this.matchesSavedReportDecisionFilter(report, this.savedReportDecisionFilter) &&
       this.matchesSavedReportResearchLane(report, this.savedReportResearchLaneFilter) &&
       this.matchesSavedReportEvidenceFilter(report, this.savedReportEvidenceFilter) &&
@@ -1011,6 +1027,7 @@ export class ReportDateTableComponent implements OnInit {
     this.savedReportResearchLaneFilter = 'all';
     this.savedReportEvidenceFilter = 'all';
     this.savedReportThemeFilter = 'all';
+    this.savedReportHypothesisFilter = 'all';
     this.savedReportSearchText = ticker;
     this.savedReportMessage = `Showing every saved ${ticker} report and its research history.`;
   }
@@ -1448,6 +1465,38 @@ export class ReportDateTableComponent implements OnInit {
           researchMinutes,
           theme: theme.key,
           themeLabel: theme.label
+        };
+      })
+      .filter((summary) => summary.reportCount > 0);
+  }
+
+  getSavedReportHypothesisPlans(now: Date = new Date()): SavedReportHypothesisPlan[] {
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const exposurePlans = this.getSavedReportExposurePlans(now);
+
+    return this.savedReportHypotheses
+      .map((hypothesis) => {
+        const reports = this.savedReports.filter((report) => this.getSavedReportHypothesis(report) === hypothesis.key);
+        const activeReports = reports.filter((report) => {
+          const daysUntil = this.getSavedReportDaysUntil(report.reportDate, startOfToday);
+          return this.getSavedReportStatus(report) !== 'skip' && daysUntil !== null && daysUntil >= 0;
+        });
+        const plannedEventRisk = exposurePlans
+          .filter((plan) => this.getSavedReportHypothesis(plan.report) === hypothesis.key)
+          .reduce((total, plan) => total + plan.plannedEventRisk, 0);
+
+        return {
+          activeCount: activeReports.length,
+          evidenceCompleteCount: activeReports.filter((report) => (
+            this.getSavedReportEvidenceCount(report) === this.savedReportEvidenceSteps.length
+          )).length,
+          hypothesis: hypothesis.key,
+          hypothesisLabel: hypothesis.label,
+          plannedEventRisk,
+          reportCount: reports.length,
+          researchMinutes: activeReports.reduce((total, report) => (
+            total + this.getSavedReportResearchMinutes(report)
+          ), 0)
         };
       })
       .filter((summary) => summary.reportCount > 0);
@@ -2224,6 +2273,10 @@ export class ReportDateTableComponent implements OnInit {
 
   setSavedReportThemeFilter(filter: SavedReportThemeFilter): void {
     this.savedReportThemeFilter = filter;
+  }
+
+  setSavedReportHypothesisFilter(filter: SavedReportHypothesisFilter): void {
+    this.savedReportHypothesisFilter = filter;
   }
 
   getSavedReportRole(report: SavedReport): SavedReportRole {
