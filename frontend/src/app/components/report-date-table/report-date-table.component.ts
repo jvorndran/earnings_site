@@ -74,6 +74,7 @@ interface SavedReportJournal {
 }
 
 interface SavedReportReview {
+  actualMovePercent: number | null;
   followUp: string;
   followUpComplete: boolean;
   outcome: SavedReportReviewOutcome;
@@ -456,7 +457,10 @@ interface SavedReportConvictionReviewSummary {
 type SavedReportImpliedMoveCohort = 'contained' | 'expected' | 'elevated';
 
 interface SavedReportImpliedMoveReviewSummary {
+  actualMoveCount: number;
+  averageActualMove: number | null;
   averageImpliedMove: number;
+  averageMoveDifference: number | null;
   completedCount: number;
   cohort: SavedReportImpliedMoveCohort;
   cohortLabel: string;
@@ -859,7 +863,7 @@ export class ReportDateTableComponent implements OnInit {
     const headers = [
       'Ticker', 'Company', 'Report Date', 'Report Timing', 'Workflow Status', 'Research Playbook', 'Research Theme', 'Event Strategy', 'Research Hypothesis', 'Research Time (minutes)', 'Portfolio Role', 'Conviction',
       'Implied Move (%)', 'Short Interest (%)', 'EPS Estimate', 'Market Cap', 'Risk Allocation (%)',
-      'Preparation Complete', 'Evidence Reviewed', 'Journal Fields Complete', 'Review Outcome', 'Review Reaction', 'Review Lesson',
+      'Preparation Complete', 'Evidence Reviewed', 'Journal Fields Complete', 'Actual Post-Earnings Move (%)', 'Review Outcome', 'Review Reaction', 'Review Lesson',
       'Follow-through Action', 'Follow-through Complete'
     ];
     const rows = [...this.savedReports]
@@ -888,6 +892,7 @@ export class ReportDateTableComponent implements OnInit {
           `${this.getSavedReportPreparationCount(report)}/${this.savedReportPreparationSteps.length}`,
           `${this.getSavedReportEvidenceCount(report)}/${this.savedReportEvidenceSteps.length}`,
           `${this.getSavedReportJournalCount(report)}/3`,
+          review.actualMovePercent ?? '',
           this.getSavedReportReviewLabel(review.outcome),
           review.reaction,
           review.lesson,
@@ -2050,8 +2055,22 @@ export class ReportDateTableComponent implements OnInit {
           recordedOutcomeCount: 0
         });
         const averageImpliedMove = reports.reduce((total, report) => total + report.impliedMove, 0) / (reports.length || 1);
+        const actualMoves = reports
+          .map((report) => this.getSavedReportReview(report).actualMovePercent)
+          .filter((move): move is number => move !== null);
+        const averageActualMove = actualMoves.length > 0
+          ? actualMoves.reduce((total, move) => total + move, 0) / actualMoves.length
+          : null;
 
-        return {...cohort, ...summary, averageImpliedMove, reportCount: reports.length};
+        return {
+          ...cohort,
+          ...summary,
+          actualMoveCount: actualMoves.length,
+          averageActualMove,
+          averageImpliedMove,
+          averageMoveDifference: averageActualMove === null ? null : averageActualMove - averageImpliedMove,
+          reportCount: reports.length
+        };
       })
       .filter((summary) => summary.reportCount > 0);
   }
@@ -2674,6 +2693,16 @@ export class ReportDateTableComponent implements OnInit {
 
     this.updateSavedReportReview(report, review);
     this.savedReportMessage = `${report.ticker} post-earnings outcome set to ${this.getSavedReportReviewLabel(review.outcome)}.`;
+  }
+
+  setSavedReportActualMove(report: SavedReport, value: unknown): void {
+    const review = this.getSavedReportReview(report);
+    review.actualMovePercent = this.normalizeSavedReportActualMove(value);
+
+    this.updateSavedReportReview(report, review);
+    this.savedReportMessage = review.actualMovePercent === null
+      ? `${report.ticker} actual post-earnings move cleared.`
+      : `${report.ticker} actual post-earnings move set to ${review.actualMovePercent.toFixed(1)}%.`;
   }
 
   updateSavedReportReviewNote(report: SavedReport, key: SavedReportReviewKey, value: string): void {
@@ -3463,6 +3492,7 @@ export class ReportDateTableComponent implements OnInit {
 
   private normalizeSavedReportReview(review?: Partial<SavedReportReview>): SavedReportReview {
     return {
+      actualMovePercent: this.normalizeSavedReportActualMove(review?.actualMovePercent),
       followUp: this.normalizeSavedReportJournalText(review?.followUp),
       followUpComplete: review?.followUpComplete === true,
       outcome: this.normalizeSavedReportReviewOutcome(review?.outcome),
@@ -3475,6 +3505,17 @@ export class ReportDateTableComponent implements OnInit {
     return outcome === 'positive' || outcome === 'negative' || outcome === 'mixed' || outcome === 'flat'
       ? outcome
       : 'unreviewed';
+  }
+
+  private normalizeSavedReportActualMove(value: unknown): number | null {
+    if (value === null || value === undefined || value === '') {
+      return null;
+    }
+
+    const actualMove = Number(value);
+    return Number.isFinite(actualMove) && actualMove >= 0 && actualMove <= 100
+      ? Math.round(actualMove * 100) / 100
+      : null;
   }
 
   private normalizeSavedReportJournalText(value: unknown): string {

@@ -1538,13 +1538,16 @@
         <p>{{summary.detail}}</p>
         <div class="saved-report-move-review__metrics">
           <span><small>Average expected move</small><strong>{{summary.averageImpliedMove | number:'1.1-1'}}%</strong></span>
+          <span><small>Actual moves logged</small><strong>{{summary.actualMoveCount}}/{{summary.reportCount}}</strong></span>
+          <span><small>Average actual move</small><strong>{{summary.averageActualMove === null ? '—' : (summary.averageActualMove | number:'1.1-1') + '%'}}</strong></span>
+          <span><small>Actual vs expected</small><strong>{{summary.averageMoveDifference === null ? '—' : (summary.averageMoveDifference > 0 ? '+' : '') + (summary.averageMoveDifference | number:'1.1-1') + ' pts'}}</strong></span>
           <span><small>Recorded reactions</small><strong>{{summary.recordedOutcomeCount}}/{{summary.reportCount}}</strong></span>
           <span><small>Positive / negative</small><strong>{{summary.positiveCount}} / {{summary.negativeCount}}</strong></span>
           <span><small>Complete reviews</small><strong>{{summary.completedCount}}/{{summary.reportCount}}</strong></span>
         </div>
       </article>
     </div>
-    <small class="saved-report-move-review__note">Use this saved research record to calibrate event expectations; it does not measure actual returns or predict future reactions.</small>
+    <small class="saved-report-move-review__note">Actual moves are entered manually as absolute price changes. This calibrates expected moves, not position returns or future reactions.</small>
   </section>
 
   <section *ngIf="getSavedReportSeasonalityReviewSummaries().length > 0" class="saved-report-seasonality" aria-labelledby="saved-report-seasonality-title">
@@ -1746,6 +1749,19 @@
             [ngModel]="getSavedReportReview(report).outcome">
             <option *ngFor="let outcome of savedReportReviewOutcomes" [ngValue]="outcome.key">{{outcome.label}}</option>
           </select>
+        </label>
+        <label>
+          <span>Actual post-earnings move (%)</span>
+          <input
+            (ngModelChange)="setSavedReportActualMove(report, $event)"
+            [ngModel]="getSavedReportReview(report).actualMovePercent"
+            aria-label="Actual post-earnings move percentage"
+            max="100"
+            min="0"
+            placeholder="For example, 6.4"
+            step="0.1"
+            type="number">
+          <small>Record the absolute stock move after results to compare it with the implied move.</small>
         </label>
         <label>
           <span>What happened?</span>
