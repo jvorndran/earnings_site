@@ -647,6 +647,9 @@
           <div><dt>Saved reports</dt><dd>{{memory.reportCount}}</dd></div>
           <div><dt>Reviewed</dt><dd>{{memory.documentedReviewCount}}/{{memory.pastReportCount}}</dd></div>
           <div><dt>Lessons</dt><dd>{{memory.lessonCount}}</dd></div>
+          <div><dt>Reactions</dt><dd>{{memory.recordedOutcomeCount}}/{{memory.pastReportCount}}</dd></div>
+          <div><dt>Positive / negative</dt><dd>{{memory.positiveCount}} / {{memory.negativeCount}}</dd></div>
+          <div><dt>Actual vs expected</dt><dd>{{memory.averageMoveDifference === null ? '—' : (memory.averageMoveDifference > 0 ? '+' : '') + (memory.averageMoveDifference | number:'1.1-1') + ' pts'}}</dd></div>
         </dl>
         <p *ngIf="memory.nextReport; else noUpcomingTickerReport">
           Next report {{formatDate(memory.nextReport.reportDate)}} · {{formatSavedReportCountdown(getSavedReportDaysUntil(memory.nextReport.reportDate))}}

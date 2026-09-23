@@ -489,11 +489,15 @@ interface SavedReportEvidenceReviewSummary {
 }
 
 interface SavedReportTickerMemory {
+  averageMoveDifference: number | null;
   documentedReviewCount: number;
   lessonCount: number;
   name: string;
+  negativeCount: number;
   nextReport: SavedReport | null;
   pastReportCount: number;
+  positiveCount: number;
+  recordedOutcomeCount: number;
   reportCount: number;
   ticker: string;
 }
@@ -1022,6 +1026,16 @@ export class ReportDateTableComponent implements OnInit {
           .filter((item) => item.daysUntil !== null && item.daysUntil >= 0)
           .sort((left, right) => (left.daysUntil || 0) - (right.daysUntil || 0))[0]?.report || null;
         const pastReports = datedReports.filter((item) => item.daysUntil !== null && item.daysUntil < 0);
+        const reviews = pastReports.map((item) => this.getSavedReportReview(item.report));
+        const actualMoves = reviews
+          .map((review) => review.actualMovePercent)
+          .filter((move): move is number => move !== null);
+        const averageActualMove = actualMoves.length > 0
+          ? actualMoves.reduce((total, move) => total + move, 0) / actualMoves.length
+          : null;
+        const averageImpliedMove = pastReports.length > 0
+          ? pastReports.reduce((total, item) => total + item.report.impliedMove, 0) / pastReports.length
+          : 0;
 
         return {
           ticker,
@@ -1030,7 +1044,11 @@ export class ReportDateTableComponent implements OnInit {
           reportCount: reports.length,
           pastReportCount: pastReports.length,
           documentedReviewCount: pastReports.filter((item) => this.isSavedReportReviewComplete(item.report)).length,
-          lessonCount: reports.filter((report) => this.getSavedReportReview(report).lesson.trim().length > 0).length
+          lessonCount: reports.filter((report) => this.getSavedReportReview(report).lesson.trim().length > 0).length,
+          recordedOutcomeCount: reviews.filter((review) => review.outcome !== 'unreviewed').length,
+          positiveCount: reviews.filter((review) => review.outcome === 'positive').length,
+          negativeCount: reviews.filter((review) => review.outcome === 'negative').length,
+          averageMoveDifference: averageActualMove === null ? null : averageActualMove - averageImpliedMove
         };
       })
       .sort((left, right) => {
@@ -2345,13 +2363,14 @@ export class ReportDateTableComponent implements OnInit {
     return `${daysUntil} days away`;
   }
 
-  private getSavedReportDaysUntil(reportDate: string, startOfToday: Date): number | null {
+  private getSavedReportDaysUntil(reportDate: string, referenceDate: Date = new Date()): number | null {
     const parsedDate = new Date(`${reportDate}T12:00:00`);
 
     if (Number.isNaN(parsedDate.getTime())) {
       return null;
     }
 
+    const startOfToday = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), referenceDate.getDate());
     const startOfReportDate = new Date(parsedDate.getFullYear(), parsedDate.getMonth(), parsedDate.getDate());
     return Math.round((startOfReportDate.getTime() - startOfToday.getTime()) / 86400000);
   }
