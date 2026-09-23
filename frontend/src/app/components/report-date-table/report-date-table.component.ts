@@ -1207,6 +1207,54 @@ export class ReportDateTableComponent implements OnInit {
     }
   }
 
+  async copySavedReportBrief(report: SavedReport): Promise<void> {
+    const journal = this.getSavedReportJournal(report);
+    const review = this.getSavedReportReview(report);
+    const startOfToday = new Date();
+    const countdown = this.formatSavedReportCountdown(this.getSavedReportDaysUntil(report.reportDate, startOfToday));
+    const preparation = `${this.getSavedReportPreparationCount(report)}/${this.savedReportPreparationSteps.length}`;
+    const evidence = `${this.getSavedReportEvidenceCount(report)}/${this.savedReportEvidenceSteps.length}`;
+    const journalCount = this.getSavedReportJournalCount(report);
+    const lines = [
+      `${report.ticker} earnings research brief`,
+      `${report.name} · ${this.formatDate(report.reportDate)} · ${countdown}`,
+      `Setup: EPS estimate ${report.estimate.toFixed(2)} · ${report.impliedMove.toFixed(1)}% implied move · ${report.shortInterest.toFixed(1)}% short interest · ${this.formatMarketCapDisplay(report.marketCap)} market cap.`,
+      `Plan: ${this.getSavedReportStatusLabel(this.getSavedReportStatus(report))} · ${this.getSavedReportStrategyLabel(this.getSavedReportStrategy(report))} · ${this.getSavedReportRoleLabel(this.getSavedReportRole(report))} · ${this.getSavedReportConvictionLabel(this.getSavedReportConviction(report))}.`,
+      `Research: ${this.getSavedReportHypothesisLabel(this.getSavedReportHypothesis(report))} · ${this.getSavedReportEventTimingLabel(this.getSavedReportEventTiming(report))} · ${this.getSavedReportResearchMinutes(report)} min planned · ${this.getSavedReportRiskAllocation(report)}% of event risk budget.`,
+      `Readiness: preparation ${preparation} · evidence ${evidence} · journal ${journalCount}/3.`
+    ];
+
+    if (journal.thesis.trim().length > 0) {
+      lines.push(`Thesis: ${journal.thesis.trim()}`);
+    }
+    if (journal.risk.trim().length > 0) {
+      lines.push(`Key risk: ${journal.risk.trim()}`);
+    }
+    if (journal.decision.trim().length > 0) {
+      lines.push(`Event decision: ${journal.decision.trim()}`);
+    }
+    if (review.outcome !== 'unreviewed' || review.actualMovePercent !== null || review.reaction.trim().length > 0 || review.lesson.trim().length > 0) {
+      const actualMove = review.actualMovePercent === null ? 'not logged' : `${review.actualMovePercent.toFixed(1)}%`;
+      lines.push(`Review: ${this.getSavedReportReviewLabel(review.outcome)} · actual move ${actualMove}.`);
+    }
+    if (review.reaction.trim().length > 0) {
+      lines.push(`Reaction: ${review.reaction.trim()}`);
+    }
+    if (review.lesson.trim().length > 0) {
+      lines.push(`Lesson: ${review.lesson.trim()}`);
+    }
+    if (review.followUp.trim().length > 0) {
+      lines.push(`Follow-through: ${review.followUp.trim()}${review.followUpComplete ? ' (complete)' : ' (open)'}.`);
+    }
+
+    try {
+      await navigator.clipboard.writeText(lines.join('\n'));
+      this.savedReportMessage = `${report.ticker} research brief copied to the clipboard.`;
+    } catch (error) {
+      this.savedReportMessage = 'The research brief could not be copied. Check browser clipboard permission and try again.';
+    }
+  }
+
   getSavedReportEventConcentrations(now: Date = new Date()): SavedReportEventConcentration[] {
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const activeReports = this.savedReports.filter((report) => (

@@ -1916,6 +1916,10 @@
           </select>
         </label>
         <button
+          (click)="copySavedReportBrief(report)"
+          [attr.aria-label]="'Copy a research brief for ' + report.ticker"
+          type="button">Copy brief</button>
+        <button
           (click)="removeSavedReport(report)"
           [attr.aria-label]="'Remove ' + report.ticker + ' from saved reports'"
           type="button">Remove</button>
