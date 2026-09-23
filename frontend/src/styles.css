@@ -3105,6 +3105,104 @@ body { margin: 0;font-family: sans-serif, "Franklin Gothic Book", Verdana; }
   line-height: 1.4;
 }
 
+.saved-report-evidence-review {
+  display: grid;
+  gap: 0.85rem;
+  margin: 18px 0;
+  padding: 18px;
+  border: 1px solid #cbb8e7;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #f8f5ff, #fdfbff);
+}
+
+.saved-report-evidence-review__header,
+.saved-report-evidence-review__card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.saved-report-evidence-review__header h3 {
+  margin: 0 0 0.2rem;
+  color: #5b2c83;
+  font-size: 1.05rem;
+}
+
+.saved-report-evidence-review__header span,
+.saved-report-evidence-review__card-header span,
+.saved-report-evidence-review__card p,
+.saved-report-evidence-review__metrics small,
+.saved-report-evidence-review__note {
+  color: #75618f;
+  font-size: 0.8rem;
+}
+
+.saved-report-evidence-review__header > strong {
+  padding: 0.35rem 0.55rem;
+  border-radius: 999px;
+  background: #6b3c99;
+  color: #ffffff;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.saved-report-evidence-review__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 0.7rem;
+}
+
+.saved-report-evidence-review__card {
+  display: grid;
+  gap: 0.7rem;
+  padding: 0.8rem;
+  border: 1px solid #ded1ef;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.saved-report-evidence-review__card[data-cohort="foundation"] {
+  border-top: 3px solid #dc2626;
+}
+
+.saved-report-evidence-review__card[data-cohort="developing"] {
+  border-top: 3px solid #d97706;
+}
+
+.saved-report-evidence-review__card[data-cohort="complete"] {
+  border-top: 3px solid #059669;
+}
+
+.saved-report-evidence-review__card-header strong,
+.saved-report-evidence-review__metrics strong {
+  color: #4c1d6f;
+}
+
+.saved-report-evidence-review__card p {
+  margin: -0.25rem 0 0;
+}
+
+.saved-report-evidence-review__metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.saved-report-evidence-review__metrics span {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.saved-report-evidence-review__metrics small {
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.saved-report-evidence-review__note {
+  line-height: 1.4;
+}
+
 .saved-report-conviction-review {
   display: grid;
   gap: 0.85rem;

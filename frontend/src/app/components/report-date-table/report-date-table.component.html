@@ -1550,6 +1550,36 @@
     <small class="saved-report-move-review__note">Actual moves are entered manually as absolute price changes. This calibrates expected moves, not position returns or future reactions.</small>
   </section>
 
+  <section *ngIf="getSavedReportEvidenceReviewSummaries().length > 0" class="saved-report-evidence-review" aria-labelledby="saved-report-evidence-review-title">
+    <div class="saved-report-evidence-review__header">
+      <div>
+        <h3 id="saved-report-evidence-review-title">Research Evidence Outcome Check</h3>
+        <span>Connect each report's currently recorded evidence coverage with the local post-earnings outcome journal.</span>
+      </div>
+      <strong>{{getSavedReportEvidenceReviewSummaries().length}} evidence cohort{{getSavedReportEvidenceReviewSummaries().length === 1 ? '' : 's'}} reviewed</strong>
+    </div>
+
+    <div class="saved-report-evidence-review__grid">
+      <article *ngFor="let summary of getSavedReportEvidenceReviewSummaries()" [attr.data-cohort]="summary.cohort" class="saved-report-evidence-review__card">
+        <div class="saved-report-evidence-review__card-header">
+          <strong>{{summary.cohortLabel}}</strong>
+          <span>{{summary.reportCount}} past report{{summary.reportCount === 1 ? '' : 's'}}</span>
+        </div>
+        <p>{{summary.detail}}</p>
+        <div class="saved-report-evidence-review__metrics">
+          <span><small>Recorded reactions</small><strong>{{summary.recordedOutcomeCount}}/{{summary.reportCount}}</strong></span>
+          <span><small>Positive / negative</small><strong>{{summary.positiveCount}} / {{summary.negativeCount}}</strong></span>
+          <span><small>Complete reviews</small><strong>{{summary.completedCount}}/{{summary.reportCount}}</strong></span>
+          <span><small>Actual moves logged</small><strong>{{summary.actualMoveCount}}/{{summary.reportCount}}</strong></span>
+          <span><small>Average expected move</small><strong>{{summary.averageImpliedMove | number:'1.1-1'}}%</strong></span>
+          <span><small>Average actual move</small><strong>{{summary.averageActualMove === null ? '—' : (summary.averageActualMove | number:'1.1-1') + '%'}}</strong></span>
+          <span><small>Actual vs expected</small><strong>{{summary.averageMoveDifference === null ? '—' : (summary.averageMoveDifference > 0 ? '+' : '') + (summary.averageMoveDifference | number:'1.1-1') + ' pts'}}</strong></span>
+        </div>
+      </article>
+    </div>
+    <small class="saved-report-evidence-review__note">Evidence checklists can be updated after an event, so this is a living research-journal view rather than a controlled study or investment recommendation.</small>
+  </section>
+
   <section *ngIf="getSavedReportSeasonalityReviewSummaries().length > 0" class="saved-report-seasonality" aria-labelledby="saved-report-seasonality-title">
     <div class="saved-report-seasonality__header">
       <div>

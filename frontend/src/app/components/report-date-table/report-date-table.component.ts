@@ -471,6 +471,23 @@ interface SavedReportImpliedMoveReviewSummary {
   reportCount: number;
 }
 
+type SavedReportEvidenceReviewCohort = 'foundation' | 'developing' | 'complete';
+
+interface SavedReportEvidenceReviewSummary {
+  actualMoveCount: number;
+  averageActualMove: number | null;
+  averageImpliedMove: number;
+  averageMoveDifference: number | null;
+  completedCount: number;
+  cohort: SavedReportEvidenceReviewCohort;
+  cohortLabel: string;
+  detail: string;
+  negativeCount: number;
+  positiveCount: number;
+  recordedOutcomeCount: number;
+  reportCount: number;
+}
+
 interface SavedReportTickerMemory {
   documentedReviewCount: number;
   lessonCount: number;
@@ -2031,6 +2048,81 @@ export class ReportDateTableComponent implements OnInit {
     return cohorts
       .map((cohort) => {
         const reports = pastReports.filter(cohort.matches);
+        const summary = reports.reduce((totals, report) => {
+          const review = this.getSavedReportReview(report);
+
+          if (this.isSavedReportReviewComplete(report)) {
+            totals.completedCount += 1;
+          }
+          if (review.outcome !== 'unreviewed') {
+            totals.recordedOutcomeCount += 1;
+            if (review.outcome === 'positive') {
+              totals.positiveCount += 1;
+            }
+            if (review.outcome === 'negative') {
+              totals.negativeCount += 1;
+            }
+          }
+
+          return totals;
+        }, {
+          completedCount: 0,
+          negativeCount: 0,
+          positiveCount: 0,
+          recordedOutcomeCount: 0
+        });
+        const averageImpliedMove = reports.reduce((total, report) => total + report.impliedMove, 0) / (reports.length || 1);
+        const actualMoves = reports
+          .map((report) => this.getSavedReportReview(report).actualMovePercent)
+          .filter((move): move is number => move !== null);
+        const averageActualMove = actualMoves.length > 0
+          ? actualMoves.reduce((total, move) => total + move, 0) / actualMoves.length
+          : null;
+
+        return {
+          ...cohort,
+          ...summary,
+          actualMoveCount: actualMoves.length,
+          averageActualMove,
+          averageImpliedMove,
+          averageMoveDifference: averageActualMove === null ? null : averageActualMove - averageImpliedMove,
+          reportCount: reports.length
+        };
+      })
+      .filter((summary) => summary.reportCount > 0);
+  }
+
+  getSavedReportEvidenceReviewSummaries(): SavedReportEvidenceReviewSummary[] {
+    const pastReports = this.getPostEarningsReviewItems().map((item) => item.report);
+    const cohorts: Array<{
+      cohort: SavedReportEvidenceReviewCohort;
+      cohortLabel: string;
+      detail: string;
+      matches: (evidenceCount: number) => boolean;
+    }> = [
+      {
+        cohort: 'foundation',
+        cohortLabel: 'Foundation missing',
+        detail: '0–1 of 4 evidence inputs currently recorded',
+        matches: (evidenceCount) => evidenceCount <= 1
+      },
+      {
+        cohort: 'developing',
+        cohortLabel: 'Evidence developing',
+        detail: '2–3 of 4 evidence inputs currently recorded',
+        matches: (evidenceCount) => evidenceCount >= 2 && evidenceCount < this.savedReportEvidenceSteps.length
+      },
+      {
+        cohort: 'complete',
+        cohortLabel: 'Evidence complete',
+        detail: 'All 4 evidence inputs currently recorded',
+        matches: (evidenceCount) => evidenceCount === this.savedReportEvidenceSteps.length
+      }
+    ];
+
+    return cohorts
+      .map((cohort) => {
+        const reports = pastReports.filter((report) => cohort.matches(this.getSavedReportEvidenceCount(report)));
         const summary = reports.reduce((totals, report) => {
           const review = this.getSavedReportReview(report);
 
