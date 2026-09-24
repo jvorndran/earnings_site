@@ -698,6 +698,40 @@
     </div>
   </section>
 
+  <section class="saved-report-strategy" aria-labelledby="saved-report-session-filter-title">
+    <div class="saved-report-strategy__header">
+      <div>
+        <h3 id="saved-report-session-filter-title">Report Session Lens</h3>
+        <span>Focus the saved shortlist by when each company reports, including catalysts whose release session still needs confirmation.</span>
+      </div>
+      <strong>{{visibleSavedReports.length}} report{{visibleSavedReports.length === 1 ? '' : 's'}} in view</strong>
+    </div>
+
+    <div class="saved-report-strategy__grid">
+      <button
+        (click)="setSavedReportEventTimingFilter('all')"
+        [attr.aria-pressed]="savedReportEventTimingFilter === 'all'"
+        [class.saved-report-strategy-card--active]="savedReportEventTimingFilter === 'all'"
+        class="saved-report-strategy-card"
+        type="button">
+        <span>All sessions</span>
+        <strong>{{savedReports.length}}</strong>
+        <small>Full research shortlist</small>
+      </button>
+      <button
+        *ngFor="let timing of savedReportEventTimings"
+        (click)="setSavedReportEventTimingFilter(timing.key)"
+        [attr.aria-pressed]="savedReportEventTimingFilter === timing.key"
+        [class.saved-report-strategy-card--active]="savedReportEventTimingFilter === timing.key"
+        class="saved-report-strategy-card"
+        type="button">
+        <span>{{timing.label}}</span>
+        <strong>{{getSavedReportEventTimingCount(timing.key)}}</strong>
+        <small>{{timing.detail}}</small>
+      </button>
+    </div>
+  </section>
+
   <section *ngIf="getSavedReportPlaybookSummaries().length > 0" class="saved-report-playbook-journal" aria-labelledby="saved-report-playbook-journal-title">
     <div class="saved-report-playbook-journal__header">
       <div>
