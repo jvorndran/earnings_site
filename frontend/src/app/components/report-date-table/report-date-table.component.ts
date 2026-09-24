@@ -875,6 +875,51 @@ export class ReportDateTableComponent implements OnInit {
     this.savedReportMessage = `${this.savedReports.length} saved report${this.savedReports.length === 1 ? '' : 's'} downloaded as a backup.`;
   }
 
+  downloadSavedReportsCalendar(): void {
+    if (this.savedReports.length === 0) {
+      this.savedReportMessage = 'Save at least one report before exporting a calendar.';
+      return;
+    }
+
+    const exportedAt = new Date();
+    const calendarStamp = exportedAt.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z');
+    const calendarEvents = [...this.savedReports]
+      .sort((first, second) => first.reportDate.localeCompare(second.reportDate) || first.ticker.localeCompare(second.ticker))
+      .map((report) => {
+        const eventDate = this.getSavedReportCalendarDate(report.reportDate);
+        const summary = `${report.ticker} earnings${report.name ? ` — ${report.name}` : ''}`;
+        const description = [
+          `Session: ${this.getSavedReportEventTimingLabel(this.getSavedReportEventTiming(report))}`,
+          `Strategy: ${this.getSavedReportStrategyLabel(this.getSavedReportStrategy(report))}`,
+          `Hypothesis: ${this.getSavedReportHypothesisLabel(this.getSavedReportHypothesis(report))}`,
+          `Implied move: ${report.impliedMove.toFixed(1)}%`,
+          `Research time: ${this.getSavedReportResearchMinutes(report)} minutes`
+        ].join('\\n');
+
+        return [
+          'BEGIN:VEVENT',
+          `UID:earnings-site-${report.ticker}-${eventDate}@local`,
+          `DTSTAMP:${calendarStamp}`,
+          `DTSTART;VALUE=DATE:${eventDate}`,
+          `SUMMARY:${this.escapeSavedReportCalendarText(summary)}`,
+          `DESCRIPTION:${this.escapeSavedReportCalendarText(description)}`,
+          'END:VEVENT'
+        ].join('\r\n');
+      });
+    const calendar = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Earnings Site//Saved Research//EN', 'CALSCALE:GREGORIAN', ...calendarEvents, 'END:VCALENDAR'].join('\r\n');
+    const blob = new Blob([calendar], {type: 'text/calendar;charset=utf-8'});
+    const downloadUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+
+    link.href = downloadUrl;
+    link.download = `earnings-research-${exportedAt.toISOString().slice(0, 10)}.ics`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(downloadUrl);
+    this.savedReportMessage = `${this.savedReports.length} saved earnings date${this.savedReports.length === 1 ? '' : 's'} exported as a calendar.`;
+  }
+
   downloadSavedReportsCsv(): void {
     if (this.savedReports.length === 0) {
       this.savedReportMessage = 'Save at least one report before exporting research.';
@@ -3679,6 +3724,20 @@ export class ReportDateTableComponent implements OnInit {
 
   private normalizeSavedReportJournalText(value: unknown): string {
     return typeof value === 'string' ? value.slice(0, 280) : '';
+  }
+
+  private getSavedReportCalendarDate(reportDate: string): string {
+    const date = new Date(`${reportDate}T12:00:00`);
+
+    if (Number.isNaN(date.getTime())) {
+      return reportDate.replace(/[^0-9]/g, '').slice(0, 8);
+    }
+
+    return `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`;
+  }
+
+  private escapeSavedReportCalendarText(value: string): string {
+    return value.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
   }
 
   private persistSavedReports(): void {
