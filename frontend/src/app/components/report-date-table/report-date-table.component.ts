@@ -1044,10 +1044,7 @@ export class ReportDateTableComponent implements OnInit {
       this.matchesSavedReportDecisionFilter(report, this.savedReportDecisionFilter) &&
       this.matchesSavedReportResearchLane(report, this.savedReportResearchLaneFilter) &&
       this.matchesSavedReportEvidenceFilter(report, this.savedReportEvidenceFilter) &&
-      (normalizedSearch.length === 0 ||
-        report.ticker.toLowerCase().includes(normalizedSearch) ||
-        report.name.toLowerCase().includes(normalizedSearch) ||
-        report.reportDate.toLowerCase().includes(normalizedSearch))
+      (normalizedSearch.length === 0 || this.getSavedReportSearchText(report).includes(normalizedSearch))
     ));
   }
 
@@ -3724,6 +3721,32 @@ export class ReportDateTableComponent implements OnInit {
 
   private normalizeSavedReportJournalText(value: unknown): string {
     return typeof value === 'string' ? value.slice(0, 280) : '';
+  }
+
+  private getSavedReportSearchText(report: SavedReport): string {
+    const journal = this.getSavedReportJournal(report);
+    const review = this.getSavedReportReview(report);
+
+    return [
+      report.ticker,
+      report.name,
+      report.reportDate,
+      this.getSavedReportStatusLabel(this.getSavedReportStatus(report)),
+      this.getSavedReportStrategyLabel(this.getSavedReportStrategy(report)),
+      this.getSavedReportHypothesisLabel(this.getSavedReportHypothesis(report)),
+      this.getSavedReportThemeLabel(this.getSavedReportTheme(report)),
+      this.getSavedReportRoleLabel(this.getSavedReportRole(report)),
+      this.getSavedReportConvictionLabel(this.getSavedReportConviction(report)),
+      this.getSavedReportEventTimingLabel(this.getSavedReportEventTiming(report)),
+      this.getSavedReportPlaybookLabel(this.getSavedReportPlaybook(report)),
+      journal.thesis,
+      journal.risk,
+      journal.decision,
+      this.getSavedReportReviewLabel(review.outcome),
+      review.reaction,
+      review.lesson,
+      review.followUp
+    ].join(' ').toLowerCase();
   }
 
   private getSavedReportCalendarDate(reportDate: string): string {
