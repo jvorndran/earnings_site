@@ -3999,6 +3999,97 @@ body { margin: 0;font-family: sans-serif, "Franklin Gothic Book", Verdana; }
   background: #fffdf5;
 }
 
+.saved-report-reaction-call {
+  display: grid;
+  gap: 0.85rem;
+  margin: 18px 0;
+  padding: 18px;
+  border: 1px solid #b8c8ef;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #f5f7ff, #fbfcff);
+}
+
+.saved-report-reaction-call__header,
+.saved-report-reaction-call__grid article > div:first-child {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.saved-report-reaction-call__header h3 {
+  margin: 0 0 0.25rem;
+  color: #27377d;
+}
+
+.saved-report-reaction-call__header span,
+.saved-report-reaction-call__grid article > div:first-child span,
+.saved-report-reaction-call__metrics small,
+.saved-report-reaction-call__note {
+  color: #56648d;
+}
+
+.saved-report-reaction-call__header > strong {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: #e7ebff;
+  color: #34488e;
+  font-size: 0.75rem;
+  padding: 0.35rem 0.55rem;
+}
+
+.saved-report-reaction-call__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 0.7rem;
+}
+
+.saved-report-reaction-call__grid article {
+  display: grid;
+  gap: 0.85rem;
+  padding: 0.85rem;
+  border: 1px solid #d4ddfb;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.saved-report-reaction-call__grid article[data-call='negative'] {
+  border-color: #efd0cf;
+  background: #fffafa;
+}
+
+.saved-report-reaction-call__grid article[data-call='muted'] {
+  border-color: #d9dbe4;
+  background: #fcfcfd;
+}
+
+.saved-report-reaction-call__grid strong {
+  color: #263675;
+}
+
+.saved-report-reaction-call__grid article[data-call='negative'] strong {
+  color: #9b3030;
+}
+
+.saved-report-reaction-call__metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.saved-report-reaction-call__metrics span {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.saved-report-reaction-call__metrics strong {
+  font-size: 1.05rem;
+}
+
+.saved-report-reaction-call__note {
+  line-height: 1.4;
+}
+
 @media (max-width: 640px) {
   .saved-report-risk-capacity__header {
     grid-template-columns: 1fr;

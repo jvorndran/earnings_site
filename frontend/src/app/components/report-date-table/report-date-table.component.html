@@ -1433,6 +1433,29 @@
     </p>
   </section>
 
+  <section *ngIf="getSavedReportReactionCallSummaries().length > 0" class="saved-report-reaction-call" aria-labelledby="saved-report-reaction-call-title">
+    <div class="saved-report-reaction-call__header">
+      <div>
+        <h3 id="saved-report-reaction-call-title">Earnings Reaction Call Calibration</h3>
+        <span>Compare saved pre-event reaction calls with the outcome journal after earnings are released.</span>
+      </div>
+      <strong>{{getSavedReportReactionCallSummaries().length}} call type{{getSavedReportReactionCallSummaries().length === 1 ? '' : 's'}} reviewed</strong>
+    </div>
+    <div class="saved-report-reaction-call__grid">
+      <article *ngFor="let summary of getSavedReportReactionCallSummaries()" [attr.data-call]="summary.expectedReaction">
+        <div>
+          <strong>{{summary.expectedReactionLabel}}</strong>
+          <span>{{summary.reportCount}} past call{{summary.reportCount === 1 ? '' : 's'}}</span>
+        </div>
+        <div class="saved-report-reaction-call__metrics">
+          <span><small>Recorded outcomes</small><strong>{{summary.resolvedCount}}/{{summary.reportCount}}</strong></span>
+          <span><small>Matching outcomes</small><strong>{{summary.matchedCount}}/{{summary.resolvedCount}}</strong></span>
+        </div>
+      </article>
+    </div>
+    <small class="saved-report-reaction-call__note">A mixed outcome is recorded but is not counted as a directional match. This journal supports research calibration, not investment-performance measurement.</small>
+  </section>
+
   <section *ngIf="getSavedReportFollowUpItems().length > 0" class="saved-report-follow-up" aria-labelledby="saved-report-follow-up-title">
     <div class="saved-report-follow-up__header">
       <div>
@@ -1909,6 +1932,15 @@
             </option>
           </select>
           <small *ngIf="getSavedReportPlaybook(report) !== 'unassigned'">Originally applied: {{getSavedReportPlaybookLabel(getSavedReportPlaybook(report))}}</small>
+        </label>
+        <label>
+          <span>Pre-event reaction call</span>
+          <select
+            (ngModelChange)="setSavedReportReactionExpectation(report, $event)"
+            [ngModel]="getSavedReportReactionExpectation(report)">
+            <option *ngFor="let expectation of savedReportReactionExpectations" [ngValue]="expectation.key">{{expectation.label}}</option>
+          </select>
+          <small>{{getSavedReportReactionExpectationDetail(getSavedReportReactionExpectation(report))}}</small>
         </label>
         <label>
           <span>Preparation</span>
