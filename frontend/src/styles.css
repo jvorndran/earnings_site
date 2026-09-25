@@ -2780,7 +2780,8 @@ body { margin: 0;font-family: sans-serif, "Franklin Gothic Book", Verdana; }
 }
 
 .saved-report-review select,
-.saved-report-review textarea {
+.saved-report-review textarea,
+.saved-report-review input:not([type="checkbox"]) {
   width: 100%;
   box-sizing: border-box;
   padding: 0.45rem 0.55rem;
@@ -2793,6 +2794,21 @@ body { margin: 0;font-family: sans-serif, "Franklin Gothic Book", Verdana; }
 
 .saved-report-review textarea {
   resize: vertical;
+}
+
+.saved-report-review__deadline small {
+  color: #667085;
+  font-size: 0.76rem;
+}
+
+.saved-report-review__deadline small[data-deadline="overdue"] {
+  color: #b42318;
+  font-weight: 700;
+}
+
+.saved-report-review__deadline small[data-deadline="dueToday"] {
+  color: #b54708;
+  font-weight: 700;
 }
 
 .saved-report-review__follow-up {
@@ -3893,6 +3909,94 @@ body { margin: 0;font-family: sans-serif, "Franklin Gothic Book", Verdana; }
 .saved-report-review-cadence__card[data-cadence='overdue'] em {
   background: #fde7e5;
   color: #a43c31;
+}
+
+.saved-report-review-deadline {
+  display: grid;
+  gap: 0.75rem;
+  margin: 1rem 0;
+  padding: 0.9rem;
+  border: 1px solid #b8d9cf;
+  border-radius: 7px;
+  background: linear-gradient(135deg, #f2fbf8, #fcfffe);
+}
+
+.saved-report-review-deadline__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.saved-report-review-deadline__header h4 {
+  margin: 0;
+  color: #145342;
+}
+
+.saved-report-review-deadline__header span,
+.saved-report-review-deadline__card small {
+  color: #477467;
+}
+
+.saved-report-review-deadline__header button {
+  flex: 0 0 auto;
+  border: 1px solid #49927b;
+  border-radius: 4px;
+  background: #fff;
+  color: #17614d;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  padding: 0.45rem 0.6rem;
+}
+
+.saved-report-review-deadline__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.6rem;
+}
+
+.saved-report-review-deadline__card {
+  display: grid;
+  gap: 0.25rem;
+  min-height: 6.5rem;
+  padding: 0.75rem;
+  border: 1px solid #c9e3dc;
+  border-radius: 6px;
+  background: #fff;
+  color: #145342;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.saved-report-review-deadline__card:hover,
+.saved-report-review-deadline__card:focus-visible,
+.saved-report-review-deadline__card--active {
+  border-color: #49927b;
+  box-shadow: 0 2px 8px rgba(23, 97, 77, 0.14);
+}
+
+.saved-report-review-deadline__card span {
+  color: #26765f;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.saved-report-review-deadline__card strong {
+  color: #145342;
+  font-size: 1.1rem;
+}
+
+.saved-report-review-deadline__card[data-deadline='overdue'] {
+  border-color: #e7b0ab;
+  background: #fff8f7;
+}
+
+.saved-report-review-deadline__card[data-deadline='dueToday'] {
+  border-color: #eacb8a;
+  background: #fffdf5;
 }
 
 @media (max-width: 640px) {

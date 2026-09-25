@@ -1381,6 +1381,30 @@
       </div>
     </div>
 
+    <div *ngIf="getSavedReportReviewDeadlineSummaries().length > 0" class="saved-report-review-deadline" aria-labelledby="saved-report-review-deadline-title">
+      <div class="saved-report-review-deadline__header">
+        <div>
+          <h4 id="saved-report-review-deadline-title">Review Deadline Board</h4>
+          <span>Set a deliberate close-out date for every past catalyst instead of relying on review age alone.</span>
+        </div>
+        <button *ngIf="savedReportReviewDeadlineFilter !== 'all'" (click)="clearSavedReportReviewDeadline()" type="button">Show all deadlines</button>
+      </div>
+      <div class="saved-report-review-deadline__grid">
+        <button
+          *ngFor="let summary of getSavedReportReviewDeadlineSummaries()"
+          (click)="focusSavedReportReviewDeadline(summary.key)"
+          [attr.aria-pressed]="savedReportReviewDeadlineFilter === summary.key"
+          [attr.data-deadline]="summary.key"
+          [class.saved-report-review-deadline__card--active]="savedReportReviewDeadlineFilter === summary.key"
+          class="saved-report-review-deadline__card"
+          type="button">
+          <span>{{summary.label}}</span>
+          <strong>{{summary.totalCount}} report{{summary.totalCount === 1 ? '' : 's'}}</strong>
+          <small>{{summary.detail}}</small>
+        </button>
+      </div>
+    </div>
+
     <div aria-label="Post-earnings review filter" class="saved-report-review-queue__filters" role="group">
       <button
         *ngFor="let filter of postEarningsReviewFilters"
@@ -1810,6 +1834,15 @@
             {{isSavedReportReviewComplete(report) ? 'Complete' : 'Needs notes'}}
           </strong>
         </div>
+        <label class="saved-report-review__deadline">
+          <span>Review deadline</span>
+          <input
+            (ngModelChange)="setSavedReportReviewDeadline(report, $event)"
+            [ngModel]="getSavedReportReview(report).reviewBy"
+            aria-label="Post-earnings review deadline"
+            type="date">
+          <small [attr.data-deadline]="getSavedReportReviewDeadlineStatus(report)">{{getSavedReportReviewDeadlineLabel(report)}}</small>
+        </label>
         <label>
           <span>Market reaction</span>
           <select

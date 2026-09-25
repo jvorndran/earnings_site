@@ -47,6 +47,8 @@ type SavedReportReviewKey = 'reaction' | 'lesson' | 'followUp';
 type PostEarningsReviewFilter = 'all' | 'needsOutcome' | 'needsNotes' | 'complete';
 type SavedReportReviewCadence = 'fresh' | 'aging' | 'overdue';
 type SavedReportReviewCadenceFilter = 'all' | SavedReportReviewCadence;
+type SavedReportReviewDeadline = 'needsDate' | 'scheduled' | 'dueToday' | 'overdue' | 'complete';
+type SavedReportReviewDeadlineFilter = 'all' | SavedReportReviewDeadline;
 type SavedReportSeason = 'q1' | 'q2' | 'q3' | 'q4';
 type SavedReportSeasonFilter = 'all' | SavedReportSeason;
 type SavedReportLessonOutcomeFilter = 'all' | Exclude<SavedReportReviewOutcome, 'unreviewed'>;
@@ -80,6 +82,7 @@ interface SavedReportReview {
   followUpComplete: boolean;
   outcome: SavedReportReviewOutcome;
   reaction: string;
+  reviewBy: string;
   lesson: string;
 }
 
@@ -372,6 +375,14 @@ interface SavedReportReviewCadenceSummary {
   totalCount: number;
 }
 
+interface SavedReportReviewDeadlineSummary {
+  completeCount: number;
+  detail: string;
+  key: SavedReportReviewDeadline;
+  label: string;
+  totalCount: number;
+}
+
 interface SavedReportSeasonalityReviewSummary {
   completeCount: number;
   detail: string;
@@ -556,6 +567,7 @@ export class ReportDateTableComponent implements OnInit {
   savedReportSearchText = '';
   postEarningsReviewFilter: PostEarningsReviewFilter = 'all';
   savedReportReviewCadenceFilter: SavedReportReviewCadenceFilter = 'all';
+  savedReportReviewDeadlineFilter: SavedReportReviewDeadlineFilter = 'all';
   savedReportSeasonalityFilter: SavedReportSeasonFilter = 'all';
   savedReportLessonSearchText = '';
   savedReportLessonOutcomeFilter: SavedReportLessonOutcomeFilter = 'all';
@@ -818,6 +830,7 @@ export class ReportDateTableComponent implements OnInit {
       this.savedReportResearchLaneFilter = 'all';
       this.savedReportEvidenceFilter = 'all';
       this.savedReportReviewCadenceFilter = 'all';
+      this.savedReportReviewDeadlineFilter = 'all';
       this.savedReportPlaybookFilter = 'all';
       this.savedReportThemeFilter = 'all';
       this.savedReportHypothesisFilter = 'all';
@@ -846,6 +859,7 @@ export class ReportDateTableComponent implements OnInit {
     this.savedReportResearchLaneFilter = 'all';
     this.savedReportEvidenceFilter = 'all';
     this.savedReportReviewCadenceFilter = 'all';
+    this.savedReportReviewDeadlineFilter = 'all';
     this.savedReportPlaybookFilter = 'all';
     this.savedReportThemeFilter = 'all';
     this.savedReportHypothesisFilter = 'all';
@@ -933,7 +947,7 @@ export class ReportDateTableComponent implements OnInit {
     const headers = [
       'Ticker', 'Company', 'Report Date', 'Report Timing', 'Workflow Status', 'Research Playbook', 'Research Theme', 'Event Strategy', 'Research Hypothesis', 'Research Time (minutes)', 'Portfolio Role', 'Conviction',
       'Implied Move (%)', 'Short Interest (%)', 'EPS Estimate', 'Market Cap', 'Risk Allocation (%)',
-      'Preparation Complete', 'Evidence Reviewed', 'Journal Fields Complete', 'Actual Post-Earnings Move (%)', 'Review Outcome', 'Review Reaction', 'Review Lesson',
+      'Preparation Complete', 'Evidence Reviewed', 'Journal Fields Complete', 'Actual Post-Earnings Move (%)', 'Review Deadline', 'Review Outcome', 'Review Reaction', 'Review Lesson',
       'Follow-through Action', 'Follow-through Complete'
     ];
     const rows = [...this.savedReports]
@@ -963,6 +977,7 @@ export class ReportDateTableComponent implements OnInit {
           `${this.getSavedReportEvidenceCount(report)}/${this.savedReportEvidenceSteps.length}`,
           `${this.getSavedReportJournalCount(report)}/3`,
           review.actualMovePercent ?? '',
+          review.reviewBy,
           this.getSavedReportReviewLabel(review.outcome),
           review.reaction,
           review.lesson,
@@ -1019,6 +1034,7 @@ export class ReportDateTableComponent implements OnInit {
         this.savedReportResearchLaneFilter = 'all';
         this.savedReportEvidenceFilter = 'all';
         this.savedReportReviewCadenceFilter = 'all';
+        this.savedReportReviewDeadlineFilter = 'all';
         this.savedReportPlaybookFilter = 'all';
         this.savedReportThemeFilter = 'all';
         this.savedReportHypothesisFilter = 'all';
@@ -1678,6 +1694,7 @@ export class ReportDateTableComponent implements OnInit {
       .filter((item) => (
         this.matchesPostEarningsReviewFilter(item, this.postEarningsReviewFilter) &&
         (this.savedReportReviewCadenceFilter === 'all' || this.getSavedReportReviewCadence(item) === this.savedReportReviewCadenceFilter) &&
+        (this.savedReportReviewDeadlineFilter === 'all' || this.getSavedReportReviewDeadlineStatus(item.report) === this.savedReportReviewDeadlineFilter) &&
         (this.savedReportSeasonalityFilter === 'all' || this.getSavedReportSeason(item.report) === this.savedReportSeasonalityFilter)
       ));
   }
@@ -1756,6 +1773,45 @@ export class ReportDateTableComponent implements OnInit {
   clearSavedReportReviewCadence(): void {
     this.savedReportReviewCadenceFilter = 'all';
     this.savedReportMessage = 'Showing every post-earnings review.';
+  }
+
+  getSavedReportReviewDeadlineSummaries(): SavedReportReviewDeadlineSummary[] {
+    const summaries: SavedReportReviewDeadlineSummary[] = [
+      {key: 'needsDate', label: 'Needs deadline', detail: 'No review date has been selected', totalCount: 0, completeCount: 0},
+      {key: 'scheduled', label: 'Scheduled', detail: 'Deadline is still ahead', totalCount: 0, completeCount: 0},
+      {key: 'dueToday', label: 'Due today', detail: 'Close the review before the day ends', totalCount: 0, completeCount: 0},
+      {key: 'overdue', label: 'Past deadline', detail: 'Review date has passed', totalCount: 0, completeCount: 0},
+      {key: 'complete', label: 'Closed', detail: 'Outcome, reaction, and lesson are saved', totalCount: 0, completeCount: 0}
+    ];
+
+    this.getPostEarningsReviewItems().forEach((item) => {
+      const summary = summaries.find((candidate) => candidate.key === this.getSavedReportReviewDeadlineStatus(item.report));
+
+      if (!summary) {
+        return;
+      }
+
+      summary.totalCount += 1;
+      if (this.isSavedReportReviewComplete(item.report)) {
+        summary.completeCount += 1;
+      }
+    });
+
+    return summaries.filter((summary) => summary.totalCount > 0);
+  }
+
+  focusSavedReportReviewDeadline(deadline: SavedReportReviewDeadline): void {
+    this.postEarningsReviewFilter = 'all';
+    this.savedReportReviewCadenceFilter = 'all';
+    this.savedReportSeasonalityFilter = 'all';
+    this.savedReportReviewDeadlineFilter = deadline;
+    const label = this.getSavedReportReviewDeadlineSummaries().find((summary) => summary.key === deadline)?.label || 'selected';
+    this.savedReportMessage = `Showing reviews with the ${label.toLowerCase()} status.`;
+  }
+
+  clearSavedReportReviewDeadline(): void {
+    this.savedReportReviewDeadlineFilter = 'all';
+    this.savedReportMessage = 'Showing every post-earnings review deadline.';
   }
 
   getSavedReportSeasonalityReviewSummaries(): SavedReportSeasonalityReviewSummary[] {
@@ -1865,6 +1921,52 @@ export class ReportDateTableComponent implements OnInit {
     }
 
     return item.daysSince >= 3 ? 'aging' : 'fresh';
+  }
+
+  getSavedReportReviewDeadlineStatus(report: SavedReport, now: Date = new Date()): SavedReportReviewDeadline {
+    if (this.isSavedReportReviewComplete(report)) {
+      return 'complete';
+    }
+
+    const reviewBy = this.getSavedReportReview(report).reviewBy;
+    if (!reviewBy) {
+      return 'needsDate';
+    }
+
+    const daysUntil = this.getSavedReportDaysUntil(reviewBy, now);
+    if (daysUntil === null) {
+      return 'needsDate';
+    }
+
+    if (daysUntil < 0) {
+      return 'overdue';
+    }
+
+    return daysUntil === 0 ? 'dueToday' : 'scheduled';
+  }
+
+  getSavedReportReviewDeadlineLabel(report: SavedReport): string {
+    const reviewBy = this.getSavedReportReview(report).reviewBy;
+    const status = this.getSavedReportReviewDeadlineStatus(report);
+
+    if (status === 'complete') {
+      return 'Review closed';
+    }
+
+    if (!reviewBy) {
+      return 'Set a deadline';
+    }
+
+    const formattedDate = this.formatDate(reviewBy) || reviewBy;
+    if (status === 'overdue') {
+      return `Deadline passed · ${formattedDate}`;
+    }
+
+    if (status === 'dueToday') {
+      return 'Due today';
+    }
+
+    return `Due ${formattedDate}`;
   }
 
   private getSavedReportSeason(report: SavedReport): SavedReportSeason | null {
@@ -2920,6 +3022,15 @@ export class ReportDateTableComponent implements OnInit {
       : `${report.ticker} actual post-earnings move set to ${review.actualMovePercent.toFixed(1)}%.`;
   }
 
+  setSavedReportReviewDeadline(report: SavedReport, value: unknown): void {
+    const review = this.getSavedReportReview(report);
+    review.reviewBy = this.normalizeSavedReportReviewDeadline(value);
+    this.updateSavedReportReview(report, review);
+    this.savedReportMessage = review.reviewBy
+      ? `${report.ticker} review deadline set for ${this.formatDate(review.reviewBy) || review.reviewBy}.`
+      : `${report.ticker} review deadline cleared.`;
+  }
+
   updateSavedReportReviewNote(report: SavedReport, key: SavedReportReviewKey, value: string): void {
     const review = this.getSavedReportReview(report);
     review[key] = this.normalizeSavedReportJournalText(value);
@@ -3712,6 +3823,7 @@ export class ReportDateTableComponent implements OnInit {
       followUpComplete: review?.followUpComplete === true,
       outcome: this.normalizeSavedReportReviewOutcome(review?.outcome),
       reaction: this.normalizeSavedReportJournalText(review?.reaction),
+      reviewBy: this.normalizeSavedReportReviewDeadline(review?.reviewBy),
       lesson: this.normalizeSavedReportJournalText(review?.lesson)
     };
   }
@@ -3731,6 +3843,15 @@ export class ReportDateTableComponent implements OnInit {
     return Number.isFinite(actualMove) && actualMove >= 0 && actualMove <= 100
       ? Math.round(actualMove * 100) / 100
       : null;
+  }
+
+  private normalizeSavedReportReviewDeadline(value: unknown): string {
+    if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      return '';
+    }
+
+    const parsedDate = new Date(`${value}T12:00:00`);
+    return Number.isNaN(parsedDate.getTime()) || parsedDate.toISOString().slice(0, 10) !== value ? '' : value;
   }
 
   private normalizeSavedReportJournalText(value: unknown): string {
@@ -3759,7 +3880,8 @@ export class ReportDateTableComponent implements OnInit {
       this.getSavedReportReviewLabel(review.outcome),
       review.reaction,
       review.lesson,
-      review.followUp
+      review.followUp,
+      review.reviewBy
     ].join(' ').toLowerCase();
   }
 
