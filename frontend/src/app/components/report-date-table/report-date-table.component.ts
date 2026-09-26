@@ -225,6 +225,7 @@ interface SavedReport {
   strategy?: SavedReportStrategy;
   hypothesis?: SavedReportHypothesis;
   researchMinutes?: number;
+  researchBy?: string;
   role?: SavedReportRole;
   conviction?: SavedReportConviction;
   preparation?: Partial<SavedReportPreparation>;
@@ -451,6 +452,22 @@ interface SavedReportResearchCapacitySummary {
   plannedDayCount: number;
   totalCapacityMinutes: number;
   totalMinutes: number;
+}
+
+interface SavedReportResearchSession {
+  capacityMinutes: number;
+  isOverCapacity: boolean;
+  remainingMinutes: number;
+  researchDate: string;
+  reports: SavedReport[];
+  totalMinutes: number;
+}
+
+interface SavedReportResearchSessionSummary {
+  plannedMinutes: number;
+  scheduledCount: number;
+  sessionCount: number;
+  unplannedCount: number;
 }
 
 interface SavedReportTimingReviewSummary {
@@ -831,6 +848,7 @@ export class ReportDateTableComponent implements OnInit {
         strategy: 'unassigned' as SavedReportStrategy,
         hypothesis: 'unassigned' as SavedReportHypothesis,
         researchMinutes: 0,
+        researchBy: '',
         role: 'unassigned' as SavedReportRole,
         conviction: 'unassigned' as SavedReportConviction,
         plannedRiskPercent: 0,
@@ -928,7 +946,8 @@ export class ReportDateTableComponent implements OnInit {
           `Strategy: ${this.getSavedReportStrategyLabel(this.getSavedReportStrategy(report))}`,
           `Hypothesis: ${this.getSavedReportHypothesisLabel(this.getSavedReportHypothesis(report))}`,
           `Implied move: ${report.impliedMove.toFixed(1)}%`,
-          `Research time: ${this.getSavedReportResearchMinutes(report)} minutes`
+          `Research time: ${this.getSavedReportResearchMinutes(report)} minutes`,
+          `Research session: ${this.getSavedReportResearchBy(report) || 'Not scheduled'}`
         ].join('\\n');
 
         return [
@@ -962,7 +981,7 @@ export class ReportDateTableComponent implements OnInit {
     }
 
     const headers = [
-      'Ticker', 'Company', 'Report Date', 'Report Timing', 'Workflow Status', 'Research Playbook', 'Research Theme', 'Event Strategy', 'Research Hypothesis', 'Pre-event Reaction Call', 'Research Time (minutes)', 'Portfolio Role', 'Conviction',
+      'Ticker', 'Company', 'Report Date', 'Report Timing', 'Workflow Status', 'Research Playbook', 'Research Theme', 'Event Strategy', 'Research Hypothesis', 'Pre-event Reaction Call', 'Research Time (minutes)', 'Research Work Date', 'Portfolio Role', 'Conviction',
       'Implied Move (%)', 'Short Interest (%)', 'EPS Estimate', 'Market Cap', 'Risk Allocation (%)',
       'Preparation Complete', 'Evidence Reviewed', 'Journal Fields Complete', 'Actual Post-Earnings Move (%)', 'Review Deadline', 'Review Outcome', 'Review Reaction', 'Review Lesson',
       'Follow-through Action', 'Follow-through Complete'
@@ -984,6 +1003,7 @@ export class ReportDateTableComponent implements OnInit {
           this.getSavedReportHypothesisLabel(this.getSavedReportHypothesis(report)),
           this.getSavedReportReactionExpectationLabel(this.getSavedReportReactionExpectation(report)),
           this.getSavedReportResearchMinutes(report),
+          this.getSavedReportResearchBy(report),
           this.getSavedReportRoleLabel(this.getSavedReportRole(report)),
           this.getSavedReportConvictionLabel(this.getSavedReportConviction(report)),
           report.impliedMove,
@@ -1320,7 +1340,7 @@ export class ReportDateTableComponent implements OnInit {
       `${report.name} · ${this.formatDate(report.reportDate)} · ${countdown}`,
       `Setup: EPS estimate ${report.estimate.toFixed(2)} · ${report.impliedMove.toFixed(1)}% implied move · ${report.shortInterest.toFixed(1)}% short interest · ${this.formatMarketCapDisplay(report.marketCap)} market cap.`,
       `Plan: ${this.getSavedReportStatusLabel(this.getSavedReportStatus(report))} · ${this.getSavedReportStrategyLabel(this.getSavedReportStrategy(report))} · ${this.getSavedReportRoleLabel(this.getSavedReportRole(report))} · ${this.getSavedReportConvictionLabel(this.getSavedReportConviction(report))}.`,
-      `Research: ${this.getSavedReportHypothesisLabel(this.getSavedReportHypothesis(report))} · ${this.getSavedReportEventTimingLabel(this.getSavedReportEventTiming(report))} · ${this.getSavedReportResearchMinutes(report)} min planned · ${this.getSavedReportRiskAllocation(report)}% of event risk budget.`,
+      `Research: ${this.getSavedReportHypothesisLabel(this.getSavedReportHypothesis(report))} · ${this.getSavedReportEventTimingLabel(this.getSavedReportEventTiming(report))} · ${this.getSavedReportResearchMinutes(report)} min planned · ${this.getSavedReportResearchBy(report) ? `session ${this.formatDate(this.getSavedReportResearchBy(report))}` : 'session not scheduled'} · ${this.getSavedReportRiskAllocation(report)}% of event risk budget.`,
       `Readiness: preparation ${preparation} · evidence ${evidence} · journal ${journalCount}/3.`
     ];
 
@@ -2988,6 +3008,159 @@ export class ReportDateTableComponent implements OnInit {
     this.persistSavedReports();
   }
 
+  getSavedReportResearchBy(report: SavedReport): string {
+    return this.normalizeSavedReportResearchBy(report.researchBy);
+  }
+
+  setSavedReportResearchBy(report: SavedReport, value: unknown): void {
+    const researchBy = this.normalizeSavedReportResearchBy(value);
+
+    if (researchBy && researchBy > report.reportDate) {
+      this.savedReportMessage = `${report.ticker} research needs to be scheduled on or before its earnings date.`;
+      return;
+    }
+
+    this.savedReports = this.savedReports.map((savedReport) => (
+      savedReport.ticker === report.ticker && savedReport.reportDate === report.reportDate
+        ? {...savedReport, researchBy}
+        : savedReport
+    ));
+    this.savedReportMessage = researchBy
+      ? `${report.ticker} research session set for ${this.formatDate(researchBy) || researchBy}.`
+      : `${report.ticker} research session cleared.`;
+    this.persistSavedReports();
+  }
+
+  getSavedReportResearchSessionSummary(now: Date = new Date()): SavedReportResearchSessionSummary {
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const activeReports = this.savedReports.filter((report) => {
+      const daysUntil = this.getSavedReportDaysUntil(report.reportDate, startOfToday);
+      return this.getSavedReportStatus(report) !== 'skip' &&
+        this.getSavedReportResearchMinutes(report) > 0 &&
+        daysUntil !== null && daysUntil >= 0;
+    });
+    const scheduledReports = activeReports.filter((report) => {
+      const researchBy = this.getSavedReportResearchBy(report);
+      const daysUntil = this.getSavedReportDaysUntil(researchBy, startOfToday);
+      return Boolean(researchBy) && researchBy <= report.reportDate && daysUntil !== null && daysUntil >= 0;
+    });
+
+    return {
+      plannedMinutes: scheduledReports.reduce((total, report) => total + this.getSavedReportResearchMinutes(report), 0),
+      scheduledCount: scheduledReports.length,
+      sessionCount: this.getSavedReportResearchSessions(startOfToday).length,
+      unplannedCount: activeReports.length - scheduledReports.length
+    };
+  }
+
+  getSavedReportResearchSessions(now: Date = new Date()): SavedReportResearchSession[] {
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const capacityMinutes = this.getSavedReportResearchCapacityPerDay();
+    const sessions = new Map<string, SavedReportResearchSession>();
+
+    this.savedReports
+      .filter((report) => this.getSavedReportStatus(report) !== 'skip' && this.getSavedReportResearchMinutes(report) > 0)
+      .forEach((report) => {
+        const researchBy = this.getSavedReportResearchBy(report);
+        const sessionDaysUntil = this.getSavedReportDaysUntil(researchBy, startOfToday);
+        const reportDaysUntil = this.getSavedReportDaysUntil(report.reportDate, startOfToday);
+
+        if (!researchBy || researchBy > report.reportDate || sessionDaysUntil === null || sessionDaysUntil < 0 || reportDaysUntil === null || reportDaysUntil < 0) {
+          return;
+        }
+
+        const session = sessions.get(researchBy) || {
+          capacityMinutes,
+          isOverCapacity: false,
+          remainingMinutes: capacityMinutes,
+          researchDate: researchBy,
+          reports: [],
+          totalMinutes: 0
+        };
+        const researchMinutes = this.getSavedReportResearchMinutes(report);
+
+        session.reports.push(report);
+        session.totalMinutes += researchMinutes;
+        session.remainingMinutes = Math.max(capacityMinutes - session.totalMinutes, 0);
+        session.isOverCapacity = session.totalMinutes > capacityMinutes;
+        sessions.set(researchBy, session);
+      });
+
+    return Array.from(sessions.values())
+      .sort((first, second) => first.researchDate.localeCompare(second.researchDate));
+  }
+
+  autoScheduleSavedReportResearch(now: Date = new Date()): void {
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const capacityMinutes = this.getSavedReportResearchCapacityPerDay();
+    const scheduledMinutes = new Map<string, number>();
+    const assignments = new Map<string, string>();
+    const reportKey = (report: SavedReport): string => `${report.ticker}|${report.reportDate}`;
+
+    this.getSavedReportResearchSessions(startOfToday).forEach((session) => {
+      scheduledMinutes.set(session.researchDate, session.totalMinutes);
+    });
+
+    const unscheduledReports = this.savedReports
+      .filter((report) => {
+        const reportDaysUntil = this.getSavedReportDaysUntil(report.reportDate, startOfToday);
+        const researchBy = this.getSavedReportResearchBy(report);
+        const sessionDaysUntil = this.getSavedReportDaysUntil(researchBy, startOfToday);
+        const hasUsableSession = Boolean(researchBy) && researchBy <= report.reportDate && sessionDaysUntil !== null && sessionDaysUntil >= 0;
+
+        return this.getSavedReportStatus(report) !== 'skip' &&
+          this.getSavedReportResearchMinutes(report) > 0 &&
+          reportDaysUntil !== null && reportDaysUntil >= 0 &&
+          !hasUsableSession;
+      })
+      .sort((first, second) => first.reportDate.localeCompare(second.reportDate) || first.ticker.localeCompare(second.ticker));
+
+    unscheduledReports.forEach((report) => {
+      const reportDate = new Date(`${report.reportDate}T12:00:00`);
+      const lastResearchDate = new Date(reportDate);
+
+      if (reportDate.getTime() > startOfToday.getTime()) {
+        lastResearchDate.setDate(lastResearchDate.getDate() - 1);
+      }
+      if (lastResearchDate.getTime() < startOfToday.getTime()) {
+        lastResearchDate.setTime(startOfToday.getTime());
+      }
+
+      const availableDates: string[] = [];
+      const cursor = new Date(startOfToday);
+      while (cursor.getTime() <= lastResearchDate.getTime()) {
+        availableDates.push(this.formatSavedReportStorageDate(cursor));
+        cursor.setDate(cursor.getDate() + 1);
+      }
+
+      const researchMinutes = this.getSavedReportResearchMinutes(report);
+      const underCapacityDates = availableDates.filter((date) => (scheduledMinutes.get(date) || 0) + researchMinutes <= capacityMinutes);
+      const candidateDates = underCapacityDates.length > 0 ? underCapacityDates : availableDates;
+      const selectedDate = candidateDates.sort((first, second) => (
+        (scheduledMinutes.get(first) || 0) - (scheduledMinutes.get(second) || 0) || first.localeCompare(second)
+      ))[0];
+
+      if (!selectedDate) {
+        return;
+      }
+
+      assignments.set(reportKey(report), selectedDate);
+      scheduledMinutes.set(selectedDate, (scheduledMinutes.get(selectedDate) || 0) + researchMinutes);
+    });
+
+    if (assignments.size === 0) {
+      this.savedReportMessage = 'Add a research time budget to an active upcoming report before auto-planning sessions.';
+      return;
+    }
+
+    this.savedReports = this.savedReports.map((report) => {
+      const researchBy = assignments.get(reportKey(report));
+      return researchBy ? {...report, researchBy} : report;
+    });
+    this.persistSavedReports();
+    this.savedReportMessage = `${assignments.size} research session${assignments.size === 1 ? '' : 's'} scheduled around the current daily capacity.`;
+  }
+
   isSavedReportPreparationComplete(report: SavedReport, key: SavedReportPreparationKey): boolean {
     return this.normalizeSavedReportPreparation(report.preparation)[key];
   }
@@ -3787,6 +3960,7 @@ export class ReportDateTableComponent implements OnInit {
         strategy: this.normalizeSavedReportStrategy(report.strategy),
         hypothesis: this.normalizeSavedReportHypothesis(report.hypothesis),
         researchMinutes: this.normalizeSavedReportResearchMinutes(report.researchMinutes),
+        researchBy: this.normalizeSavedReportResearchBy(report.researchBy),
         role: this.normalizeSavedReportRole(report.role),
         conviction: this.normalizeSavedReportConviction(report.conviction),
         plannedRiskPercent: this.normalizeSavedReportRiskAllocation(report.plannedRiskPercent),
@@ -3832,6 +4006,14 @@ export class ReportDateTableComponent implements OnInit {
   private normalizeSavedReportResearchMinutes(value: unknown): number {
     const minutes = Number(value);
     return this.savedReportResearchTimeOptions.some((item) => item.minutes === minutes) ? minutes : 0;
+  }
+
+  private normalizeSavedReportResearchBy(value: unknown): string {
+    return this.normalizeSavedReportReviewDeadline(value);
+  }
+
+  private formatSavedReportStorageDate(date: Date): string {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
   }
 
   private loadSavedReportResearchCapacity(): number {
@@ -3964,6 +4146,7 @@ export class ReportDateTableComponent implements OnInit {
       this.getSavedReportEventTimingLabel(this.getSavedReportEventTiming(report)),
       this.getSavedReportReactionExpectationLabel(this.getSavedReportReactionExpectation(report)),
       this.getSavedReportPlaybookLabel(this.getSavedReportPlaybook(report)),
+      this.getSavedReportResearchBy(report),
       journal.thesis,
       journal.risk,
       journal.decision,

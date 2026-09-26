@@ -1079,13 +1079,21 @@ body { margin: 0;font-family: sans-serif, "Franklin Gothic Book", Verdana; }
   text-transform: uppercase;
 }
 
-.saved-report-actions select {
+.saved-report-actions select,
+.saved-report-actions input[type="date"] {
   border: 1px solid #b7d8cc;
   border-radius: 4px;
   background: white;
   color: #173e32;
   min-height: 2rem;
   padding: 0 0.45rem;
+}
+
+.saved-report-actions label small {
+  max-width: 12rem;
+  color: #667a73;
+  font-size: 0.68rem;
+  line-height: 1.25;
 }
 
 .saved-report-actions button {
@@ -4467,6 +4475,156 @@ body { margin: 0;font-family: sans-serif, "Franklin Gothic Book", Verdana; }
   margin-top: 0.85rem;
 }
 
+.saved-report-research-sessions {
+  width: 90%;
+  margin: 0 auto 1.5rem;
+  padding: 1rem;
+  border: 1px solid #b8d8d1;
+  border-radius: 7px;
+  background: linear-gradient(135deg, #f3fbf9, #ffffff);
+}
+
+.saved-report-research-sessions__header,
+.saved-report-research-sessions__header-actions,
+.saved-report-research-sessions__card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.saved-report-research-sessions__header h3,
+.saved-report-research-sessions__card-header strong {
+  margin: 0;
+  color: #155d55;
+}
+
+.saved-report-research-sessions__header span,
+.saved-report-research-sessions__card-header span,
+.saved-report-research-sessions__metrics small,
+.saved-report-research-sessions__notice,
+.saved-report-research-sessions__note {
+  color: #4e746e;
+}
+
+.saved-report-research-sessions__header-actions {
+  align-items: center;
+}
+
+.saved-report-research-sessions__header-actions strong {
+  color: #155d55;
+  text-align: right;
+}
+
+.saved-report-research-sessions__header-actions button {
+  border: 1px solid #238579;
+  border-radius: 4px;
+  background: white;
+  color: #155d55;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  padding: 0.42rem 0.65rem;
+}
+
+.saved-report-research-sessions__header-actions button:hover,
+.saved-report-research-sessions__header-actions button:focus-visible {
+  background: #dff4ef;
+}
+
+.saved-report-research-sessions__notice {
+  margin-top: 0.8rem;
+  padding: 0.65rem 0.75rem;
+  border-left: 3px solid #ce8a2f;
+  background: #fff9ec;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.saved-report-research-sessions__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(235px, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.9rem;
+}
+
+.saved-report-research-sessions__grid article {
+  display: grid;
+  gap: 0.8rem;
+  padding: 0.85rem;
+  border: 1px solid #c8e3dd;
+  border-radius: 6px;
+  background: white;
+}
+
+.saved-report-research-sessions__card--over-capacity {
+  border-top: 4px solid #b9533f !important;
+}
+
+.saved-report-research-sessions__card-header em {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: #ddf3ee;
+  color: #17665c;
+  font-size: 0.72rem;
+  font-style: normal;
+  font-weight: 700;
+  padding: 0.28rem 0.45rem;
+}
+
+.saved-report-research-sessions__metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(90px, 1fr));
+  gap: 0.55rem;
+}
+
+.saved-report-research-sessions__metrics span {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.saved-report-research-sessions__metrics small {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.saved-report-research-sessions__metrics strong {
+  color: #155d55;
+}
+
+.saved-report-research-sessions__reports {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.saved-report-research-sessions__reports a {
+  display: grid;
+  gap: 0.1rem;
+  padding: 0.45rem;
+  border-radius: 4px;
+  background: #edf8f5;
+  color: #17665c;
+  text-decoration: none;
+}
+
+.saved-report-research-sessions__reports a:hover,
+.saved-report-research-sessions__reports a:focus-visible {
+  background: #dff3ed;
+  text-decoration: underline;
+}
+
+.saved-report-research-sessions__reports span {
+  color: #537b73;
+  font-size: 0.76rem;
+}
+
+.saved-report-research-sessions__note {
+  display: block;
+  margin-top: 0.85rem;
+  line-height: 1.4;
+}
+
 .saved-report-seasonality {
   width: 90%;
   margin: 0 auto 1.5rem;
@@ -4797,7 +4955,10 @@ body { margin: 0;font-family: sans-serif, "Franklin Gothic Book", Verdana; }
   }
 
   .saved-report-research-load__header,
-  .saved-report-research-load__card-header {
+  .saved-report-research-load__card-header,
+  .saved-report-research-sessions__header,
+  .saved-report-research-sessions__header-actions,
+  .saved-report-research-sessions__card-header {
     align-items: stretch;
     flex-direction: column;
   }

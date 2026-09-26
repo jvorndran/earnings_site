@@ -1222,6 +1222,46 @@
     <small class="saved-report-research-load__note">Time budgets are stored with your saved research and help plan review effort; they do not predict event outcomes.</small>
   </section>
 
+  <section *ngIf="getSavedReportResearchSessionSummary().scheduledCount > 0 || getSavedReportResearchSessionSummary().unplannedCount > 0" class="saved-report-research-sessions" aria-labelledby="saved-report-research-sessions-title">
+    <div class="saved-report-research-sessions__header">
+      <div>
+        <h3 id="saved-report-research-sessions-title">Research Session Calendar</h3>
+        <span>Schedule pre-event work on the day you plan to do it, then balance the time against your daily capacity.</span>
+      </div>
+      <div class="saved-report-research-sessions__header-actions">
+        <strong>{{getSavedReportResearchSessionSummary().scheduledCount}}/{{getSavedReportResearchSessionSummary().scheduledCount + getSavedReportResearchSessionSummary().unplannedCount}} reports planned · {{getSavedReportResearchSessionSummary().sessionCount}} work day{{getSavedReportResearchSessionSummary().sessionCount === 1 ? '' : 's'}} · {{getSavedReportResearchSessionSummary().plannedMinutes}} min</strong>
+        <button *ngIf="getSavedReportResearchSessionSummary().unplannedCount > 0" (click)="autoScheduleSavedReportResearch()" type="button">Auto-plan sessions</button>
+      </div>
+    </div>
+    <div *ngIf="getSavedReportResearchSessionSummary().unplannedCount > 0" class="saved-report-research-sessions__notice">
+      {{getSavedReportResearchSessionSummary().unplannedCount}} active report{{getSavedReportResearchSessionSummary().unplannedCount === 1 ? '' : 's'}} with a time budget still need{{getSavedReportResearchSessionSummary().unplannedCount === 1 ? 's' : ''}} a work date.
+    </div>
+    <div class="saved-report-research-sessions__grid">
+      <article
+        *ngFor="let session of getSavedReportResearchSessions()"
+        [class.saved-report-research-sessions__card--over-capacity]="session.isOverCapacity">
+        <div class="saved-report-research-sessions__card-header">
+          <div>
+            <strong>{{formatDate(session.researchDate)}}</strong>
+            <span>{{session.reports.length}} planned research block{{session.reports.length === 1 ? '' : 's'}}</span>
+          </div>
+          <em>{{session.totalMinutes}} / {{session.capacityMinutes}} min</em>
+        </div>
+        <div class="saved-report-research-sessions__metrics">
+          <span><small>Time booked</small><strong>{{session.totalMinutes}} min</strong></span>
+          <span><small>{{session.isOverCapacity ? 'Over capacity' : 'Open capacity'}}</small><strong>{{session.isOverCapacity ? session.totalMinutes - session.capacityMinutes : session.remainingMinutes}} min</strong></span>
+        </div>
+        <div class="saved-report-research-sessions__reports">
+          <a *ngFor="let report of session.reports" [routerLink]="['/', report.reportDate, report.ticker]">
+            <strong>{{report.ticker}}</strong>
+            <span>{{getSavedReportResearchMinutes(report)}} min · earnings {{formatDate(report.reportDate)}}</span>
+          </a>
+        </div>
+      </article>
+    </div>
+    <small class="saved-report-research-sessions__note">Auto-planning fills only active reports with time budgets that lack a usable date, preserves manual sessions, and places work no later than the earnings date.</small>
+  </section>
+
   <section *ngIf="getSavedReportTimingPlans().length > 0" class="saved-report-timing-plan" aria-labelledby="saved-report-timing-plan-title">
     <div class="saved-report-timing-plan__header">
       <div>
@@ -1984,6 +2024,15 @@
             [ngModel]="getSavedReportResearchMinutes(report)">
             <option *ngFor="let option of savedReportResearchTimeOptions" [ngValue]="option.minutes">{{option.label}}</option>
           </select>
+        </label>
+        <label>
+          <span>Research work date</span>
+          <input
+            (ngModelChange)="setSavedReportResearchBy(report, $event)"
+            [ngModel]="getSavedReportResearchBy(report)"
+            aria-label="Research work date"
+            type="date">
+          <small>Schedule pre-event work on or before earnings.</small>
         </label>
         <label>
           <span>Report timing</span>
