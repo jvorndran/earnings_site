@@ -974,6 +974,51 @@ export class ReportDateTableComponent implements OnInit {
     this.savedReportMessage = `${this.savedReports.length} saved earnings date${this.savedReports.length === 1 ? '' : 's'} exported as a calendar.`;
   }
 
+  downloadSavedReportResearchSessionsCalendar(): void {
+    const sessions = this.getSavedReportResearchSessions();
+
+    if (sessions.length === 0) {
+      this.savedReportMessage = 'Schedule an active research session before exporting a research calendar.';
+      return;
+    }
+
+    const exportedAt = new Date();
+    const calendarStamp = exportedAt.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z');
+    const calendarEvents = sessions.flatMap((session) => session.reports.map((report) => {
+      const sessionDate = this.getSavedReportCalendarDate(session.researchDate);
+      const summary = `Research: ${report.ticker} earnings${report.name ? ` — ${report.name}` : ''}`;
+      const description = [
+        `Research time: ${this.getSavedReportResearchMinutes(report)} minutes`,
+        `Earnings date: ${this.formatDate(report.reportDate) || report.reportDate}`,
+        `Event session: ${this.getSavedReportEventTimingLabel(this.getSavedReportEventTiming(report))}`,
+        `Strategy: ${this.getSavedReportStrategyLabel(this.getSavedReportStrategy(report))}`,
+        `Hypothesis: ${this.getSavedReportHypothesisLabel(this.getSavedReportHypothesis(report))}`
+      ].join('\\n');
+
+      return [
+        'BEGIN:VEVENT',
+        `UID:earnings-site-research-${report.ticker}-${report.reportDate}-${sessionDate}@local`,
+        `DTSTAMP:${calendarStamp}`,
+        `DTSTART;VALUE=DATE:${sessionDate}`,
+        `SUMMARY:${this.escapeSavedReportCalendarText(summary)}`,
+        `DESCRIPTION:${this.escapeSavedReportCalendarText(description)}`,
+        'END:VEVENT'
+      ].join('\r\n');
+    }));
+    const calendar = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Earnings Site//Research Sessions//EN', 'CALSCALE:GREGORIAN', ...calendarEvents, 'END:VCALENDAR'].join('\r\n');
+    const blob = new Blob([calendar], {type: 'text/calendar;charset=utf-8'});
+    const downloadUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+
+    link.href = downloadUrl;
+    link.download = `earnings-research-sessions-${exportedAt.toISOString().slice(0, 10)}.ics`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(downloadUrl);
+    this.savedReportMessage = `${calendarEvents.length} research session${calendarEvents.length === 1 ? '' : 's'} exported as a calendar.`;
+  }
+
   downloadSavedReportsCsv(): void {
     if (this.savedReports.length === 0) {
       this.savedReportMessage = 'Save at least one report before exporting research.';

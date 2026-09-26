@@ -1230,6 +1230,7 @@
       </div>
       <div class="saved-report-research-sessions__header-actions">
         <strong>{{getSavedReportResearchSessionSummary().scheduledCount}}/{{getSavedReportResearchSessionSummary().scheduledCount + getSavedReportResearchSessionSummary().unplannedCount}} reports planned · {{getSavedReportResearchSessionSummary().sessionCount}} work day{{getSavedReportResearchSessionSummary().sessionCount === 1 ? '' : 's'}} · {{getSavedReportResearchSessionSummary().plannedMinutes}} min</strong>
+        <button *ngIf="getSavedReportResearchSessionSummary().scheduledCount > 0" (click)="downloadSavedReportResearchSessionsCalendar()" type="button">Export sessions</button>
         <button *ngIf="getSavedReportResearchSessionSummary().unplannedCount > 0" (click)="autoScheduleSavedReportResearch()" type="button">Auto-plan sessions</button>
       </div>
     </div>
