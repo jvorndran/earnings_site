@@ -617,6 +617,30 @@
     </div>
   </section>
 
+  <section class="saved-report-strategy" aria-labelledby="saved-report-scenarios-title">
+    <div class="saved-report-strategy__header">
+      <div>
+        <h3 id="saved-report-scenarios-title">Earnings Scenario Coverage</h3>
+        <span>Capture an upside, base, and downside case before an earnings plan becomes a one-way thesis.</span>
+      </div>
+      <strong>{{getSavedReportScenarioFilterCount('needsScenarios')}} report{{getSavedReportScenarioFilterCount('needsScenarios') === 1 ? '' : 's'}} with scenario gaps</strong>
+    </div>
+
+    <div class="saved-report-strategy__grid">
+      <button
+        *ngFor="let filter of savedReportScenarioFilters"
+        (click)="setSavedReportScenarioFilter(filter.key)"
+        [attr.aria-pressed]="savedReportScenarioFilter === filter.key"
+        [class.saved-report-strategy-card--active]="savedReportScenarioFilter === filter.key"
+        class="saved-report-strategy-card"
+        type="button">
+        <span>{{filter.label}}</span>
+        <strong>{{getSavedReportScenarioFilterCount(filter.key)}}</strong>
+        <small>{{filter.detail}}</small>
+      </button>
+    </div>
+  </section>
+
   <div class="saved-report-search">
     <label>
       <span>Search saved research, workflow, and notes</span>
@@ -1885,6 +1909,49 @@
             [ngModel]="getSavedReportJournal(report).decision"
             maxlength="280"
             placeholder="Size, wait, avoid, or review after results?"
+            rows="2"></textarea>
+        </label>
+      </div>
+      <div class="saved-report-journal saved-report-scenarios">
+        <div class="saved-report-journal-header">
+          <span>Scenario map</span>
+          <strong>{{getSavedReportScenarioCount(report)}}/3 captured</strong>
+        </div>
+        <div
+          [attr.aria-label]="report.ticker + ' scenario coverage progress'"
+          [attr.aria-valuenow]="getSavedReportScenarioPercent(report)"
+          aria-valuemax="100"
+          aria-valuemin="0"
+          class="saved-report-progress"
+          role="progressbar">
+          <span [style.width.%]="getSavedReportScenarioPercent(report)"></span>
+        </div>
+        <p>Separate the expected path from what would improve or break the earnings setup.</p>
+        <label>
+          <span>Upside case</span>
+          <textarea
+            (ngModelChange)="updateSavedReportScenario(report, 'upside', $event)"
+            [ngModel]="getSavedReportScenarios(report).upside"
+            maxlength="280"
+            placeholder="What result or guidance could exceed the current setup?"
+            rows="2"></textarea>
+        </label>
+        <label>
+          <span>Base case</span>
+          <textarea
+            (ngModelChange)="updateSavedReportScenario(report, 'base', $event)"
+            [ngModel]="getSavedReportScenarios(report).base"
+            maxlength="280"
+            placeholder="What outcome is already broadly reflected in expectations?"
+            rows="2"></textarea>
+        </label>
+        <label>
+          <span>Downside case</span>
+          <textarea
+            (ngModelChange)="updateSavedReportScenario(report, 'downside', $event)"
+            [ngModel]="getSavedReportScenarios(report).downside"
+            maxlength="280"
+            placeholder="What miss, guide, or metric would impair the setup?"
             rows="2"></textarea>
         </label>
       </div>

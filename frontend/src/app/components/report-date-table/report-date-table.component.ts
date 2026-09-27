@@ -42,6 +42,8 @@ type SavedReportPreparationKey = 'estimateReviewed' | 'riskPlanned' | 'timingCon
 type SavedReportEvidenceKey = 'priorResultsReviewed' | 'guidanceReviewed' | 'peerContextReviewed' | 'valuationReviewed';
 type SavedReportEvidenceFilter = 'all' | 'needsEvidence' | 'complete';
 type SavedReportJournalKey = 'thesis' | 'risk' | 'decision';
+type SavedReportScenarioKey = 'upside' | 'base' | 'downside';
+type SavedReportScenarioFilter = 'all' | 'needsScenarios' | 'complete';
 type SavedReportReviewOutcome = 'unreviewed' | 'positive' | 'negative' | 'mixed' | 'flat';
 type SavedReportReactionExpectation = 'unassigned' | 'positive' | 'negative' | 'muted';
 type SavedReportReviewKey = 'reaction' | 'lesson' | 'followUp';
@@ -75,6 +77,12 @@ interface SavedReportJournal {
   thesis: string;
   risk: string;
   decision: string;
+}
+
+interface SavedReportScenarios {
+  upside: string;
+  base: string;
+  downside: string;
 }
 
 interface SavedReportReview {
@@ -231,6 +239,7 @@ interface SavedReport {
   preparation?: Partial<SavedReportPreparation>;
   evidence?: Partial<SavedReportEvidence>;
   journal?: Partial<SavedReportJournal>;
+  scenarios?: Partial<SavedReportScenarios>;
   review?: Partial<SavedReportReview>;
 }
 
@@ -591,6 +600,7 @@ export class ReportDateTableComponent implements OnInit {
   savedReportDecisionFilter: SavedReportDecisionFilter = 'all';
   savedReportResearchLaneFilter: SavedReportResearchLane = 'all';
   savedReportEvidenceFilter: SavedReportEvidenceFilter = 'all';
+  savedReportScenarioFilter: SavedReportScenarioFilter = 'all';
   savedReportSearchText = '';
   postEarningsReviewFilter: PostEarningsReviewFilter = 'all';
   savedReportReviewCadenceFilter: SavedReportReviewCadenceFilter = 'all';
@@ -765,6 +775,11 @@ export class ReportDateTableComponent implements OnInit {
     {key: 'needsEvidence', label: 'Evidence gaps', detail: 'One or more independent inputs are unchecked'},
     {key: 'complete', label: 'Evidence covered', detail: 'All four inputs have been reviewed'}
   ];
+  readonly savedReportScenarioFilters: Array<{key: SavedReportScenarioFilter; label: string; detail: string}> = [
+    {key: 'all', label: 'All scenarios', detail: 'Full research shortlist'},
+    {key: 'needsScenarios', label: 'Scenario gaps', detail: 'One or more upside, base, or downside cases are missing'},
+    {key: 'complete', label: 'Scenario mapped', detail: 'Upside, base, and downside cases are all captured'}
+  ];
   opportunityMapPoints: OpportunityMapPoint[] = [];
   opportunityRiskLine = 50;
   opportunityZeroLine = 50;
@@ -854,6 +869,7 @@ export class ReportDateTableComponent implements OnInit {
         plannedRiskPercent: 0,
         preparation: this.normalizeSavedReportPreparation(),
         evidence: this.normalizeSavedReportEvidence(),
+        scenarios: this.normalizeSavedReportScenarios(),
         review: this.normalizeSavedReportReview()
       }, ...this.savedReports].slice(0, 20);
       this.savedReportMessage = `${stock.Ticker} saved for follow-up.`;
@@ -864,6 +880,7 @@ export class ReportDateTableComponent implements OnInit {
       this.savedReportDecisionFilter = 'all';
       this.savedReportResearchLaneFilter = 'all';
       this.savedReportEvidenceFilter = 'all';
+      this.savedReportScenarioFilter = 'all';
       this.savedReportReviewCadenceFilter = 'all';
       this.savedReportReviewDeadlineFilter = 'all';
       this.savedReportPlaybookFilter = 'all';
@@ -893,6 +910,7 @@ export class ReportDateTableComponent implements OnInit {
     this.savedReportDecisionFilter = 'all';
     this.savedReportResearchLaneFilter = 'all';
     this.savedReportEvidenceFilter = 'all';
+    this.savedReportScenarioFilter = 'all';
     this.savedReportReviewCadenceFilter = 'all';
     this.savedReportReviewDeadlineFilter = 'all';
     this.savedReportPlaybookFilter = 'all';
@@ -1028,13 +1046,14 @@ export class ReportDateTableComponent implements OnInit {
     const headers = [
       'Ticker', 'Company', 'Report Date', 'Report Timing', 'Workflow Status', 'Research Playbook', 'Research Theme', 'Event Strategy', 'Research Hypothesis', 'Pre-event Reaction Call', 'Research Time (minutes)', 'Research Work Date', 'Portfolio Role', 'Conviction',
       'Implied Move (%)', 'Short Interest (%)', 'EPS Estimate', 'Market Cap', 'Risk Allocation (%)',
-      'Preparation Complete', 'Evidence Reviewed', 'Journal Fields Complete', 'Actual Post-Earnings Move (%)', 'Review Deadline', 'Review Outcome', 'Review Reaction', 'Review Lesson',
+      'Preparation Complete', 'Evidence Reviewed', 'Journal Fields Complete', 'Upside Scenario', 'Base Scenario', 'Downside Scenario', 'Actual Post-Earnings Move (%)', 'Review Deadline', 'Review Outcome', 'Review Reaction', 'Review Lesson',
       'Follow-through Action', 'Follow-through Complete'
     ];
     const rows = [...this.savedReports]
       .sort((first, second) => first.reportDate.localeCompare(second.reportDate) || first.ticker.localeCompare(second.ticker))
       .map((report) => {
         const review = this.getSavedReportReview(report);
+        const scenarios = this.getSavedReportScenarios(report);
 
         return [
           report.ticker,
@@ -1059,6 +1078,9 @@ export class ReportDateTableComponent implements OnInit {
           `${this.getSavedReportPreparationCount(report)}/${this.savedReportPreparationSteps.length}`,
           `${this.getSavedReportEvidenceCount(report)}/${this.savedReportEvidenceSteps.length}`,
           `${this.getSavedReportJournalCount(report)}/3`,
+          scenarios.upside,
+          scenarios.base,
+          scenarios.downside,
           review.actualMovePercent ?? '',
           review.reviewBy,
           this.getSavedReportReviewLabel(review.outcome),
@@ -1116,6 +1138,7 @@ export class ReportDateTableComponent implements OnInit {
         this.savedReportDecisionFilter = 'all';
         this.savedReportResearchLaneFilter = 'all';
         this.savedReportEvidenceFilter = 'all';
+        this.savedReportScenarioFilter = 'all';
         this.savedReportReviewCadenceFilter = 'all';
         this.savedReportReviewDeadlineFilter = 'all';
         this.savedReportPlaybookFilter = 'all';
@@ -1149,6 +1172,7 @@ export class ReportDateTableComponent implements OnInit {
       this.matchesSavedReportDecisionFilter(report, this.savedReportDecisionFilter) &&
       this.matchesSavedReportResearchLane(report, this.savedReportResearchLaneFilter) &&
       this.matchesSavedReportEvidenceFilter(report, this.savedReportEvidenceFilter) &&
+      this.matchesSavedReportScenarioFilter(report, this.savedReportScenarioFilter) &&
       (normalizedSearch.length === 0 || this.getSavedReportSearchText(report).includes(normalizedSearch))
     ));
   }
@@ -1213,6 +1237,7 @@ export class ReportDateTableComponent implements OnInit {
     this.savedReportDecisionFilter = 'all';
     this.savedReportResearchLaneFilter = 'all';
     this.savedReportEvidenceFilter = 'all';
+    this.savedReportScenarioFilter = 'all';
     this.savedReportThemeFilter = 'all';
     this.savedReportHypothesisFilter = 'all';
     this.savedReportSearchText = ticker;
@@ -1380,13 +1405,15 @@ export class ReportDateTableComponent implements OnInit {
     const preparation = `${this.getSavedReportPreparationCount(report)}/${this.savedReportPreparationSteps.length}`;
     const evidence = `${this.getSavedReportEvidenceCount(report)}/${this.savedReportEvidenceSteps.length}`;
     const journalCount = this.getSavedReportJournalCount(report);
+    const scenarios = this.getSavedReportScenarios(report);
+    const scenarioCount = this.getSavedReportScenarioCount(report);
     const lines = [
       `${report.ticker} earnings research brief`,
       `${report.name} · ${this.formatDate(report.reportDate)} · ${countdown}`,
       `Setup: EPS estimate ${report.estimate.toFixed(2)} · ${report.impliedMove.toFixed(1)}% implied move · ${report.shortInterest.toFixed(1)}% short interest · ${this.formatMarketCapDisplay(report.marketCap)} market cap.`,
       `Plan: ${this.getSavedReportStatusLabel(this.getSavedReportStatus(report))} · ${this.getSavedReportStrategyLabel(this.getSavedReportStrategy(report))} · ${this.getSavedReportRoleLabel(this.getSavedReportRole(report))} · ${this.getSavedReportConvictionLabel(this.getSavedReportConviction(report))}.`,
       `Research: ${this.getSavedReportHypothesisLabel(this.getSavedReportHypothesis(report))} · ${this.getSavedReportEventTimingLabel(this.getSavedReportEventTiming(report))} · ${this.getSavedReportResearchMinutes(report)} min planned · ${this.getSavedReportResearchBy(report) ? `session ${this.formatDate(this.getSavedReportResearchBy(report))}` : 'session not scheduled'} · ${this.getSavedReportRiskAllocation(report)}% of event risk budget.`,
-      `Readiness: preparation ${preparation} · evidence ${evidence} · journal ${journalCount}/3.`
+      `Readiness: preparation ${preparation} · evidence ${evidence} · journal ${journalCount}/3 · scenarios ${scenarioCount}/3.`
     ];
 
     if (journal.thesis.trim().length > 0) {
@@ -1397,6 +1424,15 @@ export class ReportDateTableComponent implements OnInit {
     }
     if (journal.decision.trim().length > 0) {
       lines.push(`Event decision: ${journal.decision.trim()}`);
+    }
+    if (scenarios.upside.trim().length > 0) {
+      lines.push(`Upside case: ${scenarios.upside.trim()}`);
+    }
+    if (scenarios.base.trim().length > 0) {
+      lines.push(`Base case: ${scenarios.base.trim()}`);
+    }
+    if (scenarios.downside.trim().length > 0) {
+      lines.push(`Downside case: ${scenarios.downside.trim()}`);
     }
     if (review.outcome !== 'unreviewed' || review.actualMovePercent !== null || review.reaction.trim().length > 0 || review.lesson.trim().length > 0) {
       const actualMove = review.actualMovePercent === null ? 'not logged' : `${review.actualMovePercent.toFixed(1)}%`;
@@ -2798,6 +2834,7 @@ export class ReportDateTableComponent implements OnInit {
     this.savedReportDecisionFilter = 'all';
     this.savedReportResearchLaneFilter = 'all';
     this.savedReportEvidenceFilter = 'all';
+    this.savedReportScenarioFilter = 'all';
     this.savedReportThemeFilter = 'all';
     this.savedReportSearchText = '';
     this.savedReportMessage = `${this.getSavedReportRoleLabel(role)} / ${this.getSavedReportConvictionLabel(conviction)} is now in view.`;
@@ -2817,6 +2854,14 @@ export class ReportDateTableComponent implements OnInit {
 
   getSavedReportEvidenceFilterCount(filter: SavedReportEvidenceFilter): number {
     return this.savedReports.filter((report) => this.matchesSavedReportEvidenceFilter(report, filter)).length;
+  }
+
+  setSavedReportScenarioFilter(filter: SavedReportScenarioFilter): void {
+    this.savedReportScenarioFilter = filter;
+  }
+
+  getSavedReportScenarioFilterCount(filter: SavedReportScenarioFilter): number {
+    return this.savedReports.filter((report) => this.matchesSavedReportScenarioFilter(report, filter)).length;
   }
 
   getSavedReportResearchLaneCount(lane: Exclude<SavedReportResearchLane, 'all'>): number {
@@ -2890,6 +2935,15 @@ export class ReportDateTableComponent implements OnInit {
     }
 
     const isComplete = this.getSavedReportEvidenceCount(report) === this.savedReportEvidenceSteps.length;
+    return filter === 'complete' ? isComplete : !isComplete;
+  }
+
+  private matchesSavedReportScenarioFilter(report: SavedReport, filter: SavedReportScenarioFilter): boolean {
+    if (filter === 'all') {
+      return true;
+    }
+
+    const isComplete = this.getSavedReportScenarioCount(report) === 3;
     return filter === 'complete' ? isComplete : !isComplete;
   }
 
@@ -3282,6 +3336,31 @@ export class ReportDateTableComponent implements OnInit {
     this.savedReports = this.savedReports.map((savedReport) => (
       savedReport.ticker === report.ticker && savedReport.reportDate === report.reportDate
         ? {...savedReport, journal}
+        : savedReport
+    ));
+    this.persistSavedReports();
+  }
+
+  getSavedReportScenarios(report: SavedReport): SavedReportScenarios {
+    return this.normalizeSavedReportScenarios(report.scenarios);
+  }
+
+  getSavedReportScenarioCount(report: SavedReport): number {
+    const scenarios = this.getSavedReportScenarios(report);
+    return Object.values(scenarios).filter((entry) => entry.trim().length > 0).length;
+  }
+
+  getSavedReportScenarioPercent(report: SavedReport): number {
+    return Math.round((this.getSavedReportScenarioCount(report) / 3) * 100);
+  }
+
+  updateSavedReportScenario(report: SavedReport, key: SavedReportScenarioKey, value: string): void {
+    const scenarios = this.getSavedReportScenarios(report);
+    scenarios[key] = this.normalizeSavedReportJournalText(value);
+
+    this.savedReports = this.savedReports.map((savedReport) => (
+      savedReport.ticker === report.ticker && savedReport.reportDate === report.reportDate
+        ? {...savedReport, scenarios}
         : savedReport
     ));
     this.persistSavedReports();
@@ -4012,6 +4091,7 @@ export class ReportDateTableComponent implements OnInit {
         preparation: this.normalizeSavedReportPreparation(report.preparation),
         evidence: this.normalizeSavedReportEvidence(report.evidence),
         journal: this.normalizeSavedReportJournal(report.journal),
+        scenarios: this.normalizeSavedReportScenarios(report.scenarios),
         review: this.normalizeSavedReportReview(report.review)
       }))
       .filter((report) => report.ticker.length > 0 && report.reportDate.length > 0)
@@ -4132,6 +4212,14 @@ export class ReportDateTableComponent implements OnInit {
     };
   }
 
+  private normalizeSavedReportScenarios(scenarios?: Partial<SavedReportScenarios>): SavedReportScenarios {
+    return {
+      upside: this.normalizeSavedReportJournalText(scenarios?.upside),
+      base: this.normalizeSavedReportJournalText(scenarios?.base),
+      downside: this.normalizeSavedReportJournalText(scenarios?.downside)
+    };
+  }
+
   private normalizeSavedReportReview(review?: Partial<SavedReportReview>): SavedReportReview {
     return {
       actualMovePercent: this.normalizeSavedReportActualMove(review?.actualMovePercent),
@@ -4176,6 +4264,7 @@ export class ReportDateTableComponent implements OnInit {
 
   private getSavedReportSearchText(report: SavedReport): string {
     const journal = this.getSavedReportJournal(report);
+    const scenarios = this.getSavedReportScenarios(report);
     const review = this.getSavedReportReview(report);
 
     return [
@@ -4195,6 +4284,9 @@ export class ReportDateTableComponent implements OnInit {
       journal.thesis,
       journal.risk,
       journal.decision,
+      scenarios.upside,
+      scenarios.base,
+      scenarios.downside,
       this.getSavedReportReviewLabel(review.outcome),
       review.reaction,
       review.lesson,
