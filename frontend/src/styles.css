@@ -4940,6 +4940,105 @@ body { margin: 0;font-family: sans-serif, "Franklin Gothic Book", Verdana; }
   line-height: 1.4;
 }
 
+.saved-report-outcome-driver {
+  background: linear-gradient(135deg, #f5f8ff, #fbfdff);
+  border: 1px solid #c9d8f2;
+  border-radius: 12px;
+  margin: 1.5rem 0;
+  padding: 1.25rem;
+}
+
+.saved-report-outcome-driver__header {
+  align-items: start;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.saved-report-outcome-driver__header h3 {
+  color: #1e3e6e;
+  margin: 0;
+}
+
+.saved-report-outcome-driver__header span,
+.saved-report-outcome-driver__header strong {
+  color: #496487;
+  display: block;
+  margin-top: 0.35rem;
+}
+
+.saved-report-outcome-driver__grid {
+  display: grid;
+  gap: 0.8rem;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  margin-top: 1rem;
+}
+
+.saved-report-outcome-driver__grid article {
+  background: #fff;
+  border: 1px solid #d5e0f1;
+  border-top: 4px solid #5779ac;
+  border-radius: 9px;
+  padding: 0.9rem;
+}
+
+.saved-report-outcome-driver__grid article[data-driver='guidance'] {
+  border-top-color: #7a5caf;
+}
+
+.saved-report-outcome-driver__grid article[data-driver='margins'] {
+  border-top-color: #17846c;
+}
+
+.saved-report-outcome-driver__grid article[data-driver='demand'] {
+  border-top-color: #b87328;
+}
+
+.saved-report-outcome-driver__grid article[data-driver='valuation'] {
+  border-top-color: #b14c67;
+}
+
+.saved-report-outcome-driver__grid article[data-driver='macro'] {
+  border-top-color: #66707f;
+}
+
+.saved-report-outcome-driver__grid article > div:first-child {
+  display: flex;
+  justify-content: space-between;
+}
+
+.saved-report-outcome-driver__grid article strong {
+  color: #203e69;
+}
+
+.saved-report-outcome-driver__grid article span,
+.saved-report-outcome-driver__grid article small {
+  color: #5c6d83;
+}
+
+.saved-report-outcome-driver__metrics {
+  display: grid;
+  gap: 0.55rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 0.85rem;
+}
+
+.saved-report-outcome-driver__metrics span {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.saved-report-outcome-driver__metrics small {
+  font-size: 0.7rem;
+}
+
+.saved-report-outcome-driver__note {
+  color: #5c6d83;
+  display: block;
+  line-height: 1.4;
+  margin-top: 0.9rem;
+}
+
 @media (max-width: 560px) {
   .earnings-signal-board__header,
   .earnings-signal-board__card-header,
@@ -4985,5 +5084,15 @@ body { margin: 0;font-family: sans-serif, "Franklin Gothic Book", Verdana; }
   .saved-report-hypothesis-plan__header {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .saved-report-outcome-driver__header,
+  .saved-report-outcome-driver__grid article > div:first-child {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .saved-report-outcome-driver__metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

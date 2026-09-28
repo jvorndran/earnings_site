@@ -45,6 +45,7 @@ type SavedReportJournalKey = 'thesis' | 'risk' | 'decision';
 type SavedReportScenarioKey = 'upside' | 'base' | 'downside';
 type SavedReportScenarioFilter = 'all' | 'needsScenarios' | 'complete';
 type SavedReportReviewOutcome = 'unreviewed' | 'positive' | 'negative' | 'mixed' | 'flat';
+type SavedReportOutcomeDriver = 'unassigned' | 'results' | 'guidance' | 'margins' | 'demand' | 'valuation' | 'macro';
 type SavedReportReactionExpectation = 'unassigned' | 'positive' | 'negative' | 'muted';
 type SavedReportReviewKey = 'reaction' | 'lesson' | 'followUp';
 type PostEarningsReviewFilter = 'all' | 'needsOutcome' | 'needsNotes' | 'complete';
@@ -89,6 +90,7 @@ interface SavedReportReview {
   actualMovePercent: number | null;
   followUp: string;
   followUpComplete: boolean;
+  outcomeDriver: SavedReportOutcomeDriver;
   outcome: SavedReportReviewOutcome;
   reaction: string;
   reviewBy: string;
@@ -401,6 +403,16 @@ interface SavedReportReactionCallSummary {
   matchedCount: number;
   reportCount: number;
   resolvedCount: number;
+}
+
+interface SavedReportOutcomeDriverSummary {
+  averageMoveDifference: number | null;
+  driver: Exclude<SavedReportOutcomeDriver, 'unassigned'>;
+  driverLabel: string;
+  negativeCount: number;
+  positiveCount: number;
+  recordedOutcomeCount: number;
+  reportCount: number;
 }
 
 interface SavedReportSeasonalityReviewSummary {
@@ -742,6 +754,15 @@ export class ReportDateTableComponent implements OnInit {
     {key: 'negative', label: 'Negative reaction', detail: 'Results may trigger a downside response'},
     {key: 'muted', label: 'Muted reaction', detail: 'The response may remain contained'}
   ];
+  readonly savedReportOutcomeDrivers: Array<{key: SavedReportOutcomeDriver; label: string; detail: string}> = [
+    {key: 'unassigned', label: 'Not classified', detail: 'Record the main factor once the review is clear'},
+    {key: 'results', label: 'Results', detail: 'Reported earnings or revenue drove the reaction'},
+    {key: 'guidance', label: 'Guidance', detail: 'Forward outlook changed investor expectations'},
+    {key: 'margins', label: 'Margins', detail: 'Profitability or cost structure moved the thesis'},
+    {key: 'demand', label: 'Demand', detail: 'Volumes, bookings, or customer demand set the tone'},
+    {key: 'valuation', label: 'Valuation', detail: 'Multiple, positioning, or expectations dominated'},
+    {key: 'macro', label: 'Macro', detail: 'Rates, currencies, policy, or broad conditions dominated'}
+  ];
   readonly postEarningsReviewFilters: Array<{key: PostEarningsReviewFilter; label: string; detail: string}> = [
     {key: 'all', label: 'All past reports', detail: 'See every saved report whose date has passed.'},
     {key: 'needsOutcome', label: 'Needs outcome', detail: 'Record the initial market reaction.'},
@@ -1046,7 +1067,7 @@ export class ReportDateTableComponent implements OnInit {
     const headers = [
       'Ticker', 'Company', 'Report Date', 'Report Timing', 'Workflow Status', 'Research Playbook', 'Research Theme', 'Event Strategy', 'Research Hypothesis', 'Pre-event Reaction Call', 'Research Time (minutes)', 'Research Work Date', 'Portfolio Role', 'Conviction',
       'Implied Move (%)', 'Short Interest (%)', 'EPS Estimate', 'Market Cap', 'Risk Allocation (%)',
-      'Preparation Complete', 'Evidence Reviewed', 'Journal Fields Complete', 'Upside Scenario', 'Base Scenario', 'Downside Scenario', 'Actual Post-Earnings Move (%)', 'Review Deadline', 'Review Outcome', 'Review Reaction', 'Review Lesson',
+      'Preparation Complete', 'Evidence Reviewed', 'Journal Fields Complete', 'Upside Scenario', 'Base Scenario', 'Downside Scenario', 'Actual Post-Earnings Move (%)', 'Review Deadline', 'Review Outcome', 'Primary Outcome Driver', 'Review Reaction', 'Review Lesson',
       'Follow-through Action', 'Follow-through Complete'
     ];
     const rows = [...this.savedReports]
@@ -1084,6 +1105,7 @@ export class ReportDateTableComponent implements OnInit {
           review.actualMovePercent ?? '',
           review.reviewBy,
           this.getSavedReportReviewLabel(review.outcome),
+          this.getSavedReportOutcomeDriverLabel(review.outcomeDriver),
           review.reaction,
           review.lesson,
           review.followUp,
@@ -2174,6 +2196,36 @@ export class ReportDateTableComponent implements OnInit {
       .filter((summary) => summary.reportCount > 0);
   }
 
+  getSavedReportOutcomeDriverSummaries(): SavedReportOutcomeDriverSummary[] {
+    const pastReports = this.getPostEarningsReviewItems().map((item) => item.report);
+
+    return this.savedReportOutcomeDrivers
+      .filter((driver): driver is {key: Exclude<SavedReportOutcomeDriver, 'unassigned'>; label: string; detail: string} => driver.key !== 'unassigned')
+      .map((driver) => {
+        const reports = pastReports.filter((report) => this.getSavedReportReview(report).outcomeDriver === driver.key);
+        const actualMoveDifferences = reports
+          .map((report) => {
+            const actualMove = this.getSavedReportReview(report).actualMovePercent;
+            return actualMove === null ? null : actualMove - report.impliedMove;
+          })
+          .filter((difference): difference is number => difference !== null);
+        const outcomes = reports.map((report) => this.getSavedReportReview(report).outcome);
+
+        return {
+          averageMoveDifference: actualMoveDifferences.length > 0
+            ? Math.round((actualMoveDifferences.reduce((total, difference) => total + difference, 0) / actualMoveDifferences.length) * 10) / 10
+            : null,
+          driver: driver.key,
+          driverLabel: driver.label,
+          negativeCount: outcomes.filter((outcome) => outcome === 'negative').length,
+          positiveCount: outcomes.filter((outcome) => outcome === 'positive').length,
+          recordedOutcomeCount: outcomes.filter((outcome) => outcome !== 'unreviewed').length,
+          reportCount: reports.length
+        };
+      })
+      .filter((summary) => summary.reportCount > 0);
+  }
+
   private isSavedReportReactionCallMatched(expectation: Exclude<SavedReportReactionExpectation, 'unassigned'>, outcome: SavedReportReviewOutcome): boolean {
     return (expectation === 'positive' && outcome === 'positive') ||
       (expectation === 'negative' && outcome === 'negative') ||
@@ -2724,6 +2776,10 @@ export class ReportDateTableComponent implements OnInit {
 
   getSavedReportReactionExpectationDetail(expectation: SavedReportReactionExpectation): string {
     return this.savedReportReactionExpectations.find((item) => item.key === expectation)?.detail || 'Keep research open without a directional expectation';
+  }
+
+  getSavedReportOutcomeDriverLabel(driver: SavedReportOutcomeDriver): string {
+    return this.savedReportOutcomeDrivers.find((item) => item.key === driver)?.label || 'Not classified';
   }
 
   getSavedReportEventTiming(report: SavedReport): SavedReportEventTiming {
@@ -3389,6 +3445,15 @@ export class ReportDateTableComponent implements OnInit {
 
     this.updateSavedReportReview(report, review);
     this.savedReportMessage = `${report.ticker} post-earnings outcome set to ${this.getSavedReportReviewLabel(review.outcome)}.`;
+  }
+
+  setSavedReportOutcomeDriver(report: SavedReport, driver: SavedReportOutcomeDriver): void {
+    const review = this.getSavedReportReview(report);
+    review.outcomeDriver = this.normalizeSavedReportOutcomeDriver(driver);
+    this.updateSavedReportReview(report, review);
+    this.savedReportMessage = review.outcomeDriver === 'unassigned'
+      ? `${report.ticker} post-earnings driver cleared.`
+      : `${report.ticker} post-earnings driver set to ${this.getSavedReportOutcomeDriverLabel(review.outcomeDriver).toLowerCase()}.`;
   }
 
   setSavedReportActualMove(report: SavedReport, value: unknown): void {
@@ -4225,6 +4290,7 @@ export class ReportDateTableComponent implements OnInit {
       actualMovePercent: this.normalizeSavedReportActualMove(review?.actualMovePercent),
       followUp: this.normalizeSavedReportJournalText(review?.followUp),
       followUpComplete: review?.followUpComplete === true,
+      outcomeDriver: this.normalizeSavedReportOutcomeDriver(review?.outcomeDriver),
       outcome: this.normalizeSavedReportReviewOutcome(review?.outcome),
       reaction: this.normalizeSavedReportJournalText(review?.reaction),
       reviewBy: this.normalizeSavedReportReviewDeadline(review?.reviewBy),
@@ -4236,6 +4302,13 @@ export class ReportDateTableComponent implements OnInit {
     return outcome === 'positive' || outcome === 'negative' || outcome === 'mixed' || outcome === 'flat'
       ? outcome
       : 'unreviewed';
+  }
+
+  private normalizeSavedReportOutcomeDriver(driver: unknown): SavedReportOutcomeDriver {
+    return driver === 'results' || driver === 'guidance' || driver === 'margins' || driver === 'demand' ||
+      driver === 'valuation' || driver === 'macro'
+      ? driver
+      : 'unassigned';
   }
 
   private normalizeSavedReportActualMove(value: unknown): number | null {
@@ -4288,6 +4361,7 @@ export class ReportDateTableComponent implements OnInit {
       scenarios.base,
       scenarios.downside,
       this.getSavedReportReviewLabel(review.outcome),
+      this.getSavedReportOutcomeDriverLabel(review.outcomeDriver),
       review.reaction,
       review.lesson,
       review.followUp,
