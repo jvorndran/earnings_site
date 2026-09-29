@@ -84,6 +84,8 @@ export class CalenderItemComponent implements OnInit {
   selectedCalendarDate = 'all';
   calendarExportMessage = '';
   calendarShareMessage = '';
+  calendarShortlistMessage = '';
+  calendarShortlistLimit = 5;
   savedCalendarReports: SavedCalendarReport[] = [];
   savedCalendarReportFilter: SavedReportFilter = 'all';
   savedCalendarReportMessage = '';
@@ -580,14 +582,57 @@ export class CalenderItemComponent implements OnInit {
   }
 
   getCatalystLeaders(): CalendarCatalyst[] {
+    return this.getCalendarShortlistCandidates()
+      .slice(0, 6);
+  }
+
+  getCalendarShortlistCandidates(): CalendarCatalyst[] {
     return Object.entries(this.filteredCalenderData)
       .flatMap(([date, items]) => items.map((item) => ({
         date,
         item,
         score: this.getCatalystScore(item)
       })))
-      .sort((firstCatalyst, secondCatalyst) => secondCatalyst.score - firstCatalyst.score)
-      .slice(0, 6);
+      .sort((firstCatalyst, secondCatalyst) => (
+        secondCatalyst.score - firstCatalyst.score || firstCatalyst.date.localeCompare(secondCatalyst.date)
+      ));
+  }
+
+  saveCalendarShortlist(): void {
+    const savedKeys = new Set(this.savedCalendarReports.map((report) => (
+      `${report.ticker}:${report.reportDate}`
+    )));
+    const availableSlots = Math.max(20 - this.savedCalendarReports.length, 0);
+
+    if (availableSlots === 0) {
+      this.calendarShortlistMessage = 'Your saved earnings queue is full. Remove a report before adding another shortlist.';
+      return;
+    }
+
+    const candidates = this.getCalendarShortlistCandidates()
+      .filter((candidate) => !savedKeys.has(`${candidate.item.Ticker}:${this.formatDateRoute(candidate.date)}`))
+      .slice(0, Math.min(this.calendarShortlistLimit, availableSlots));
+
+    if (candidates.length === 0) {
+      this.calendarShortlistMessage = 'The top matching catalysts are already in your saved earnings queue.';
+      return;
+    }
+
+    const reports = candidates.map((candidate) => ({
+      ticker: candidate.item.Ticker,
+      name: candidate.item.Name,
+      reportDate: this.formatDateRoute(candidate.date),
+      estimate: Number(candidate.item.Estimate) || 0,
+      impliedMove: this.getPercentValue(candidate.item.Implied_Move),
+      shortInterest: this.getPercentValue(candidate.item.Short_Interest),
+      marketCap: candidate.item.Market_Cap,
+      status: 'research' as SavedReportStatus
+    }));
+
+    this.savedCalendarReports = [...this.savedCalendarReports, ...reports];
+    this.persistSavedCalendarReports();
+    this.calendarShortlistMessage = `${reports.length} top catalyst${reports.length === 1 ? '' : 's'} added to your saved earnings queue.`;
+    this.savedCalendarReportMessage = this.calendarShortlistMessage;
   }
 
   getCatalystScore(item: CalenderData): number {

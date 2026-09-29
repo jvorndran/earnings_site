@@ -5,6 +5,21 @@
       <span>{{getVisibleCompanyCount()}} matching companies across {{getDates(filteredCalenderData).length}} report dates</span>
     </div>
     <div class="calendar-filter-actions">
+      <label class="calendar-shortlist-control">
+        <span>Quick shortlist</span>
+        <select [(ngModel)]="calendarShortlistLimit" aria-label="Number of top catalysts to save">
+          <option [ngValue]="3">Top 3</option>
+          <option [ngValue]="5">Top 5</option>
+          <option [ngValue]="10">Top 10</option>
+        </select>
+      </label>
+      <button
+        (click)="saveCalendarShortlist()"
+        [disabled]="getCalendarShortlistCandidates().length === 0"
+        class="calendar-clear-button"
+        type="button">
+        Save top catalysts
+      </button>
       <button
         (click)="shareCalendarView()"
         class="calendar-clear-button"
@@ -27,6 +42,9 @@
   </p>
   <p *ngIf="calendarShareMessage" aria-live="polite" class="calendar-share-message">
     {{calendarShareMessage}}
+  </p>
+  <p *ngIf="calendarShortlistMessage" aria-live="polite" class="calendar-shortlist-message">
+    {{calendarShortlistMessage}}
   </p>
 
   <div class="calendar-filter-grid">
