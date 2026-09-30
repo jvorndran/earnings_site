@@ -56,6 +56,7 @@ type SavedReportReviewDeadlineFilter = 'all' | SavedReportReviewDeadline;
 type SavedReportSeason = 'q1' | 'q2' | 'q3' | 'q4';
 type SavedReportSeasonFilter = 'all' | SavedReportSeason;
 type SavedReportLessonOutcomeFilter = 'all' | Exclude<SavedReportReviewOutcome, 'unreviewed'>;
+type SavedReportCatalystStatus = 'unassigned' | 'watching' | 'confirmed' | 'invalidated';
 type SavedReportPlaybookKey = 'preEventStarter' | 'postEventStarter' | 'longTermResearch';
 type SavedReportPlaybookFilter = 'all' | SavedReportPlaybookKey;
 type SavedReportTheme = 'unassigned' | 'technology' | 'consumer' | 'financials' | 'healthcare' | 'industrials' | 'energyMaterials';
@@ -84,6 +85,12 @@ interface SavedReportScenarios {
   upside: string;
   base: string;
   downside: string;
+}
+
+interface SavedReportCatalyst {
+  checkBy: string;
+  status: SavedReportCatalystStatus;
+  trigger: string;
 }
 
 interface SavedReportReview {
@@ -238,6 +245,7 @@ interface SavedReport {
   researchBy?: string;
   role?: SavedReportRole;
   conviction?: SavedReportConviction;
+  catalyst?: Partial<SavedReportCatalyst>;
   preparation?: Partial<SavedReportPreparation>;
   evidence?: Partial<SavedReportEvidence>;
   journal?: Partial<SavedReportJournal>;
@@ -251,6 +259,12 @@ interface SavedReportFocus {
   nextAction: string;
   preparationRemaining: number;
   journalRemaining: number;
+}
+
+interface SavedReportCatalystWatchItem {
+  catalyst: SavedReportCatalyst;
+  daysUntil: number;
+  report: SavedReport;
 }
 
 interface SavedReportExposurePlan {
@@ -754,6 +768,12 @@ export class ReportDateTableComponent implements OnInit {
     {key: 'negative', label: 'Negative reaction', detail: 'Results may trigger a downside response'},
     {key: 'muted', label: 'Muted reaction', detail: 'The response may remain contained'}
   ];
+  readonly savedReportCatalystStatuses: Array<{key: SavedReportCatalystStatus; label: string; detail: string}> = [
+    {key: 'unassigned', label: 'No catalyst watch', detail: 'No pre-earnings observation is tracked yet'},
+    {key: 'watching', label: 'Watching', detail: 'Track a read-through, data point, or company update'},
+    {key: 'confirmed', label: 'Confirmed', detail: 'The catalyst supports the current research plan'},
+    {key: 'invalidated', label: 'Invalidated', detail: 'The catalyst no longer supports the planned setup'}
+  ];
   readonly savedReportOutcomeDrivers: Array<{key: SavedReportOutcomeDriver; label: string; detail: string}> = [
     {key: 'unassigned', label: 'Not classified', detail: 'Record the main factor once the review is clear'},
     {key: 'results', label: 'Results', detail: 'Reported earnings or revenue drove the reaction'},
@@ -888,6 +908,7 @@ export class ReportDateTableComponent implements OnInit {
         role: 'unassigned' as SavedReportRole,
         conviction: 'unassigned' as SavedReportConviction,
         plannedRiskPercent: 0,
+        catalyst: this.normalizeSavedReportCatalyst(),
         preparation: this.normalizeSavedReportPreparation(),
         evidence: this.normalizeSavedReportEvidence(),
         scenarios: this.normalizeSavedReportScenarios(),
@@ -979,6 +1000,7 @@ export class ReportDateTableComponent implements OnInit {
       .sort((first, second) => first.reportDate.localeCompare(second.reportDate) || first.ticker.localeCompare(second.ticker))
       .map((report) => {
         const eventDate = this.getSavedReportCalendarDate(report.reportDate);
+        const catalyst = this.getSavedReportCatalyst(report);
         const summary = `${report.ticker} earnings${report.name ? ` — ${report.name}` : ''}`;
         const description = [
           `Session: ${this.getSavedReportEventTimingLabel(this.getSavedReportEventTiming(report))}`,
@@ -986,7 +1008,8 @@ export class ReportDateTableComponent implements OnInit {
           `Hypothesis: ${this.getSavedReportHypothesisLabel(this.getSavedReportHypothesis(report))}`,
           `Implied move: ${report.impliedMove.toFixed(1)}%`,
           `Research time: ${this.getSavedReportResearchMinutes(report)} minutes`,
-          `Research session: ${this.getSavedReportResearchBy(report) || 'Not scheduled'}`
+          `Research session: ${this.getSavedReportResearchBy(report) || 'Not scheduled'}`,
+          `Catalyst watch: ${this.getSavedReportCatalystStatusLabel(catalyst.status)}${catalyst.trigger ? ` — ${catalyst.trigger}` : ''}${catalyst.checkBy ? ` · check by ${catalyst.checkBy}` : ''}`
         ].join('\\n');
 
         return [
@@ -1067,7 +1090,7 @@ export class ReportDateTableComponent implements OnInit {
     const headers = [
       'Ticker', 'Company', 'Report Date', 'Report Timing', 'Workflow Status', 'Research Playbook', 'Research Theme', 'Event Strategy', 'Research Hypothesis', 'Pre-event Reaction Call', 'Research Time (minutes)', 'Research Work Date', 'Portfolio Role', 'Conviction',
       'Implied Move (%)', 'Short Interest (%)', 'EPS Estimate', 'Market Cap', 'Risk Allocation (%)',
-      'Preparation Complete', 'Evidence Reviewed', 'Journal Fields Complete', 'Upside Scenario', 'Base Scenario', 'Downside Scenario', 'Actual Post-Earnings Move (%)', 'Review Deadline', 'Review Outcome', 'Primary Outcome Driver', 'Review Reaction', 'Review Lesson',
+      'Preparation Complete', 'Evidence Reviewed', 'Journal Fields Complete', 'Upside Scenario', 'Base Scenario', 'Downside Scenario', 'Catalyst Watch Status', 'Catalyst Trigger', 'Catalyst Check Date', 'Actual Post-Earnings Move (%)', 'Review Deadline', 'Review Outcome', 'Primary Outcome Driver', 'Review Reaction', 'Review Lesson',
       'Follow-through Action', 'Follow-through Complete'
     ];
     const rows = [...this.savedReports]
@@ -1075,6 +1098,7 @@ export class ReportDateTableComponent implements OnInit {
       .map((report) => {
         const review = this.getSavedReportReview(report);
         const scenarios = this.getSavedReportScenarios(report);
+        const catalyst = this.getSavedReportCatalyst(report);
 
         return [
           report.ticker,
@@ -1102,6 +1126,9 @@ export class ReportDateTableComponent implements OnInit {
           scenarios.upside,
           scenarios.base,
           scenarios.downside,
+          this.getSavedReportCatalystStatusLabel(catalyst.status),
+          catalyst.trigger,
+          catalyst.checkBy,
           review.actualMovePercent ?? '',
           review.reviewBy,
           this.getSavedReportReviewLabel(review.outcome),
@@ -1293,6 +1320,28 @@ export class ReportDateTableComponent implements OnInit {
       .slice(0, 3);
   }
 
+  getSavedReportCatalystWatchItems(now: Date = new Date()): SavedReportCatalystWatchItem[] {
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    return this.savedReports
+      .map((report) => ({
+        catalyst: this.getSavedReportCatalyst(report),
+        daysUntil: this.getSavedReportDaysUntil(report.reportDate, startOfToday),
+        report
+      }))
+      .filter((item): item is SavedReportCatalystWatchItem => (
+        this.getSavedReportStatus(item.report) !== 'skip' &&
+        item.daysUntil !== null &&
+        item.daysUntil >= 0 &&
+        item.catalyst.status !== 'unassigned'
+      ))
+      .sort((first, second) => (
+        (first.catalyst.checkBy || first.report.reportDate).localeCompare(second.catalyst.checkBy || second.report.reportDate) ||
+        first.report.reportDate.localeCompare(second.report.reportDate) ||
+        first.report.ticker.localeCompare(second.report.ticker)
+      ));
+  }
+
   getSavedReportReadiness(): SavedReportReadiness {
     const activeReports = this.savedReports.filter((report) => this.getSavedReportStatus(report) !== 'skip');
     const preparationStepCount = this.savedReportPreparationSteps.length;
@@ -1429,6 +1478,7 @@ export class ReportDateTableComponent implements OnInit {
     const journalCount = this.getSavedReportJournalCount(report);
     const scenarios = this.getSavedReportScenarios(report);
     const scenarioCount = this.getSavedReportScenarioCount(report);
+    const catalyst = this.getSavedReportCatalyst(report);
     const lines = [
       `${report.ticker} earnings research brief`,
       `${report.name} · ${this.formatDate(report.reportDate)} · ${countdown}`,
@@ -1455,6 +1505,9 @@ export class ReportDateTableComponent implements OnInit {
     }
     if (scenarios.downside.trim().length > 0) {
       lines.push(`Downside case: ${scenarios.downside.trim()}`);
+    }
+    if (catalyst.status !== 'unassigned') {
+      lines.push(`Catalyst watch: ${this.getSavedReportCatalystStatusLabel(catalyst.status)}${catalyst.trigger ? ` — ${catalyst.trigger}` : ''}${catalyst.checkBy ? ` · check by ${this.formatDate(catalyst.checkBy) || catalyst.checkBy}` : ''}.`);
     }
     if (review.outcome !== 'unreviewed' || review.actualMovePercent !== null || review.reaction.trim().length > 0 || review.lesson.trim().length > 0) {
       const actualMove = review.actualMovePercent === null ? 'not logged' : `${review.actualMovePercent.toFixed(1)}%`;
@@ -2830,6 +2883,68 @@ export class ReportDateTableComponent implements OnInit {
     this.persistSavedReports();
   }
 
+  getSavedReportCatalyst(report: SavedReport): SavedReportCatalyst {
+    return this.normalizeSavedReportCatalyst(report.catalyst);
+  }
+
+  getSavedReportCatalystStatusLabel(status: SavedReportCatalystStatus): string {
+    return this.savedReportCatalystStatuses.find((item) => item.key === status)?.label || 'No catalyst watch';
+  }
+
+  getSavedReportCatalystStatusDetail(status: SavedReportCatalystStatus): string {
+    return this.savedReportCatalystStatuses.find((item) => item.key === status)?.detail || 'No pre-earnings observation is tracked yet';
+  }
+
+  setSavedReportCatalystStatus(report: SavedReport, status: SavedReportCatalystStatus): void {
+    const catalyst = this.getSavedReportCatalyst(report);
+    catalyst.status = this.normalizeSavedReportCatalystStatus(status);
+
+    this.updateSavedReportCatalyst(report, catalyst);
+    this.savedReportMessage = catalyst.status === 'unassigned'
+      ? `${report.ticker} catalyst watch cleared.`
+      : `${report.ticker} catalyst watch set to ${this.getSavedReportCatalystStatusLabel(catalyst.status).toLowerCase()}.`;
+  }
+
+  updateSavedReportCatalystTrigger(report: SavedReport, value: string): void {
+    const catalyst = this.getSavedReportCatalyst(report);
+    catalyst.trigger = this.normalizeSavedReportJournalText(value);
+
+    if (catalyst.trigger && catalyst.status === 'unassigned') {
+      catalyst.status = 'watching';
+    }
+
+    this.updateSavedReportCatalyst(report, catalyst);
+  }
+
+  setSavedReportCatalystCheckBy(report: SavedReport, value: unknown): void {
+    const catalyst = this.getSavedReportCatalyst(report);
+    const checkBy = this.normalizeSavedReportReviewDeadline(value);
+
+    if (checkBy && checkBy > report.reportDate) {
+      this.savedReportMessage = `${report.ticker} catalyst check needs to be scheduled on or before its earnings date.`;
+      return;
+    }
+
+    catalyst.checkBy = checkBy;
+    if (checkBy && catalyst.status === 'unassigned') {
+      catalyst.status = 'watching';
+    }
+
+    this.updateSavedReportCatalyst(report, catalyst);
+    this.savedReportMessage = checkBy
+      ? `${report.ticker} catalyst check set for ${this.formatDate(checkBy) || checkBy}.`
+      : `${report.ticker} catalyst check date cleared.`;
+  }
+
+  private updateSavedReportCatalyst(report: SavedReport, catalyst: SavedReportCatalyst): void {
+    this.savedReports = this.savedReports.map((savedReport) => (
+      savedReport.ticker === report.ticker && savedReport.reportDate === report.reportDate
+        ? {...savedReport, catalyst}
+        : savedReport
+    ));
+    this.persistSavedReports();
+  }
+
   getSavedReportStrategyCount(strategy: SavedReportStrategy): number {
     return this.savedReports.filter((report) => this.getSavedReportStrategy(report) === strategy).length;
   }
@@ -4153,6 +4268,7 @@ export class ReportDateTableComponent implements OnInit {
         role: this.normalizeSavedReportRole(report.role),
         conviction: this.normalizeSavedReportConviction(report.conviction),
         plannedRiskPercent: this.normalizeSavedReportRiskAllocation(report.plannedRiskPercent),
+        catalyst: this.normalizeSavedReportCatalyst(report.catalyst),
         preparation: this.normalizeSavedReportPreparation(report.preparation),
         evidence: this.normalizeSavedReportEvidence(report.evidence),
         journal: this.normalizeSavedReportJournal(report.journal),
@@ -4233,6 +4349,20 @@ export class ReportDateTableComponent implements OnInit {
     return expectation === 'positive' || expectation === 'negative' || expectation === 'muted'
       ? expectation
       : 'unassigned';
+  }
+
+  private normalizeSavedReportCatalystStatus(status: unknown): SavedReportCatalystStatus {
+    return status === 'watching' || status === 'confirmed' || status === 'invalidated'
+      ? status
+      : 'unassigned';
+  }
+
+  private normalizeSavedReportCatalyst(catalyst?: Partial<SavedReportCatalyst>): SavedReportCatalyst {
+    return {
+      checkBy: this.normalizeSavedReportReviewDeadline(catalyst?.checkBy),
+      status: this.normalizeSavedReportCatalystStatus(catalyst?.status),
+      trigger: this.normalizeSavedReportJournalText(catalyst?.trigger)
+    };
   }
 
   private normalizeSavedReportRole(role: unknown): SavedReportRole {
@@ -4339,6 +4469,7 @@ export class ReportDateTableComponent implements OnInit {
     const journal = this.getSavedReportJournal(report);
     const scenarios = this.getSavedReportScenarios(report);
     const review = this.getSavedReportReview(report);
+    const catalyst = this.getSavedReportCatalyst(report);
 
     return [
       report.ticker,
@@ -4354,6 +4485,9 @@ export class ReportDateTableComponent implements OnInit {
       this.getSavedReportReactionExpectationLabel(this.getSavedReportReactionExpectation(report)),
       this.getSavedReportPlaybookLabel(this.getSavedReportPlaybook(report)),
       this.getSavedReportResearchBy(report),
+      this.getSavedReportCatalystStatusLabel(catalyst.status),
+      catalyst.trigger,
+      catalyst.checkBy,
       journal.thesis,
       journal.risk,
       journal.decision,

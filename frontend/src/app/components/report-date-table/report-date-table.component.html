@@ -641,6 +641,31 @@
     </div>
   </section>
 
+  <section *ngIf="getSavedReportCatalystWatchItems().length > 0" class="saved-report-catalyst-watch" aria-labelledby="saved-report-catalyst-watch-title">
+    <div class="saved-report-catalyst-watch__header">
+      <div>
+        <h3 id="saved-report-catalyst-watch-title">Pre-earnings Catalyst Watch</h3>
+        <span>Keep scheduled read-throughs, data points, and company updates visible before each report.</span>
+      </div>
+      <strong>{{getSavedReportCatalystWatchItems().length}} active watch{{getSavedReportCatalystWatchItems().length === 1 ? '' : 'es'}}</strong>
+    </div>
+    <div class="saved-report-catalyst-watch__grid">
+      <a
+        *ngFor="let item of getSavedReportCatalystWatchItems()"
+        [attr.data-status]="item.catalyst.status"
+        [routerLink]="['/', item.report.reportDate, item.report.ticker]"
+        class="saved-report-catalyst-watch__item">
+        <div>
+          <span>{{formatDate(item.report.reportDate)}} · {{formatSavedReportCountdown(item.daysUntil)}}</span>
+          <strong>{{item.report.ticker}}</strong>
+          <small>{{getSavedReportCatalystStatusLabel(item.catalyst.status)}}{{item.catalyst.checkBy ? ' · check ' + (formatDate(item.catalyst.checkBy) || item.catalyst.checkBy) : ''}}</small>
+        </div>
+        <p>{{item.catalyst.trigger || 'No catalyst detail recorded yet — add the event or read-through to make this watch actionable.'}}</p>
+      </a>
+    </div>
+    <small class="saved-report-catalyst-watch__note">Catalyst watches are personal research prompts stored in this browser; they do not predict earnings results or recommend a trade.</small>
+  </section>
+
   <div class="saved-report-search">
     <label>
       <span>Search saved research, workflow, and notes</span>
@@ -2082,6 +2107,33 @@
             <option *ngFor="let expectation of savedReportReactionExpectations" [ngValue]="expectation.key">{{expectation.label}}</option>
           </select>
           <small>{{getSavedReportReactionExpectationDetail(getSavedReportReactionExpectation(report))}}</small>
+        </label>
+        <label>
+          <span>Catalyst watch</span>
+          <select
+            (ngModelChange)="setSavedReportCatalystStatus(report, $event)"
+            [ngModel]="getSavedReportCatalyst(report).status">
+            <option *ngFor="let status of savedReportCatalystStatuses" [ngValue]="status.key">{{status.label}}</option>
+          </select>
+          <small>{{getSavedReportCatalystStatusDetail(getSavedReportCatalyst(report).status)}}</small>
+        </label>
+        <label>
+          <span>Key catalyst or read-through</span>
+          <textarea
+            (ngModelChange)="updateSavedReportCatalystTrigger(report, $event)"
+            [ngModel]="getSavedReportCatalyst(report).trigger"
+            maxlength="280"
+            placeholder="What data point, company update, or peer event should change the research?"
+            rows="2"></textarea>
+        </label>
+        <label>
+          <span>Catalyst check date</span>
+          <input
+            (ngModelChange)="setSavedReportCatalystCheckBy(report, $event)"
+            [ngModel]="getSavedReportCatalyst(report).checkBy"
+            aria-label="Catalyst check date"
+            type="date">
+          <small>Schedule the check on or before earnings.</small>
         </label>
         <label>
           <span>Preparation</span>
