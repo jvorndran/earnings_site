@@ -57,6 +57,8 @@ type SavedReportSeason = 'q1' | 'q2' | 'q3' | 'q4';
 type SavedReportSeasonFilter = 'all' | SavedReportSeason;
 type SavedReportLessonOutcomeFilter = 'all' | Exclude<SavedReportReviewOutcome, 'unreviewed'>;
 type SavedReportCatalystStatus = 'unassigned' | 'watching' | 'confirmed' | 'invalidated';
+type SavedReportSourceKind = 'unassigned' | 'earningsRelease' | 'filing' | 'callTranscript' | 'investorPresentation' | 'peerReadThrough' | 'industryData';
+type SavedReportSourceFilter = 'all' | 'needsSource' | 'needsReview' | 'covered';
 type SavedReportPlaybookKey = 'preEventStarter' | 'postEventStarter' | 'longTermResearch';
 type SavedReportPlaybookFilter = 'all' | SavedReportPlaybookKey;
 type SavedReportTheme = 'unassigned' | 'technology' | 'consumer' | 'financials' | 'healthcare' | 'industrials' | 'energyMaterials';
@@ -91,6 +93,13 @@ interface SavedReportCatalyst {
   checkBy: string;
   status: SavedReportCatalystStatus;
   trigger: string;
+}
+
+interface SavedReportSource {
+  kind: SavedReportSourceKind;
+  note: string;
+  reviewedOn: string;
+  url: string;
 }
 
 interface SavedReportReview {
@@ -246,6 +255,7 @@ interface SavedReport {
   role?: SavedReportRole;
   conviction?: SavedReportConviction;
   catalyst?: Partial<SavedReportCatalyst>;
+  source?: Partial<SavedReportSource>;
   preparation?: Partial<SavedReportPreparation>;
   evidence?: Partial<SavedReportEvidence>;
   journal?: Partial<SavedReportJournal>;
@@ -627,6 +637,7 @@ export class ReportDateTableComponent implements OnInit {
   savedReportResearchLaneFilter: SavedReportResearchLane = 'all';
   savedReportEvidenceFilter: SavedReportEvidenceFilter = 'all';
   savedReportScenarioFilter: SavedReportScenarioFilter = 'all';
+  savedReportSourceFilter: SavedReportSourceFilter = 'all';
   savedReportSearchText = '';
   postEarningsReviewFilter: PostEarningsReviewFilter = 'all';
   savedReportReviewCadenceFilter: SavedReportReviewCadenceFilter = 'all';
@@ -774,6 +785,21 @@ export class ReportDateTableComponent implements OnInit {
     {key: 'confirmed', label: 'Confirmed', detail: 'The catalyst supports the current research plan'},
     {key: 'invalidated', label: 'Invalidated', detail: 'The catalyst no longer supports the planned setup'}
   ];
+  readonly savedReportSources: Array<{key: SavedReportSourceKind; label: string; detail: string}> = [
+    {key: 'unassigned', label: 'No source logged', detail: 'Add the primary evidence source that supports this earnings research.'},
+    {key: 'earningsRelease', label: 'Earnings release', detail: 'Company results, shareholder letter, or earnings press release.'},
+    {key: 'filing', label: 'SEC filing', detail: '10-Q, 10-K, 8-K, proxy, or another regulatory filing.'},
+    {key: 'callTranscript', label: 'Call transcript', detail: 'Management commentary or Q&A from an earnings call.'},
+    {key: 'investorPresentation', label: 'Investor presentation', detail: 'Slides, investor day materials, or company presentation.'},
+    {key: 'peerReadThrough', label: 'Peer read-through', detail: 'A comparable company event that informs the setup.'},
+    {key: 'industryData', label: 'Industry data', detail: 'An independent data point, survey, or market report.'}
+  ];
+  readonly savedReportSourceFilters: Array<{key: SavedReportSourceFilter; label: string; detail: string}> = [
+    {key: 'all', label: 'All saved reports', detail: 'Full research shortlist'},
+    {key: 'needsSource', label: 'No source', detail: 'No primary evidence source is identified yet'},
+    {key: 'needsReview', label: 'Needs review', detail: 'A source is identified but lacks a reference or review date'},
+    {key: 'covered', label: 'Source covered', detail: 'A source, reference, and review date are recorded'}
+  ];
   readonly savedReportOutcomeDrivers: Array<{key: SavedReportOutcomeDriver; label: string; detail: string}> = [
     {key: 'unassigned', label: 'Not classified', detail: 'Record the main factor once the review is clear'},
     {key: 'results', label: 'Results', detail: 'Reported earnings or revenue drove the reaction'},
@@ -909,6 +935,7 @@ export class ReportDateTableComponent implements OnInit {
         conviction: 'unassigned' as SavedReportConviction,
         plannedRiskPercent: 0,
         catalyst: this.normalizeSavedReportCatalyst(),
+        source: this.normalizeSavedReportSource(),
         preparation: this.normalizeSavedReportPreparation(),
         evidence: this.normalizeSavedReportEvidence(),
         scenarios: this.normalizeSavedReportScenarios(),
@@ -923,6 +950,7 @@ export class ReportDateTableComponent implements OnInit {
       this.savedReportResearchLaneFilter = 'all';
       this.savedReportEvidenceFilter = 'all';
       this.savedReportScenarioFilter = 'all';
+      this.savedReportSourceFilter = 'all';
       this.savedReportReviewCadenceFilter = 'all';
       this.savedReportReviewDeadlineFilter = 'all';
       this.savedReportPlaybookFilter = 'all';
@@ -953,6 +981,7 @@ export class ReportDateTableComponent implements OnInit {
     this.savedReportResearchLaneFilter = 'all';
     this.savedReportEvidenceFilter = 'all';
     this.savedReportScenarioFilter = 'all';
+    this.savedReportSourceFilter = 'all';
     this.savedReportReviewCadenceFilter = 'all';
     this.savedReportReviewDeadlineFilter = 'all';
     this.savedReportPlaybookFilter = 'all';
@@ -1001,6 +1030,7 @@ export class ReportDateTableComponent implements OnInit {
       .map((report) => {
         const eventDate = this.getSavedReportCalendarDate(report.reportDate);
         const catalyst = this.getSavedReportCatalyst(report);
+        const source = this.getSavedReportSource(report);
         const summary = `${report.ticker} earnings${report.name ? ` — ${report.name}` : ''}`;
         const description = [
           `Session: ${this.getSavedReportEventTimingLabel(this.getSavedReportEventTiming(report))}`,
@@ -1009,7 +1039,8 @@ export class ReportDateTableComponent implements OnInit {
           `Implied move: ${report.impliedMove.toFixed(1)}%`,
           `Research time: ${this.getSavedReportResearchMinutes(report)} minutes`,
           `Research session: ${this.getSavedReportResearchBy(report) || 'Not scheduled'}`,
-          `Catalyst watch: ${this.getSavedReportCatalystStatusLabel(catalyst.status)}${catalyst.trigger ? ` — ${catalyst.trigger}` : ''}${catalyst.checkBy ? ` · check by ${catalyst.checkBy}` : ''}`
+          `Catalyst watch: ${this.getSavedReportCatalystStatusLabel(catalyst.status)}${catalyst.trigger ? ` — ${catalyst.trigger}` : ''}${catalyst.checkBy ? ` · check by ${catalyst.checkBy}` : ''}`,
+          `Research source: ${this.getSavedReportSourceLabel(source.kind)}${source.reviewedOn ? ` · reviewed ${source.reviewedOn}` : ''}${source.url ? ` · ${source.url}` : ''}${source.note ? ` — ${source.note}` : ''}`
         ].join('\\n');
 
         return [
@@ -1091,7 +1122,7 @@ export class ReportDateTableComponent implements OnInit {
       'Ticker', 'Company', 'Report Date', 'Report Timing', 'Workflow Status', 'Research Playbook', 'Research Theme', 'Event Strategy', 'Research Hypothesis', 'Pre-event Reaction Call', 'Research Time (minutes)', 'Research Work Date', 'Portfolio Role', 'Conviction',
       'Implied Move (%)', 'Short Interest (%)', 'EPS Estimate', 'Market Cap', 'Risk Allocation (%)',
       'Preparation Complete', 'Evidence Reviewed', 'Journal Fields Complete', 'Upside Scenario', 'Base Scenario', 'Downside Scenario', 'Catalyst Watch Status', 'Catalyst Trigger', 'Catalyst Check Date', 'Actual Post-Earnings Move (%)', 'Review Deadline', 'Review Outcome', 'Primary Outcome Driver', 'Review Reaction', 'Review Lesson',
-      'Follow-through Action', 'Follow-through Complete'
+      'Follow-through Action', 'Follow-through Complete', 'Research Source', 'Source URL', 'Source Note', 'Source Reviewed On'
     ];
     const rows = [...this.savedReports]
       .sort((first, second) => first.reportDate.localeCompare(second.reportDate) || first.ticker.localeCompare(second.ticker))
@@ -1099,6 +1130,7 @@ export class ReportDateTableComponent implements OnInit {
         const review = this.getSavedReportReview(report);
         const scenarios = this.getSavedReportScenarios(report);
         const catalyst = this.getSavedReportCatalyst(report);
+        const source = this.getSavedReportSource(report);
 
         return [
           report.ticker,
@@ -1137,6 +1169,10 @@ export class ReportDateTableComponent implements OnInit {
           review.lesson,
           review.followUp,
           review.followUpComplete ? 'Complete' : 'Open',
+          this.getSavedReportSourceLabel(source.kind),
+          source.url,
+          source.note,
+          source.reviewedOn,
         ];
       });
     const csv = [headers, ...rows]
@@ -1188,6 +1224,7 @@ export class ReportDateTableComponent implements OnInit {
         this.savedReportResearchLaneFilter = 'all';
         this.savedReportEvidenceFilter = 'all';
         this.savedReportScenarioFilter = 'all';
+        this.savedReportSourceFilter = 'all';
         this.savedReportReviewCadenceFilter = 'all';
         this.savedReportReviewDeadlineFilter = 'all';
         this.savedReportPlaybookFilter = 'all';
@@ -1222,6 +1259,7 @@ export class ReportDateTableComponent implements OnInit {
       this.matchesSavedReportResearchLane(report, this.savedReportResearchLaneFilter) &&
       this.matchesSavedReportEvidenceFilter(report, this.savedReportEvidenceFilter) &&
       this.matchesSavedReportScenarioFilter(report, this.savedReportScenarioFilter) &&
+      this.matchesSavedReportSourceFilter(report, this.savedReportSourceFilter) &&
       (normalizedSearch.length === 0 || this.getSavedReportSearchText(report).includes(normalizedSearch))
     ));
   }
@@ -1287,6 +1325,7 @@ export class ReportDateTableComponent implements OnInit {
     this.savedReportResearchLaneFilter = 'all';
     this.savedReportEvidenceFilter = 'all';
     this.savedReportScenarioFilter = 'all';
+    this.savedReportSourceFilter = 'all';
     this.savedReportThemeFilter = 'all';
     this.savedReportHypothesisFilter = 'all';
     this.savedReportSearchText = ticker;
@@ -1479,6 +1518,7 @@ export class ReportDateTableComponent implements OnInit {
     const scenarios = this.getSavedReportScenarios(report);
     const scenarioCount = this.getSavedReportScenarioCount(report);
     const catalyst = this.getSavedReportCatalyst(report);
+    const source = this.getSavedReportSource(report);
     const lines = [
       `${report.ticker} earnings research brief`,
       `${report.name} · ${this.formatDate(report.reportDate)} · ${countdown}`,
@@ -1508,6 +1548,9 @@ export class ReportDateTableComponent implements OnInit {
     }
     if (catalyst.status !== 'unassigned') {
       lines.push(`Catalyst watch: ${this.getSavedReportCatalystStatusLabel(catalyst.status)}${catalyst.trigger ? ` — ${catalyst.trigger}` : ''}${catalyst.checkBy ? ` · check by ${this.formatDate(catalyst.checkBy) || catalyst.checkBy}` : ''}.`);
+    }
+    if (source.kind !== 'unassigned') {
+      lines.push(`Research source: ${this.getSavedReportSourceLabel(source.kind)}${source.reviewedOn ? ` · reviewed ${this.formatDate(source.reviewedOn) || source.reviewedOn}` : ''}${source.url ? ` · ${source.url}` : ''}${source.note ? ` — ${source.note}` : ''}.`);
     }
     if (review.outcome !== 'unreviewed' || review.actualMovePercent !== null || review.reaction.trim().length > 0 || review.lesson.trim().length > 0) {
       const actualMove = review.actualMovePercent === null ? 'not logged' : `${review.actualMovePercent.toFixed(1)}%`;
@@ -2887,6 +2930,71 @@ export class ReportDateTableComponent implements OnInit {
     return this.normalizeSavedReportCatalyst(report.catalyst);
   }
 
+  getSavedReportSource(report: SavedReport): SavedReportSource {
+    return this.normalizeSavedReportSource(report.source);
+  }
+
+  getSavedReportSourceLabel(kind: SavedReportSourceKind): string {
+    return this.savedReportSources.find((item) => item.key === kind)?.label || 'No source logged';
+  }
+
+  getSavedReportSourceDetail(kind: SavedReportSourceKind): string {
+    return this.savedReportSources.find((item) => item.key === kind)?.detail || 'Add the primary evidence source that supports this earnings research.';
+  }
+
+  isSavedReportSourceComplete(report: SavedReport): boolean {
+    const source = this.getSavedReportSource(report);
+    return source.kind !== 'unassigned' && source.reviewedOn.length > 0 && (source.url.length > 0 || source.note.length > 0);
+  }
+
+  setSavedReportSourceKind(report: SavedReport, kind: SavedReportSourceKind): void {
+    const source = this.getSavedReportSource(report);
+    source.kind = this.normalizeSavedReportSourceKind(kind);
+    this.updateSavedReportSource(report, source);
+    this.savedReportMessage = source.kind === 'unassigned'
+      ? `${report.ticker} source classification cleared.`
+      : `${report.ticker} source set to ${this.getSavedReportSourceLabel(source.kind).toLowerCase()}.`;
+  }
+
+  setSavedReportSourceUrl(report: SavedReport, value: unknown): void {
+    const rawValue = typeof value === 'string' ? value.trim() : '';
+    const source = this.getSavedReportSource(report);
+    const url = this.normalizeSavedReportSourceUrl(rawValue);
+
+    if (rawValue.length > 0 && url.length === 0) {
+      this.savedReportMessage = 'Research source links must use a valid http:// or https:// address.';
+      return;
+    }
+
+    source.url = url;
+    this.updateSavedReportSource(report, source);
+    this.savedReportMessage = url ? `${report.ticker} source link saved.` : `${report.ticker} source link cleared.`;
+  }
+
+  updateSavedReportSourceNote(report: SavedReport, value: string): void {
+    const source = this.getSavedReportSource(report);
+    source.note = this.normalizeSavedReportJournalText(value);
+    this.updateSavedReportSource(report, source);
+  }
+
+  setSavedReportSourceReviewedOn(report: SavedReport, value: unknown): void {
+    const source = this.getSavedReportSource(report);
+    source.reviewedOn = this.normalizeSavedReportReviewDeadline(value);
+    this.updateSavedReportSource(report, source);
+    this.savedReportMessage = source.reviewedOn
+      ? `${report.ticker} source review recorded for ${this.formatDate(source.reviewedOn) || source.reviewedOn}.`
+      : `${report.ticker} source review date cleared.`;
+  }
+
+  private updateSavedReportSource(report: SavedReport, source: SavedReportSource): void {
+    this.savedReports = this.savedReports.map((savedReport) => (
+      savedReport.ticker === report.ticker && savedReport.reportDate === report.reportDate
+        ? {...savedReport, source}
+        : savedReport
+    ));
+    this.persistSavedReports();
+  }
+
   getSavedReportCatalystStatusLabel(status: SavedReportCatalystStatus): string {
     return this.savedReportCatalystStatuses.find((item) => item.key === status)?.label || 'No catalyst watch';
   }
@@ -3006,6 +3114,7 @@ export class ReportDateTableComponent implements OnInit {
     this.savedReportResearchLaneFilter = 'all';
     this.savedReportEvidenceFilter = 'all';
     this.savedReportScenarioFilter = 'all';
+    this.savedReportSourceFilter = 'all';
     this.savedReportThemeFilter = 'all';
     this.savedReportSearchText = '';
     this.savedReportMessage = `${this.getSavedReportRoleLabel(role)} / ${this.getSavedReportConvictionLabel(conviction)} is now in view.`;
@@ -3033,6 +3142,14 @@ export class ReportDateTableComponent implements OnInit {
 
   getSavedReportScenarioFilterCount(filter: SavedReportScenarioFilter): number {
     return this.savedReports.filter((report) => this.matchesSavedReportScenarioFilter(report, filter)).length;
+  }
+
+  setSavedReportSourceFilter(filter: SavedReportSourceFilter): void {
+    this.savedReportSourceFilter = filter;
+  }
+
+  getSavedReportSourceFilterCount(filter: SavedReportSourceFilter): number {
+    return this.savedReports.filter((report) => this.matchesSavedReportSourceFilter(report, filter)).length;
   }
 
   getSavedReportResearchLaneCount(lane: Exclude<SavedReportResearchLane, 'all'>): number {
@@ -3116,6 +3233,20 @@ export class ReportDateTableComponent implements OnInit {
 
     const isComplete = this.getSavedReportScenarioCount(report) === 3;
     return filter === 'complete' ? isComplete : !isComplete;
+  }
+
+  private matchesSavedReportSourceFilter(report: SavedReport, filter: SavedReportSourceFilter): boolean {
+    if (filter === 'all') {
+      return true;
+    }
+
+    const source = this.getSavedReportSource(report);
+    if (filter === 'needsSource') {
+      return source.kind === 'unassigned';
+    }
+
+    const isComplete = this.isSavedReportSourceComplete(report);
+    return filter === 'covered' ? isComplete : source.kind !== 'unassigned' && !isComplete;
   }
 
   setSavedReportConviction(report: SavedReport, conviction: SavedReportConviction): void {
@@ -4269,6 +4400,7 @@ export class ReportDateTableComponent implements OnInit {
         conviction: this.normalizeSavedReportConviction(report.conviction),
         plannedRiskPercent: this.normalizeSavedReportRiskAllocation(report.plannedRiskPercent),
         catalyst: this.normalizeSavedReportCatalyst(report.catalyst),
+        source: this.normalizeSavedReportSource(report.source),
         preparation: this.normalizeSavedReportPreparation(report.preparation),
         evidence: this.normalizeSavedReportEvidence(report.evidence),
         journal: this.normalizeSavedReportJournal(report.journal),
@@ -4363,6 +4495,35 @@ export class ReportDateTableComponent implements OnInit {
       status: this.normalizeSavedReportCatalystStatus(catalyst?.status),
       trigger: this.normalizeSavedReportJournalText(catalyst?.trigger)
     };
+  }
+
+  private normalizeSavedReportSourceKind(kind: unknown): SavedReportSourceKind {
+    return kind === 'earningsRelease' || kind === 'filing' || kind === 'callTranscript' || kind === 'investorPresentation' ||
+      kind === 'peerReadThrough' || kind === 'industryData'
+      ? kind
+      : 'unassigned';
+  }
+
+  private normalizeSavedReportSource(source?: Partial<SavedReportSource>): SavedReportSource {
+    return {
+      kind: this.normalizeSavedReportSourceKind(source?.kind),
+      note: this.normalizeSavedReportJournalText(source?.note),
+      reviewedOn: this.normalizeSavedReportReviewDeadline(source?.reviewedOn),
+      url: this.normalizeSavedReportSourceUrl(source?.url)
+    };
+  }
+
+  private normalizeSavedReportSourceUrl(value: unknown): string {
+    if (typeof value !== 'string' || value.trim().length === 0) {
+      return '';
+    }
+
+    try {
+      const url = new URL(value.trim());
+      return url.protocol === 'https:' || url.protocol === 'http:' ? url.toString() : '';
+    } catch (error) {
+      return '';
+    }
   }
 
   private normalizeSavedReportRole(role: unknown): SavedReportRole {
@@ -4470,6 +4631,7 @@ export class ReportDateTableComponent implements OnInit {
     const scenarios = this.getSavedReportScenarios(report);
     const review = this.getSavedReportReview(report);
     const catalyst = this.getSavedReportCatalyst(report);
+    const source = this.getSavedReportSource(report);
 
     return [
       report.ticker,
@@ -4488,6 +4650,10 @@ export class ReportDateTableComponent implements OnInit {
       this.getSavedReportCatalystStatusLabel(catalyst.status),
       catalyst.trigger,
       catalyst.checkBy,
+      this.getSavedReportSourceLabel(source.kind),
+      source.url,
+      source.note,
+      source.reviewedOn,
       journal.thesis,
       journal.risk,
       journal.decision,

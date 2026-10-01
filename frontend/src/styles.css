@@ -2272,6 +2272,51 @@ body { margin: 0;font-family: sans-serif, "Franklin Gothic Book", Verdana; }
   border-color: #0ea5e9;
 }
 
+.saved-report-source-log {
+  border-color: #bfdbfe;
+  background: #f0f7ff;
+}
+
+.saved-report-source-log .saved-report-journal-header strong {
+  border-radius: 999px;
+  background: #dbeafe;
+  color: #1d4ed8;
+  font-size: 0.68rem;
+  padding: 0.25rem 0.45rem;
+  text-transform: uppercase;
+}
+
+.saved-report-source-log select,
+.saved-report-source-log input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #bfdbfe;
+  border-radius: 7px;
+  background: #fff;
+  color: #0f172a;
+  font: inherit;
+  min-height: 2.35rem;
+  padding: 0 0.6rem;
+}
+
+.saved-report-source-log select:focus,
+.saved-report-source-log input:focus {
+  outline: 2px solid #7dd3fc;
+  outline-offset: 1px;
+  border-color: #0ea5e9;
+}
+
+.saved-report-source-log label > a {
+  color: #1d4ed8;
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.saved-report-source-log label > a:hover {
+  text-decoration: underline;
+}
+
 .saved-report-readiness {
   display: grid;
   gap: 16px;
