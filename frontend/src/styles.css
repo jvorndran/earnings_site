@@ -5225,8 +5225,102 @@ body { margin: 0;font-family: sans-serif, "Franklin Gothic Book", Verdana; }
   font-size: 0.75rem;
 }
 
+/* Earnings read-through map */
+.saved-report-read-through {
+  margin: 1.2rem 0;
+  padding: 1rem;
+  border: 1px solid #b8d9cf;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #f3fbf8, #fbfefd);
+}
+
+.saved-report-read-through__header,
+.saved-report-read-through__primary,
+.saved-report-read-through__links a {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.saved-report-read-through__header h3 {
+  margin: 0;
+  color: #1b725c;
+}
+
+.saved-report-read-through__header span,
+.saved-report-read-through__header > strong,
+.saved-report-read-through__primary span,
+.saved-report-read-through__links span,
+.saved-report-read-through__note {
+  color: #4d736a;
+}
+
+.saved-report-read-through__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(255px, 1fr));
+  gap: 0.7rem;
+  margin-top: 0.9rem;
+}
+
+.saved-report-read-through__grid article {
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.8rem;
+  border: 1px solid #b8d9cf;
+  border-left: 4px solid #32977b;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.saved-report-read-through__primary a,
+.saved-report-read-through__links a {
+  color: #1c6d58;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.saved-report-read-through__primary a:hover,
+.saved-report-read-through__links a:hover {
+  text-decoration: underline;
+}
+
+.saved-report-read-through__links {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.saved-report-read-through__links a {
+  padding: 0.45rem 0.55rem;
+  border-radius: 4px;
+  background: #edf8f4;
+}
+
+.saved-report-read-through__links a strong {
+  color: #265f51;
+}
+
+.saved-report-read-through__grid p {
+  margin: 0;
+  color: #50675f;
+  line-height: 1.4;
+}
+
+.saved-report-read-through__note {
+  display: block;
+  margin-top: 0.85rem;
+  font-size: 0.75rem;
+}
+
+.saved-report-read-through-control select {
+  min-height: 7.25rem;
+}
+
 @media (max-width: 560px) {
-  .saved-report-catalyst-watch__header {
+  .saved-report-catalyst-watch__header,
+  .saved-report-read-through__header,
+  .saved-report-read-through__primary,
+  .saved-report-read-through__links a {
     align-items: stretch;
     flex-direction: column;
   }

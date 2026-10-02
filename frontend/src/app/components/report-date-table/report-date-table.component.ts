@@ -252,6 +252,7 @@ interface SavedReport {
   hypothesis?: SavedReportHypothesis;
   researchMinutes?: number;
   researchBy?: string;
+  readThroughTickers?: string[];
   role?: SavedReportRole;
   conviction?: SavedReportConviction;
   catalyst?: Partial<SavedReportCatalyst>;
@@ -275,6 +276,12 @@ interface SavedReportCatalystWatchItem {
   catalyst: SavedReportCatalyst;
   daysUntil: number;
   report: SavedReport;
+}
+
+interface SavedReportReadThroughItem {
+  linkedReports: SavedReport[];
+  report: SavedReport;
+  untrackedTickers: string[];
 }
 
 interface SavedReportExposurePlan {
@@ -931,6 +938,7 @@ export class ReportDateTableComponent implements OnInit {
         hypothesis: 'unassigned' as SavedReportHypothesis,
         researchMinutes: 0,
         researchBy: '',
+        readThroughTickers: [],
         role: 'unassigned' as SavedReportRole,
         conviction: 'unassigned' as SavedReportConviction,
         plannedRiskPercent: 0,
@@ -1040,7 +1048,8 @@ export class ReportDateTableComponent implements OnInit {
           `Research time: ${this.getSavedReportResearchMinutes(report)} minutes`,
           `Research session: ${this.getSavedReportResearchBy(report) || 'Not scheduled'}`,
           `Catalyst watch: ${this.getSavedReportCatalystStatusLabel(catalyst.status)}${catalyst.trigger ? ` — ${catalyst.trigger}` : ''}${catalyst.checkBy ? ` · check by ${catalyst.checkBy}` : ''}`,
-          `Research source: ${this.getSavedReportSourceLabel(source.kind)}${source.reviewedOn ? ` · reviewed ${source.reviewedOn}` : ''}${source.url ? ` · ${source.url}` : ''}${source.note ? ` — ${source.note}` : ''}`
+          `Research source: ${this.getSavedReportSourceLabel(source.kind)}${source.reviewedOn ? ` · reviewed ${source.reviewedOn}` : ''}${source.url ? ` · ${source.url}` : ''}${source.note ? ` — ${source.note}` : ''}`,
+          `Earnings read-throughs: ${this.getSavedReportReadThroughTickers(report).join(', ') || 'None linked'}`
         ].join('\\n');
 
         return [
@@ -1085,7 +1094,8 @@ export class ReportDateTableComponent implements OnInit {
         `Earnings date: ${this.formatDate(report.reportDate) || report.reportDate}`,
         `Event session: ${this.getSavedReportEventTimingLabel(this.getSavedReportEventTiming(report))}`,
         `Strategy: ${this.getSavedReportStrategyLabel(this.getSavedReportStrategy(report))}`,
-        `Hypothesis: ${this.getSavedReportHypothesisLabel(this.getSavedReportHypothesis(report))}`
+        `Hypothesis: ${this.getSavedReportHypothesisLabel(this.getSavedReportHypothesis(report))}`,
+        `Earnings read-throughs: ${this.getSavedReportReadThroughTickers(report).join(', ') || 'None linked'}`
       ].join('\\n');
 
       return [
@@ -1122,7 +1132,7 @@ export class ReportDateTableComponent implements OnInit {
       'Ticker', 'Company', 'Report Date', 'Report Timing', 'Workflow Status', 'Research Playbook', 'Research Theme', 'Event Strategy', 'Research Hypothesis', 'Pre-event Reaction Call', 'Research Time (minutes)', 'Research Work Date', 'Portfolio Role', 'Conviction',
       'Implied Move (%)', 'Short Interest (%)', 'EPS Estimate', 'Market Cap', 'Risk Allocation (%)',
       'Preparation Complete', 'Evidence Reviewed', 'Journal Fields Complete', 'Upside Scenario', 'Base Scenario', 'Downside Scenario', 'Catalyst Watch Status', 'Catalyst Trigger', 'Catalyst Check Date', 'Actual Post-Earnings Move (%)', 'Review Deadline', 'Review Outcome', 'Primary Outcome Driver', 'Review Reaction', 'Review Lesson',
-      'Follow-through Action', 'Follow-through Complete', 'Research Source', 'Source URL', 'Source Note', 'Source Reviewed On'
+      'Follow-through Action', 'Follow-through Complete', 'Research Source', 'Source URL', 'Source Note', 'Source Reviewed On', 'Earnings Read-throughs'
     ];
     const rows = [...this.savedReports]
       .sort((first, second) => first.reportDate.localeCompare(second.reportDate) || first.ticker.localeCompare(second.ticker))
@@ -1173,6 +1183,7 @@ export class ReportDateTableComponent implements OnInit {
           source.url,
           source.note,
           source.reviewedOn,
+          this.getSavedReportReadThroughTickers(report).join(', '),
         ];
       });
     const csv = [headers, ...rows]
@@ -1381,6 +1392,63 @@ export class ReportDateTableComponent implements OnInit {
       ));
   }
 
+  getSavedReportReadThroughOptions(report: SavedReport): SavedReport[] {
+    const seenTickers = new Set<string>();
+
+    return this.savedReports
+      .filter((candidate) => candidate.ticker !== report.ticker)
+      .filter((candidate) => {
+        const ticker = candidate.ticker.trim().toUpperCase();
+        if (seenTickers.has(ticker)) {
+          return false;
+        }
+
+        seenTickers.add(ticker);
+        return true;
+      })
+      .sort((left, right) => left.ticker.localeCompare(right.ticker));
+  }
+
+  getSavedReportReadThroughTickers(report: SavedReport): string[] {
+    return this.normalizeSavedReportReadThroughTickers(report.readThroughTickers, report.ticker);
+  }
+
+  setSavedReportReadThroughTickers(report: SavedReport, event: Event): void {
+    const select = event.target as HTMLSelectElement;
+    const tickers = Array.from(select.selectedOptions).map((option) => option.value);
+    const readThroughTickers = this.normalizeSavedReportReadThroughTickers(tickers, report.ticker);
+
+    this.savedReports = this.savedReports.map((savedReport) => (
+      savedReport.ticker === report.ticker && savedReport.reportDate === report.reportDate
+        ? {...savedReport, readThroughTickers}
+        : savedReport
+    ));
+    this.persistSavedReports();
+    this.savedReportMessage = readThroughTickers.length > 0
+      ? `${report.ticker} now tracks ${readThroughTickers.join(', ')} as earnings read-through${readThroughTickers.length === 1 ? '' : 's'}.`
+      : `${report.ticker} earnings read-throughs cleared.`;
+  }
+
+  getSavedReportReadThroughItems(): SavedReportReadThroughItem[] {
+    return this.savedReports
+      .filter((report) => this.getSavedReportStatus(report) !== 'skip')
+      .map((report) => {
+        const tickers = this.getSavedReportReadThroughTickers(report);
+        const linkedReports = this.savedReports
+          .filter((candidate) => tickers.includes(candidate.ticker.trim().toUpperCase()))
+          .sort((left, right) => left.reportDate.localeCompare(right.reportDate) || left.ticker.localeCompare(right.ticker));
+        const trackedTickers = new Set(linkedReports.map((candidate) => candidate.ticker.trim().toUpperCase()));
+
+        return {
+          report,
+          linkedReports,
+          untrackedTickers: tickers.filter((ticker) => !trackedTickers.has(ticker))
+        };
+      })
+      .filter((item) => item.linkedReports.length > 0 || item.untrackedTickers.length > 0)
+      .sort((left, right) => left.report.reportDate.localeCompare(right.report.reportDate) || left.report.ticker.localeCompare(right.report.ticker));
+  }
+
   getSavedReportReadiness(): SavedReportReadiness {
     const activeReports = this.savedReports.filter((report) => this.getSavedReportStatus(report) !== 'skip');
     const preparationStepCount = this.savedReportPreparationSteps.length;
@@ -1519,6 +1587,7 @@ export class ReportDateTableComponent implements OnInit {
     const scenarioCount = this.getSavedReportScenarioCount(report);
     const catalyst = this.getSavedReportCatalyst(report);
     const source = this.getSavedReportSource(report);
+    const readThroughTickers = this.getSavedReportReadThroughTickers(report);
     const lines = [
       `${report.ticker} earnings research brief`,
       `${report.name} · ${this.formatDate(report.reportDate)} · ${countdown}`,
@@ -1551,6 +1620,9 @@ export class ReportDateTableComponent implements OnInit {
     }
     if (source.kind !== 'unassigned') {
       lines.push(`Research source: ${this.getSavedReportSourceLabel(source.kind)}${source.reviewedOn ? ` · reviewed ${this.formatDate(source.reviewedOn) || source.reviewedOn}` : ''}${source.url ? ` · ${source.url}` : ''}${source.note ? ` — ${source.note}` : ''}.`);
+    }
+    if (readThroughTickers.length > 0) {
+      lines.push(`Earnings read-throughs: ${readThroughTickers.join(', ')}.`);
     }
     if (review.outcome !== 'unreviewed' || review.actualMovePercent !== null || review.reaction.trim().length > 0 || review.lesson.trim().length > 0) {
       const actualMove = review.actualMovePercent === null ? 'not logged' : `${review.actualMovePercent.toFixed(1)}%`;
@@ -2818,7 +2890,7 @@ export class ReportDateTableComponent implements OnInit {
     return `${daysUntil} days away`;
   }
 
-  private getSavedReportDaysUntil(reportDate: string, referenceDate: Date = new Date()): number | null {
+  getSavedReportDaysUntil(reportDate: string, referenceDate: Date = new Date()): number | null {
     const parsedDate = new Date(`${reportDate}T12:00:00`);
 
     if (Number.isNaN(parsedDate.getTime())) {
@@ -4396,6 +4468,7 @@ export class ReportDateTableComponent implements OnInit {
         hypothesis: this.normalizeSavedReportHypothesis(report.hypothesis),
         researchMinutes: this.normalizeSavedReportResearchMinutes(report.researchMinutes),
         researchBy: this.normalizeSavedReportResearchBy(report.researchBy),
+        readThroughTickers: this.normalizeSavedReportReadThroughTickers(report.readThroughTickers, report.ticker || ''),
         role: this.normalizeSavedReportRole(report.role),
         conviction: this.normalizeSavedReportConviction(report.conviction),
         plannedRiskPercent: this.normalizeSavedReportRiskAllocation(report.plannedRiskPercent),
@@ -4448,6 +4521,29 @@ export class ReportDateTableComponent implements OnInit {
 
   private normalizeSavedReportResearchBy(value: unknown): string {
     return this.normalizeSavedReportReviewDeadline(value);
+  }
+
+  private normalizeSavedReportReadThroughTickers(value: unknown, reportTicker: string): string[] {
+    if (!Array.isArray(value)) {
+      return [];
+    }
+
+    const ownTicker = reportTicker.trim().toUpperCase();
+    const seenTickers = new Set<string>();
+
+    return value
+      .filter((ticker): ticker is string => typeof ticker === 'string')
+      .map((ticker) => ticker.trim().toUpperCase())
+      .filter((ticker) => /^[A-Z][A-Z0-9.-]{0,9}$/.test(ticker) && ticker !== ownTicker)
+      .filter((ticker) => {
+        if (seenTickers.has(ticker)) {
+          return false;
+        }
+
+        seenTickers.add(ticker);
+        return true;
+      })
+      .slice(0, 5);
   }
 
   private formatSavedReportStorageDate(date: Date): string {
@@ -4647,6 +4743,7 @@ export class ReportDateTableComponent implements OnInit {
       this.getSavedReportReactionExpectationLabel(this.getSavedReportReactionExpectation(report)),
       this.getSavedReportPlaybookLabel(this.getSavedReportPlaybook(report)),
       this.getSavedReportResearchBy(report),
+      ...this.getSavedReportReadThroughTickers(report),
       this.getSavedReportCatalystStatusLabel(catalyst.status),
       catalyst.trigger,
       catalyst.checkBy,

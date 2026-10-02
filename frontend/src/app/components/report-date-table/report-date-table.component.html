@@ -690,6 +690,32 @@
     <small class="saved-report-catalyst-watch__note">Catalyst watches are personal research prompts stored in this browser; they do not predict earnings results or recommend a trade.</small>
   </section>
 
+  <section *ngIf="getSavedReportReadThroughItems().length > 0" class="saved-report-read-through" aria-labelledby="saved-report-read-through-title">
+    <div class="saved-report-read-through__header">
+      <div>
+        <h3 id="saved-report-read-through-title">Earnings Read-through Map</h3>
+        <span>Connect peer, supplier, customer, and thematic reports so their event timing stays visible alongside each core idea.</span>
+      </div>
+      <strong>{{getSavedReportReadThroughItems().length}} linked idea{{getSavedReportReadThroughItems().length === 1 ? '' : 's'}}</strong>
+    </div>
+    <div class="saved-report-read-through__grid">
+      <article *ngFor="let item of getSavedReportReadThroughItems()">
+        <div class="saved-report-read-through__primary">
+          <a [routerLink]="['/', item.report.reportDate, item.report.ticker]">{{item.report.ticker}}</a>
+          <span>{{formatDate(item.report.reportDate)}} · {{formatSavedReportCountdown(getSavedReportDaysUntil(item.report.reportDate))}}</span>
+        </div>
+        <div *ngIf="item.linkedReports.length > 0" class="saved-report-read-through__links">
+          <a *ngFor="let linked of item.linkedReports" [routerLink]="['/', linked.reportDate, linked.ticker]">
+            <strong>{{linked.ticker}}</strong>
+            <span>{{formatDate(linked.reportDate)}} · {{formatSavedReportCountdown(getSavedReportDaysUntil(linked.reportDate))}}</span>
+          </a>
+        </div>
+        <p *ngIf="item.untrackedTickers.length > 0">{{item.untrackedTickers.join(', ')}} {{item.untrackedTickers.length === 1 ? 'is' : 'are'}} linked but not yet saved in this research calendar.</p>
+      </article>
+    </div>
+    <small class="saved-report-read-through__note">Read-through links organize personal research context only; they do not imply a price relationship or a trade recommendation.</small>
+  </section>
+
   <div class="saved-report-search">
     <label>
       <span>Search saved research, workflow, and notes</span>
@@ -2069,6 +2095,28 @@
             [ngModel]="getSavedReportSource(report).reviewedOn"
             aria-label="Research source review date"
             type="date">
+        </label>
+      </div>
+      <div *ngIf="getSavedReportReadThroughOptions(report).length > 0" class="saved-report-journal saved-report-read-through-control">
+        <div class="saved-report-journal-header">
+          <span>Earnings read-throughs</span>
+          <strong>{{getSavedReportReadThroughTickers(report).length === 0 ? 'No links' : getSavedReportReadThroughTickers(report).length + ' linked'}}</strong>
+        </div>
+        <p>Link up to five saved tickers whose earnings can inform this research, such as a peer, supplier, customer, or thematic bellwether.</p>
+        <label>
+          <span>Linked saved tickers</span>
+          <select
+            (change)="setSavedReportReadThroughTickers(report, $event)"
+            aria-label="Earnings read-through tickers"
+            multiple>
+            <option
+              *ngFor="let candidate of getSavedReportReadThroughOptions(report)"
+              [selected]="getSavedReportReadThroughTickers(report).includes(candidate.ticker)"
+              [value]="candidate.ticker">
+              {{candidate.ticker}} · {{candidate.name}}
+            </option>
+          </select>
+          <small>Use Ctrl or Command to select more than one ticker.</small>
         </label>
       </div>
       <div *ngIf="isSavedReportReviewDue(report)" class="saved-report-review">
