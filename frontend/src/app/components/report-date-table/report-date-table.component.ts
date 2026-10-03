@@ -47,6 +47,7 @@ type SavedReportScenarioFilter = 'all' | 'needsScenarios' | 'complete';
 type SavedReportReviewOutcome = 'unreviewed' | 'positive' | 'negative' | 'mixed' | 'flat';
 type SavedReportOutcomeDriver = 'unassigned' | 'results' | 'guidance' | 'margins' | 'demand' | 'valuation' | 'macro';
 type SavedReportReactionExpectation = 'unassigned' | 'positive' | 'negative' | 'muted';
+type SavedReportReactionConfidence = 0 | 50 | 60 | 70 | 80 | 90;
 type SavedReportReviewKey = 'reaction' | 'lesson' | 'followUp';
 type PostEarningsReviewFilter = 'all' | 'needsOutcome' | 'needsNotes' | 'complete';
 type SavedReportReviewCadence = 'fresh' | 'aging' | 'overdue';
@@ -241,6 +242,7 @@ interface SavedReport {
   estimate: number;
   eventTiming?: SavedReportEventTiming;
   expectedReaction?: SavedReportReactionExpectation;
+  reactionConfidence?: SavedReportReactionConfidence;
   impliedMove: number;
   shortInterest: number;
   marketCap: string | number;
@@ -431,6 +433,13 @@ interface SavedReportReviewDeadlineSummary {
 interface SavedReportReactionCallSummary {
   expectedReaction: Exclude<SavedReportReactionExpectation, 'unassigned'>;
   expectedReactionLabel: string;
+  matchedCount: number;
+  reportCount: number;
+  resolvedCount: number;
+}
+
+interface SavedReportReactionConfidenceSummary {
+  confidence: Exclude<SavedReportReactionConfidence, 0>;
   matchedCount: number;
   reportCount: number;
   resolvedCount: number;
@@ -786,6 +795,13 @@ export class ReportDateTableComponent implements OnInit {
     {key: 'negative', label: 'Negative reaction', detail: 'Results may trigger a downside response'},
     {key: 'muted', label: 'Muted reaction', detail: 'The response may remain contained'}
   ];
+  readonly savedReportReactionConfidenceOptions: Array<{percent: Exclude<SavedReportReactionConfidence, 0>; label: string}> = [
+    {percent: 50, label: '50% — tentative'},
+    {percent: 60, label: '60% — leaning'},
+    {percent: 70, label: '70% — supported'},
+    {percent: 80, label: '80% — strong'},
+    {percent: 90, label: '90% — exceptional'}
+  ];
   readonly savedReportCatalystStatuses: Array<{key: SavedReportCatalystStatus; label: string; detail: string}> = [
     {key: 'unassigned', label: 'No catalyst watch', detail: 'No pre-earnings observation is tracked yet'},
     {key: 'watching', label: 'Watching', detail: 'Track a read-through, data point, or company update'},
@@ -930,6 +946,7 @@ export class ReportDateTableComponent implements OnInit {
         reportDate: this.date,
         estimate: this.getEstimateValue(stock),
         expectedReaction: 'unassigned' as SavedReportReactionExpectation,
+        reactionConfidence: 0 as SavedReportReactionConfidence,
         impliedMove: this.getPercentageValue(stock, 'Implied Move'),
         shortInterest: this.getPercentageValue(stock, 'Short Interest'),
         marketCap: stock['Market Cap'],
@@ -1044,6 +1061,7 @@ export class ReportDateTableComponent implements OnInit {
           `Session: ${this.getSavedReportEventTimingLabel(this.getSavedReportEventTiming(report))}`,
           `Strategy: ${this.getSavedReportStrategyLabel(this.getSavedReportStrategy(report))}`,
           `Hypothesis: ${this.getSavedReportHypothesisLabel(this.getSavedReportHypothesis(report))}`,
+          `Pre-event call: ${this.getSavedReportReactionCallDetail(report)}`,
           `Implied move: ${report.impliedMove.toFixed(1)}%`,
           `Research time: ${this.getSavedReportResearchMinutes(report)} minutes`,
           `Research session: ${this.getSavedReportResearchBy(report) || 'Not scheduled'}`,
@@ -1095,6 +1113,7 @@ export class ReportDateTableComponent implements OnInit {
         `Event session: ${this.getSavedReportEventTimingLabel(this.getSavedReportEventTiming(report))}`,
         `Strategy: ${this.getSavedReportStrategyLabel(this.getSavedReportStrategy(report))}`,
         `Hypothesis: ${this.getSavedReportHypothesisLabel(this.getSavedReportHypothesis(report))}`,
+        `Pre-event call: ${this.getSavedReportReactionCallDetail(report)}`,
         `Earnings read-throughs: ${this.getSavedReportReadThroughTickers(report).join(', ') || 'None linked'}`
       ].join('\\n');
 
@@ -1129,7 +1148,7 @@ export class ReportDateTableComponent implements OnInit {
     }
 
     const headers = [
-      'Ticker', 'Company', 'Report Date', 'Report Timing', 'Workflow Status', 'Research Playbook', 'Research Theme', 'Event Strategy', 'Research Hypothesis', 'Pre-event Reaction Call', 'Research Time (minutes)', 'Research Work Date', 'Portfolio Role', 'Conviction',
+      'Ticker', 'Company', 'Report Date', 'Report Timing', 'Workflow Status', 'Research Playbook', 'Research Theme', 'Event Strategy', 'Research Hypothesis', 'Pre-event Reaction Call', 'Reaction Call Confidence (%)', 'Research Time (minutes)', 'Research Work Date', 'Portfolio Role', 'Conviction',
       'Implied Move (%)', 'Short Interest (%)', 'EPS Estimate', 'Market Cap', 'Risk Allocation (%)',
       'Preparation Complete', 'Evidence Reviewed', 'Journal Fields Complete', 'Upside Scenario', 'Base Scenario', 'Downside Scenario', 'Catalyst Watch Status', 'Catalyst Trigger', 'Catalyst Check Date', 'Actual Post-Earnings Move (%)', 'Review Deadline', 'Review Outcome', 'Primary Outcome Driver', 'Review Reaction', 'Review Lesson',
       'Follow-through Action', 'Follow-through Complete', 'Research Source', 'Source URL', 'Source Note', 'Source Reviewed On', 'Earnings Read-throughs'
@@ -1153,6 +1172,7 @@ export class ReportDateTableComponent implements OnInit {
           this.getSavedReportStrategyLabel(this.getSavedReportStrategy(report)),
           this.getSavedReportHypothesisLabel(this.getSavedReportHypothesis(report)),
           this.getSavedReportReactionExpectationLabel(this.getSavedReportReactionExpectation(report)),
+          this.getSavedReportReactionConfidence(report) || '',
           this.getSavedReportResearchMinutes(report),
           this.getSavedReportResearchBy(report),
           this.getSavedReportRoleLabel(this.getSavedReportRole(report)),
@@ -2364,6 +2384,38 @@ export class ReportDateTableComponent implements OnInit {
       .filter((summary) => summary.reportCount > 0);
   }
 
+  getSavedReportReactionConfidenceSummaries(): SavedReportReactionConfidenceSummary[] {
+    const pastReports = this.getPostEarningsReviewItems().map((item) => item.report);
+
+    return this.savedReportReactionConfidenceOptions
+      .map((option) => {
+        const reports = pastReports.filter((report) => (
+          this.getSavedReportReactionConfidence(report) === option.percent &&
+          this.getSavedReportReactionExpectation(report) !== 'unassigned'
+        ));
+        const summary = reports.reduce((totals, report) => {
+          const outcome = this.getSavedReportReview(report).outcome;
+          const expectation = this.getSavedReportReactionExpectation(report);
+
+          if (outcome !== 'unreviewed') {
+            totals.resolvedCount += 1;
+            if (expectation !== 'unassigned' && this.isSavedReportReactionCallMatched(expectation, outcome)) {
+              totals.matchedCount += 1;
+            }
+          }
+
+          return totals;
+        }, {matchedCount: 0, resolvedCount: 0});
+
+        return {
+          confidence: option.percent,
+          reportCount: reports.length,
+          ...summary
+        };
+      })
+      .filter((summary) => summary.reportCount > 0);
+  }
+
   getSavedReportOutcomeDriverSummaries(): SavedReportOutcomeDriverSummary[] {
     const pastReports = this.getPostEarningsReviewItems().map((item) => item.report);
 
@@ -2946,6 +2998,24 @@ export class ReportDateTableComponent implements OnInit {
     return this.savedReportReactionExpectations.find((item) => item.key === expectation)?.detail || 'Keep research open without a directional expectation';
   }
 
+  getSavedReportReactionConfidence(report: SavedReport): SavedReportReactionConfidence {
+    return this.normalizeSavedReportReactionConfidence(report.reactionConfidence);
+  }
+
+  getSavedReportReactionConfidenceLabel(confidence: SavedReportReactionConfidence): string {
+    return confidence === 0 ? 'Not rated' : `${confidence}% confidence`;
+  }
+
+  getSavedReportReactionCallDetail(report: SavedReport): string {
+    const expectation = this.getSavedReportReactionExpectation(report);
+
+    if (expectation === 'unassigned') {
+      return 'No directional call recorded';
+    }
+
+    return `${this.getSavedReportReactionExpectationLabel(expectation)} · ${this.getSavedReportReactionConfidenceLabel(this.getSavedReportReactionConfidence(report))}`;
+  }
+
   getSavedReportOutcomeDriverLabel(driver: SavedReportOutcomeDriver): string {
     return this.savedReportOutcomeDrivers.find((item) => item.key === driver)?.label || 'Not classified';
   }
@@ -2989,12 +3059,37 @@ export class ReportDateTableComponent implements OnInit {
 
     this.savedReports = this.savedReports.map((savedReport) => (
       savedReport.ticker === report.ticker && savedReport.reportDate === report.reportDate
-        ? {...savedReport, expectedReaction: normalizedExpectation}
+        ? {
+          ...savedReport,
+          expectedReaction: normalizedExpectation,
+          reactionConfidence: normalizedExpectation === 'unassigned'
+            ? 0
+            : this.getSavedReportReactionConfidence(savedReport)
+        }
         : savedReport
     ));
     this.savedReportMessage = normalizedExpectation === 'unassigned'
       ? `${report.ticker} pre-event reaction call cleared.`
       : `${report.ticker} pre-event reaction call set to ${this.getSavedReportReactionExpectationLabel(normalizedExpectation).toLowerCase()}.`;
+    this.persistSavedReports();
+  }
+
+  setSavedReportReactionConfidence(report: SavedReport, confidence: SavedReportReactionConfidence): void {
+    const normalizedConfidence = this.normalizeSavedReportReactionConfidence(confidence);
+
+    if (this.getSavedReportReactionExpectation(report) === 'unassigned' && normalizedConfidence > 0) {
+      this.savedReportMessage = `Add a directional reaction call for ${report.ticker} before rating confidence.`;
+      return;
+    }
+
+    this.savedReports = this.savedReports.map((savedReport) => (
+      savedReport.ticker === report.ticker && savedReport.reportDate === report.reportDate
+        ? {...savedReport, reactionConfidence: normalizedConfidence}
+        : savedReport
+    ));
+    this.savedReportMessage = normalizedConfidence === 0
+      ? `${report.ticker} reaction-call confidence cleared.`
+      : `${report.ticker} reaction-call confidence set to ${normalizedConfidence}%.`;
     this.persistSavedReports();
   }
 
@@ -4461,6 +4556,7 @@ export class ReportDateTableComponent implements OnInit {
         reportDate: report.reportDate!.trim(),
         eventTiming: this.normalizeSavedReportEventTiming(report.eventTiming),
         expectedReaction: this.normalizeSavedReportReactionExpectation(report.expectedReaction),
+        reactionConfidence: this.normalizeSavedReportReactionConfidence(report.reactionConfidence),
         status: this.normalizeSavedReportStatus(report.status),
         playbook: this.normalizeSavedReportPlaybook(report.playbook),
         theme: this.normalizeSavedReportTheme(report.theme),
@@ -4577,6 +4673,13 @@ export class ReportDateTableComponent implements OnInit {
     return expectation === 'positive' || expectation === 'negative' || expectation === 'muted'
       ? expectation
       : 'unassigned';
+  }
+
+  private normalizeSavedReportReactionConfidence(confidence: unknown): SavedReportReactionConfidence {
+    const normalizedConfidence = Number(confidence);
+    return this.savedReportReactionConfidenceOptions.some((option) => option.percent === normalizedConfidence)
+      ? normalizedConfidence as Exclude<SavedReportReactionConfidence, 0>
+      : 0;
   }
 
   private normalizeSavedReportCatalystStatus(status: unknown): SavedReportCatalystStatus {
@@ -4741,6 +4844,7 @@ export class ReportDateTableComponent implements OnInit {
       this.getSavedReportConvictionLabel(this.getSavedReportConviction(report)),
       this.getSavedReportEventTimingLabel(this.getSavedReportEventTiming(report)),
       this.getSavedReportReactionExpectationLabel(this.getSavedReportReactionExpectation(report)),
+      this.getSavedReportReactionConfidenceLabel(this.getSavedReportReactionConfidence(report)),
       this.getSavedReportPlaybookLabel(this.getSavedReportPlaybook(report)),
       this.getSavedReportResearchBy(report),
       ...this.getSavedReportReadThroughTickers(report),
