@@ -104,6 +104,7 @@ interface SavedReportSource {
 }
 
 interface SavedReportReview {
+  actualEps: number | null;
   actualMovePercent: number | null;
   followUp: string;
   followUpComplete: boolean;
@@ -396,6 +397,18 @@ interface SavedReportTimingPlan {
 interface SavedReportReviewItem {
   daysSince: number;
   report: SavedReport;
+}
+
+type SavedReportEpsResult = 'beat' | 'miss' | 'inline';
+
+interface SavedReportEpsResultItem {
+  actualEps: number;
+  actualMovePercent: number | null;
+  estimate: number;
+  epsDelta: number;
+  result: SavedReportEpsResult;
+  report: SavedReport;
+  surprisePercent: number | null;
 }
 
 interface SavedReportFollowUpItem extends SavedReportReviewItem {
@@ -1150,7 +1163,7 @@ export class ReportDateTableComponent implements OnInit {
     const headers = [
       'Ticker', 'Company', 'Report Date', 'Report Timing', 'Workflow Status', 'Research Playbook', 'Research Theme', 'Event Strategy', 'Research Hypothesis', 'Pre-event Reaction Call', 'Reaction Call Confidence (%)', 'Research Time (minutes)', 'Research Work Date', 'Portfolio Role', 'Conviction',
       'Implied Move (%)', 'Short Interest (%)', 'EPS Estimate', 'Market Cap', 'Risk Allocation (%)',
-      'Preparation Complete', 'Evidence Reviewed', 'Journal Fields Complete', 'Upside Scenario', 'Base Scenario', 'Downside Scenario', 'Catalyst Watch Status', 'Catalyst Trigger', 'Catalyst Check Date', 'Actual Post-Earnings Move (%)', 'Review Deadline', 'Review Outcome', 'Primary Outcome Driver', 'Review Reaction', 'Review Lesson',
+      'Preparation Complete', 'Evidence Reviewed', 'Journal Fields Complete', 'Upside Scenario', 'Base Scenario', 'Downside Scenario', 'Catalyst Watch Status', 'Catalyst Trigger', 'Catalyst Check Date', 'Reported EPS', 'Actual Post-Earnings Move (%)', 'Review Deadline', 'Review Outcome', 'Primary Outcome Driver', 'Review Reaction', 'Review Lesson',
       'Follow-through Action', 'Follow-through Complete', 'Research Source', 'Source URL', 'Source Note', 'Source Reviewed On', 'Earnings Read-throughs'
     ];
     const rows = [...this.savedReports]
@@ -1191,6 +1204,7 @@ export class ReportDateTableComponent implements OnInit {
           this.getSavedReportCatalystStatusLabel(catalyst.status),
           catalyst.trigger,
           catalyst.checkBy,
+          review.actualEps ?? '',
           review.actualMovePercent ?? '',
           review.reviewBy,
           this.getSavedReportReviewLabel(review.outcome),
@@ -1644,6 +1658,11 @@ export class ReportDateTableComponent implements OnInit {
     if (readThroughTickers.length > 0) {
       lines.push(`Earnings read-throughs: ${readThroughTickers.join(', ')}.`);
     }
+    if (review.actualEps !== null) {
+      const epsResult = this.getSavedReportEpsResult(report);
+      const surprisePercent = this.getSavedReportEpsSurprisePercent(report);
+      lines.push(`Reported EPS: ${review.actualEps.toFixed(2)} vs. ${report.estimate.toFixed(2)} estimate — ${this.getSavedReportEpsResultLabel(epsResult)}${surprisePercent === null ? '' : ` (${surprisePercent >= 0 ? '+' : ''}${surprisePercent.toFixed(1)}%)`}.`);
+    }
     if (review.outcome !== 'unreviewed' || review.actualMovePercent !== null || review.reaction.trim().length > 0 || review.lesson.trim().length > 0) {
       const actualMove = review.actualMovePercent === null ? 'not logged' : `${review.actualMovePercent.toFixed(1)}%`;
       lines.push(`Review: ${this.getSavedReportReviewLabel(review.outcome)} · actual move ${actualMove}.`);
@@ -1999,6 +2018,34 @@ export class ReportDateTableComponent implements OnInit {
 
   getPostEarningsReviewCompleteCount(): number {
     return this.getPostEarningsReviewItems().filter((item) => this.isSavedReportReviewComplete(item.report)).length;
+  }
+
+  getSavedReportEpsResultItems(now: Date = new Date()): SavedReportEpsResultItem[] {
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    return this.savedReports
+      .filter((report) => {
+        const daysUntil = this.getSavedReportDaysUntil(report.reportDate, startOfToday);
+        return daysUntil !== null && daysUntil < 0 && this.getSavedReportActualEps(report) !== null;
+      })
+      .map((report) => {
+        const actualEps = this.getSavedReportActualEps(report)!;
+        const estimate = Number(report.estimate) || 0;
+
+        return {
+          actualEps,
+          actualMovePercent: this.getSavedReportReview(report).actualMovePercent,
+          estimate,
+          epsDelta: actualEps - estimate,
+          result: this.getSavedReportEpsResult(report),
+          report,
+          surprisePercent: this.getSavedReportEpsSurprisePercent(report)
+        };
+      })
+      .sort((first, second) => (
+        second.report.reportDate.localeCompare(first.report.reportDate) ||
+        first.report.ticker.localeCompare(second.report.ticker)
+      ));
   }
 
   getSavedReportFollowUpItems(): SavedReportFollowUpItem[] {
@@ -3839,6 +3886,43 @@ export class ReportDateTableComponent implements OnInit {
     return this.normalizeSavedReportReview(report.review);
   }
 
+  getSavedReportActualEps(report: SavedReport): number | null {
+    return this.getSavedReportReview(report).actualEps;
+  }
+
+  getSavedReportEpsResult(report: SavedReport): SavedReportEpsResult {
+    const actualEps = this.getSavedReportActualEps(report);
+    const estimate = Number(report.estimate) || 0;
+
+    if (actualEps === null) {
+      return 'inline';
+    }
+
+    const difference = actualEps - estimate;
+    const tolerance = Math.max(Math.abs(estimate) * 0.02, 0.01);
+
+    if (difference >= tolerance) {
+      return 'beat';
+    }
+
+    return difference <= -tolerance ? 'miss' : 'inline';
+  }
+
+  getSavedReportEpsResultLabel(result: SavedReportEpsResult): string {
+    return result === 'beat' ? 'Beat' : result === 'miss' ? 'Miss' : 'In line';
+  }
+
+  getSavedReportEpsSurprisePercent(report: SavedReport): number | null {
+    const actualEps = this.getSavedReportActualEps(report);
+    const estimate = Number(report.estimate) || 0;
+
+    if (actualEps === null || Math.abs(estimate) < 0.01) {
+      return null;
+    }
+
+    return ((actualEps - estimate) / Math.abs(estimate)) * 100;
+  }
+
   getSavedReportReviewLabel(outcome: SavedReportReviewOutcome | null): string {
     if (outcome === null) {
       return 'No outcome yet';
@@ -3877,6 +3961,16 @@ export class ReportDateTableComponent implements OnInit {
     this.savedReportMessage = review.actualMovePercent === null
       ? `${report.ticker} actual post-earnings move cleared.`
       : `${report.ticker} actual post-earnings move set to ${review.actualMovePercent.toFixed(1)}%.`;
+  }
+
+  setSavedReportActualEps(report: SavedReport, value: unknown): void {
+    const review = this.getSavedReportReview(report);
+    review.actualEps = this.normalizeSavedReportActualEps(value);
+
+    this.updateSavedReportReview(report, review);
+    this.savedReportMessage = review.actualEps === null
+      ? `${report.ticker} reported EPS cleared.`
+      : `${report.ticker} reported EPS set to ${review.actualEps.toFixed(2)} (${this.getSavedReportEpsResultLabel(this.getSavedReportEpsResult({...report, review})).toLowerCase()} versus estimate).`;
   }
 
   setSavedReportReviewDeadline(report: SavedReport, value: unknown): void {
@@ -4777,6 +4871,7 @@ export class ReportDateTableComponent implements OnInit {
 
   private normalizeSavedReportReview(review?: Partial<SavedReportReview>): SavedReportReview {
     return {
+      actualEps: this.normalizeSavedReportActualEps(review?.actualEps),
       actualMovePercent: this.normalizeSavedReportActualMove(review?.actualMovePercent),
       followUp: this.normalizeSavedReportJournalText(review?.followUp),
       followUpComplete: review?.followUpComplete === true,
@@ -4809,6 +4904,17 @@ export class ReportDateTableComponent implements OnInit {
     const actualMove = Number(value);
     return Number.isFinite(actualMove) && actualMove >= 0 && actualMove <= 100
       ? Math.round(actualMove * 100) / 100
+      : null;
+  }
+
+  private normalizeSavedReportActualEps(value: unknown): number | null {
+    if (value === null || value === undefined || value === '') {
+      return null;
+    }
+
+    const actualEps = Number(value);
+    return Number.isFinite(actualEps) && actualEps >= -10000 && actualEps <= 10000
+      ? Math.round(actualEps * 100) / 100
       : null;
   }
 

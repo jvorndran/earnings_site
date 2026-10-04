@@ -1792,6 +1792,34 @@
     <small class="saved-report-timing-review__note">Use this research journal to improve session-specific preparation and review discipline; it is not a performance record or a recommendation.</small>
   </section>
 
+  <section *ngIf="getSavedReportEpsResultItems().length > 0" class="saved-report-move-review" aria-labelledby="saved-report-eps-results-title">
+    <div class="saved-report-move-review__header">
+      <div>
+        <h3 id="saved-report-eps-results-title">Reported EPS Scorecard</h3>
+        <span>Compare the reported EPS you log after earnings with the consensus estimate captured in the saved research plan.</span>
+      </div>
+      <strong>{{getSavedReportEpsResultItems().length}} reported result{{getSavedReportEpsResultItems().length === 1 ? '' : 's'}} logged</strong>
+    </div>
+
+    <div class="saved-report-move-review__grid">
+      <article *ngFor="let item of getSavedReportEpsResultItems()" [attr.data-cohort]="item.result" class="saved-report-move-review__card">
+        <div class="saved-report-move-review__card-header">
+          <strong>{{item.report.ticker}}</strong>
+          <span>{{formatDate(item.report.reportDate)}} · {{getSavedReportEpsResultLabel(item.result)}}</span>
+        </div>
+        <p>{{item.report.name}} reported against the EPS estimate held in this saved report.</p>
+        <div class="saved-report-move-review__metrics">
+          <span><small>EPS estimate</small><strong>{{item.estimate | number:'1.2-2'}}</strong></span>
+          <span><small>Reported EPS</small><strong>{{item.actualEps | number:'1.2-2'}}</strong></span>
+          <span><small>EPS delta</small><strong>{{item.epsDelta > 0 ? '+' : ''}}{{item.epsDelta | number:'1.2-2'}}</strong></span>
+          <span><small>EPS surprise</small><strong>{{item.surprisePercent === null ? '—' : (item.surprisePercent > 0 ? '+' : '') + (item.surprisePercent | number:'1.1-1') + '%'}}</strong></span>
+          <span><small>Actual stock move</small><strong>{{item.actualMovePercent === null ? '—' : (item.actualMovePercent | number:'1.1-1') + '%'}}</strong></span>
+        </div>
+      </article>
+    </div>
+    <small class="saved-report-move-review__note">A beat, miss, or in-line label uses a 2% estimate tolerance (at least $0.01) and is a research record, not a recommendation or measure of investment performance.</small>
+  </section>
+
   <section *ngIf="getSavedReportImpliedMoveReviewSummaries().length > 0" class="saved-report-move-review" aria-labelledby="saved-report-move-review-title">
     <div class="saved-report-move-review__header">
       <div>
@@ -2190,6 +2218,20 @@
             step="0.1"
             type="number">
           <small>Record the absolute stock move after results to compare it with the implied move.</small>
+        </label>
+        <label>
+          <span>Reported EPS</span>
+          <input
+            (ngModelChange)="setSavedReportActualEps(report, $event)"
+            [ngModel]="getSavedReportActualEps(report)"
+            aria-label="Reported earnings per share"
+            max="10000"
+            min="-10000"
+            placeholder="For example, 1.24"
+            step="0.01"
+            type="number">
+          <small *ngIf="getSavedReportActualEps(report) !== null">{{getSavedReportEpsResultLabel(getSavedReportEpsResult(report))}} versus the saved {{report.estimate | number:'1.2-2'}} estimate.</small>
+          <small *ngIf="getSavedReportActualEps(report) === null">Record the reported EPS to compare the result with the saved estimate.</small>
         </label>
         <label>
           <span>What happened?</span>
