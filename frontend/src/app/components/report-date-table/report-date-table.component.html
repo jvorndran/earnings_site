@@ -1619,6 +1619,29 @@
     <small class="saved-report-reaction-call__note">Confidence records the strength of a research call before earnings. It is intended for calibration, not investment-performance measurement.</small>
   </section>
 
+  <section *ngIf="getSavedReportGuidanceCallSummaries().length > 0" class="saved-report-reaction-call" aria-labelledby="saved-report-guidance-call-title">
+    <div class="saved-report-reaction-call__header">
+      <div>
+        <h3 id="saved-report-guidance-call-title">Guidance Call Calibration</h3>
+        <span>Compare the outlook expectation captured before earnings with the guidance management reported afterward.</span>
+      </div>
+      <strong>{{getSavedReportGuidanceCallSummaries().length}} guidance view{{getSavedReportGuidanceCallSummaries().length === 1 ? '' : 's'}} reviewed</strong>
+    </div>
+    <div class="saved-report-reaction-call__grid">
+      <article *ngFor="let summary of getSavedReportGuidanceCallSummaries()" [attr.data-call]="summary.expectedGuidance">
+        <div>
+          <strong>{{summary.expectedGuidanceLabel}}</strong>
+          <span>{{summary.reportCount}} past call{{summary.reportCount === 1 ? '' : 's'}}</span>
+        </div>
+        <div class="saved-report-reaction-call__metrics">
+          <span><small>Reported guidance</small><strong>{{summary.resolvedCount}}/{{summary.reportCount}}</strong></span>
+          <span><small>Matching outlooks</small><strong>{{summary.matchedCount}}/{{summary.resolvedCount}}</strong></span>
+        </div>
+      </article>
+    </div>
+    <small class="saved-report-reaction-call__note">Guidance calls are a research journal for calibrating expectations, not a prediction or investment-performance measure.</small>
+  </section>
+
   <section *ngIf="getSavedReportOutcomeDriverSummaries().length > 0" class="saved-report-outcome-driver" aria-labelledby="saved-report-outcome-driver-title">
     <div class="saved-report-outcome-driver__header">
       <div>
@@ -2207,6 +2230,15 @@
           <small>{{getSavedReportOutcomeDriverLabel(getSavedReportReview(report).outcomeDriver)}} helps compare what actually moved past reports.</small>
         </label>
         <label>
+          <span>Reported guidance</span>
+          <select
+            (ngModelChange)="setSavedReportGuidanceOutcome(report, $event)"
+            [ngModel]="getSavedReportReview(report).guidanceOutcome">
+            <option *ngFor="let outcome of savedReportGuidanceOutcomes" [ngValue]="outcome.key">{{outcome.label}}</option>
+          </select>
+          <small>Record whether management raised, maintained, or lowered its outlook.</small>
+        </label>
+        <label>
           <span>Actual post-earnings move (%)</span>
           <input
             (ngModelChange)="setSavedReportActualMove(report, $event)"
@@ -2298,6 +2330,15 @@
             <option *ngFor="let option of savedReportReactionConfidenceOptions" [ngValue]="option.percent">{{option.label}}</option>
           </select>
           <small>{{getSavedReportReactionExpectation(report) === 'unassigned' ? 'Set a directional call before rating confidence.' : 'Rate the strength of this call for later calibration.'}}</small>
+        </label>
+        <label>
+          <span>Pre-event guidance call</span>
+          <select
+            (ngModelChange)="setSavedReportGuidanceExpectation(report, $event)"
+            [ngModel]="getSavedReportGuidanceExpectation(report)">
+            <option *ngFor="let expectation of savedReportGuidanceExpectations" [ngValue]="expectation.key">{{expectation.label}}</option>
+          </select>
+          <small>{{getSavedReportGuidanceExpectationDetail(getSavedReportGuidanceExpectation(report))}}</small>
         </label>
         <label>
           <span>Catalyst watch</span>
