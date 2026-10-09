@@ -1676,12 +1676,15 @@
     </div>
 
     <div class="saved-report-follow-up__grid">
-      <article *ngFor="let item of getSavedReportFollowUpItems()" class="saved-report-follow-up__item">
+      <article *ngFor="let item of getSavedReportFollowUpItems()" [attr.data-deadline]="item.deadlineStatus" class="saved-report-follow-up__item">
         <a [routerLink]="['/', item.report.reportDate, item.report.ticker]">
           <span>{{item.daysSince}} day{{item.daysSince === 1 ? '' : 's'}} since report</span>
           <strong>{{item.report.ticker}}</strong>
           <small>{{formatDate(item.report.reportDate)}}</small>
         </a>
+        <small class="saved-report-follow-up__deadline" [attr.data-deadline]="item.deadlineStatus">
+          {{getSavedReportFollowUpDeadlineLabel(item.report)}}
+        </small>
         <p>{{item.action}}</p>
         <button (click)="setSavedReportFollowUpComplete(item.report, true)" type="button">Mark complete</button>
       </article>
@@ -2291,6 +2294,15 @@
             maxlength="280"
             placeholder="What specific research or portfolio action should happen next?"
             rows="2"></textarea>
+        </label>
+        <label *ngIf="getSavedReportReview(report).followUp.trim().length > 0" class="saved-report-review__follow-up-deadline">
+          <span>Follow-through deadline</span>
+          <input
+            (ngModelChange)="setSavedReportFollowUpDeadline(report, $event)"
+            [ngModel]="getSavedReportReview(report).followUpBy"
+            aria-label="Follow-through deadline"
+            type="date">
+          <small [attr.data-deadline]="getSavedReportFollowUpDeadlineStatus(report)">{{getSavedReportFollowUpDeadlineLabel(report)}}</small>
         </label>
         <label *ngIf="getSavedReportReview(report).followUp.trim().length > 0" class="saved-report-review__follow-up">
           <input

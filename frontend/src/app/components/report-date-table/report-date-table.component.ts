@@ -55,6 +55,7 @@ type PostEarningsReviewFilter = 'all' | 'needsOutcome' | 'needsNotes' | 'complet
 type SavedReportReviewCadence = 'fresh' | 'aging' | 'overdue';
 type SavedReportReviewCadenceFilter = 'all' | SavedReportReviewCadence;
 type SavedReportReviewDeadline = 'needsDate' | 'scheduled' | 'dueToday' | 'overdue' | 'complete';
+type SavedReportFollowUpDeadline = 'noDate' | 'scheduled' | 'dueToday' | 'overdue' | 'complete';
 type SavedReportReviewDeadlineFilter = 'all' | SavedReportReviewDeadline;
 type SavedReportSeason = 'q1' | 'q2' | 'q3' | 'q4';
 type SavedReportSeasonFilter = 'all' | SavedReportSeason;
@@ -109,6 +110,7 @@ interface SavedReportReview {
   actualEps: number | null;
   actualMovePercent: number | null;
   followUp: string;
+  followUpBy: string;
   followUpComplete: boolean;
   guidanceOutcome: SavedReportGuidanceOutcome;
   outcomeDriver: SavedReportOutcomeDriver;
@@ -417,6 +419,8 @@ interface SavedReportEpsResultItem {
 
 interface SavedReportFollowUpItem extends SavedReportReviewItem {
   action: string;
+  deadlineStatus: SavedReportFollowUpDeadline;
+  followUpBy: string;
 }
 
 interface SavedReportReviewSummary {
@@ -1094,6 +1098,7 @@ export class ReportDateTableComponent implements OnInit {
         const eventDate = this.getSavedReportCalendarDate(report.reportDate);
         const catalyst = this.getSavedReportCatalyst(report);
         const source = this.getSavedReportSource(report);
+        const review = this.getSavedReportReview(report);
         const summary = `${report.ticker} earnings${report.name ? ` — ${report.name}` : ''}`;
         const description = [
           `Session: ${this.getSavedReportEventTimingLabel(this.getSavedReportEventTiming(report))}`,
@@ -1106,6 +1111,7 @@ export class ReportDateTableComponent implements OnInit {
           `Research session: ${this.getSavedReportResearchBy(report) || 'Not scheduled'}`,
           `Catalyst watch: ${this.getSavedReportCatalystStatusLabel(catalyst.status)}${catalyst.trigger ? ` — ${catalyst.trigger}` : ''}${catalyst.checkBy ? ` · check by ${catalyst.checkBy}` : ''}`,
           `Research source: ${this.getSavedReportSourceLabel(source.kind)}${source.reviewedOn ? ` · reviewed ${source.reviewedOn}` : ''}${source.url ? ` · ${source.url}` : ''}${source.note ? ` — ${source.note}` : ''}`,
+          `Follow-through: ${review.followUp ? `${review.followUp}${review.followUpBy ? ` · due ${review.followUpBy}` : ''}${review.followUpComplete ? ' · complete' : ' · open'}` : 'None recorded'}`,
           `Earnings read-throughs: ${this.getSavedReportReadThroughTickers(report).join(', ') || 'None linked'}`
         ].join('\\n');
 
@@ -1190,7 +1196,7 @@ export class ReportDateTableComponent implements OnInit {
       'Ticker', 'Company', 'Report Date', 'Report Timing', 'Workflow Status', 'Research Playbook', 'Research Theme', 'Event Strategy', 'Research Hypothesis', 'Pre-event Reaction Call', 'Reaction Call Confidence (%)', 'Pre-event Guidance Call', 'Research Time (minutes)', 'Research Work Date', 'Portfolio Role', 'Conviction',
       'Implied Move (%)', 'Short Interest (%)', 'EPS Estimate', 'Market Cap', 'Risk Allocation (%)',
       'Preparation Complete', 'Evidence Reviewed', 'Journal Fields Complete', 'Upside Scenario', 'Base Scenario', 'Downside Scenario', 'Catalyst Watch Status', 'Catalyst Trigger', 'Catalyst Check Date', 'Reported EPS', 'Actual Post-Earnings Move (%)', 'Reported Guidance', 'Review Deadline', 'Review Outcome', 'Primary Outcome Driver', 'Review Reaction', 'Review Lesson',
-      'Follow-through Action', 'Follow-through Complete', 'Research Source', 'Source URL', 'Source Note', 'Source Reviewed On', 'Earnings Read-throughs'
+      'Follow-through Action', 'Follow-through Deadline', 'Follow-through Complete', 'Research Source', 'Source URL', 'Source Note', 'Source Reviewed On', 'Earnings Read-throughs'
     ];
     const rows = [...this.savedReports]
       .sort((first, second) => first.reportDate.localeCompare(second.reportDate) || first.ticker.localeCompare(second.ticker))
@@ -1240,6 +1246,7 @@ export class ReportDateTableComponent implements OnInit {
           review.reaction,
           review.lesson,
           review.followUp,
+          review.followUpBy,
           review.followUpComplete ? 'Complete' : 'Open',
           this.getSavedReportSourceLabel(source.kind),
           source.url,
@@ -1706,7 +1713,7 @@ export class ReportDateTableComponent implements OnInit {
       lines.push(`Lesson: ${review.lesson.trim()}`);
     }
     if (review.followUp.trim().length > 0) {
-      lines.push(`Follow-through: ${review.followUp.trim()}${review.followUpComplete ? ' (complete)' : ' (open)'}.`);
+      lines.push(`Follow-through: ${review.followUp.trim()}${review.followUpBy ? ` · due ${this.formatDate(review.followUpBy) || review.followUpBy}` : ''}${review.followUpComplete ? ' (complete)' : ' (open)'}.`);
     }
 
     try {
@@ -2080,14 +2087,27 @@ export class ReportDateTableComponent implements OnInit {
       ));
   }
 
-  getSavedReportFollowUpItems(): SavedReportFollowUpItem[] {
+  getSavedReportFollowUpItems(now: Date = new Date()): SavedReportFollowUpItem[] {
+    const deadlineOrder: SavedReportFollowUpDeadline[] = ['overdue', 'dueToday', 'scheduled', 'noDate', 'complete'];
+
     return this.getPostEarningsReviewItems()
-      .map((item) => ({
-        ...item,
-        action: this.getSavedReportReview(item.report).followUp.trim()
-      }))
+      .map((item) => {
+        const review = this.getSavedReportReview(item.report);
+
+        return {
+          ...item,
+          action: review.followUp.trim(),
+          deadlineStatus: this.getSavedReportFollowUpDeadlineStatus(item.report, now),
+          followUpBy: review.followUpBy
+        };
+      })
       .filter((item) => item.action.length > 0 && !this.isSavedReportFollowUpComplete(item.report))
-      .sort((first, second) => second.daysSince - first.daysSince || first.report.ticker.localeCompare(second.report.ticker));
+      .sort((first, second) => (
+        deadlineOrder.indexOf(first.deadlineStatus) - deadlineOrder.indexOf(second.deadlineStatus) ||
+        (first.followUpBy || '9999-12-31').localeCompare(second.followUpBy || '9999-12-31') ||
+        second.daysSince - first.daysSince ||
+        first.report.ticker.localeCompare(second.report.ticker)
+      ));
   }
 
   getSavedReportFollowUpCompleteCount(): number {
@@ -2375,6 +2395,53 @@ export class ReportDateTableComponent implements OnInit {
     }
 
     return `Due ${formattedDate}`;
+  }
+
+  getSavedReportFollowUpDeadlineStatus(report: SavedReport, now: Date = new Date()): SavedReportFollowUpDeadline {
+    const review = this.getSavedReportReview(report);
+
+    if (review.followUpComplete) {
+      return 'complete';
+    }
+
+    if (!review.followUpBy) {
+      return 'noDate';
+    }
+
+    const daysUntil = this.getSavedReportDaysUntil(review.followUpBy, now);
+    if (daysUntil === null) {
+      return 'noDate';
+    }
+
+    if (daysUntil < 0) {
+      return 'overdue';
+    }
+
+    return daysUntil === 0 ? 'dueToday' : 'scheduled';
+  }
+
+  getSavedReportFollowUpDeadlineLabel(report: SavedReport): string {
+    const review = this.getSavedReportReview(report);
+    const status = this.getSavedReportFollowUpDeadlineStatus(report);
+
+    if (status === 'complete') {
+      return 'Follow-through complete';
+    }
+
+    if (!review.followUpBy) {
+      return 'No follow-through deadline';
+    }
+
+    const formattedDate = this.formatDate(review.followUpBy) || review.followUpBy;
+    if (status === 'overdue') {
+      return `Follow-through overdue · ${formattedDate}`;
+    }
+
+    if (status === 'dueToday') {
+      return 'Follow-through due today';
+    }
+
+    return `Follow-through due ${formattedDate}`;
   }
 
   private getSavedReportSeason(report: SavedReport): SavedReportSeason | null {
@@ -4097,8 +4164,26 @@ export class ReportDateTableComponent implements OnInit {
     review[key] = this.normalizeSavedReportJournalText(value);
     if (key === 'followUp') {
       review.followUpComplete = false;
+      if (review.followUp.trim().length === 0) {
+        review.followUpBy = '';
+      }
     }
     this.updateSavedReportReview(report, review);
+  }
+
+  setSavedReportFollowUpDeadline(report: SavedReport, value: unknown): void {
+    const review = this.getSavedReportReview(report);
+
+    if (review.followUp.trim().length === 0) {
+      this.savedReportMessage = `Add a follow-through action for ${report.ticker} before assigning a deadline.`;
+      return;
+    }
+
+    review.followUpBy = this.normalizeSavedReportReviewDeadline(value);
+    this.updateSavedReportReview(report, review);
+    this.savedReportMessage = review.followUpBy
+      ? `${report.ticker} follow-through deadline set for ${this.formatDate(review.followUpBy) || review.followUpBy}.`
+      : `${report.ticker} follow-through deadline cleared.`;
   }
 
   isSavedReportFollowUpComplete(report: SavedReport): boolean {
@@ -4993,11 +5078,14 @@ export class ReportDateTableComponent implements OnInit {
   }
 
   private normalizeSavedReportReview(review?: Partial<SavedReportReview>): SavedReportReview {
+    const followUp = this.normalizeSavedReportJournalText(review?.followUp);
+
     return {
       actualEps: this.normalizeSavedReportActualEps(review?.actualEps),
       actualMovePercent: this.normalizeSavedReportActualMove(review?.actualMovePercent),
-      followUp: this.normalizeSavedReportJournalText(review?.followUp),
-      followUpComplete: review?.followUpComplete === true,
+      followUp,
+      followUpBy: followUp.length > 0 ? this.normalizeSavedReportReviewDeadline(review?.followUpBy) : '',
+      followUpComplete: followUp.length > 0 && review?.followUpComplete === true,
       guidanceOutcome: this.normalizeSavedReportGuidanceOutcome(review?.guidanceOutcome),
       outcomeDriver: this.normalizeSavedReportOutcomeDriver(review?.outcomeDriver),
       outcome: this.normalizeSavedReportReviewOutcome(review?.outcome),
@@ -5098,6 +5186,7 @@ export class ReportDateTableComponent implements OnInit {
       review.reaction,
       review.lesson,
       review.followUp,
+      review.followUpBy,
       review.reviewBy
     ].join(' ').toLowerCase();
   }
