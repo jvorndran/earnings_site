@@ -106,6 +106,14 @@ interface SavedReportSource {
   url: string;
 }
 
+type SavedReportEstimateRevisionStatus = 'unreviewed' | 'raised' | 'lowered' | 'unchanged';
+
+interface SavedReportEstimateRevision {
+  checkedOn: string;
+  currentEstimate: number | null;
+  note: string;
+}
+
 interface SavedReportReview {
   actualEps: number | null;
   actualMovePercent: number | null;
@@ -246,6 +254,7 @@ interface SavedReport {
   name: string;
   reportDate: string;
   estimate: number;
+  estimateRevision?: Partial<SavedReportEstimateRevision>;
   eventTiming?: SavedReportEventTiming;
   expectedReaction?: SavedReportReactionExpectation;
   reactionConfidence?: SavedReportReactionConfidence;
@@ -415,6 +424,14 @@ interface SavedReportEpsResultItem {
   result: SavedReportEpsResult;
   report: SavedReport;
   surprisePercent: number | null;
+}
+
+interface SavedReportEstimateRevisionItem {
+  checkedOn: string;
+  currentEstimate: number;
+  difference: number;
+  report: SavedReport;
+  status: Exclude<SavedReportEstimateRevisionStatus, 'unreviewed'>;
 }
 
 interface SavedReportFollowUpItem extends SavedReportReviewItem {
@@ -986,6 +1003,7 @@ export class ReportDateTableComponent implements OnInit {
         name: stock.Name,
         reportDate: this.date,
         estimate: this.getEstimateValue(stock),
+        estimateRevision: this.normalizeSavedReportEstimateRevision(),
         expectedReaction: 'unassigned' as SavedReportReactionExpectation,
         reactionConfidence: 0 as SavedReportReactionConfidence,
         guidanceExpectation: 'unassigned' as SavedReportGuidanceExpectation,
@@ -2087,6 +2105,31 @@ export class ReportDateTableComponent implements OnInit {
       ));
   }
 
+  getSavedReportEstimateRevisionItems(now: Date = new Date()): SavedReportEstimateRevisionItem[] {
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    return this.savedReports
+      .filter((report) => {
+        const daysUntil = this.getSavedReportDaysUntil(report.reportDate, startOfToday);
+        return daysUntil !== null && daysUntil >= 0 && this.getSavedReportEstimateRevision(report).currentEstimate !== null;
+      })
+      .map((report) => {
+        const revision = this.getSavedReportEstimateRevision(report);
+        return {
+          checkedOn: revision.checkedOn,
+          currentEstimate: revision.currentEstimate!,
+          difference: this.getSavedReportEstimateRevisionDifference(report),
+          report,
+          status: this.getSavedReportEstimateRevisionStatus(report) as Exclude<SavedReportEstimateRevisionStatus, 'unreviewed'>
+        };
+      })
+      .sort((first, second) => (
+        Math.abs(second.difference) - Math.abs(first.difference) ||
+        first.report.reportDate.localeCompare(second.report.reportDate) ||
+        first.report.ticker.localeCompare(second.report.ticker)
+      ));
+  }
+
   getSavedReportFollowUpItems(now: Date = new Date()): SavedReportFollowUpItem[] {
     const deadlineOrder: SavedReportFollowUpDeadline[] = ['overdue', 'dueToday', 'scheduled', 'noDate', 'complete'];
 
@@ -3136,6 +3179,100 @@ export class ReportDateTableComponent implements OnInit {
     const startOfToday = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), referenceDate.getDate());
     const startOfReportDate = new Date(parsedDate.getFullYear(), parsedDate.getMonth(), parsedDate.getDate());
     return Math.round((startOfReportDate.getTime() - startOfToday.getTime()) / 86400000);
+  }
+
+  getSavedReportEstimateRevision(report: SavedReport): SavedReportEstimateRevision {
+    return this.normalizeSavedReportEstimateRevision(report.estimateRevision);
+  }
+
+  getSavedReportEstimateRevisionDifference(report: SavedReport): number {
+    const currentEstimate = this.getSavedReportEstimateRevision(report).currentEstimate;
+    return currentEstimate === null ? 0 : currentEstimate - (Number(report.estimate) || 0);
+  }
+
+  getSavedReportEstimateRevisionStatus(report: SavedReport): SavedReportEstimateRevisionStatus {
+    const revision = this.getSavedReportEstimateRevision(report);
+
+    if (revision.currentEstimate === null) {
+      return 'unreviewed';
+    }
+
+    const estimate = Number(report.estimate) || 0;
+    const tolerance = Math.max(Math.abs(estimate) * 0.02, 0.01);
+    const difference = revision.currentEstimate - estimate;
+
+    if (difference >= tolerance) {
+      return 'raised';
+    }
+
+    return difference <= -tolerance ? 'lowered' : 'unchanged';
+  }
+
+  getSavedReportEstimateRevisionLabel(status: SavedReportEstimateRevisionStatus): string {
+    if (status === 'raised') {
+      return 'Raised estimate';
+    }
+
+    if (status === 'lowered') {
+      return 'Lowered estimate';
+    }
+
+    if (status === 'unchanged') {
+      return 'Estimate unchanged';
+    }
+
+    return 'Needs estimate check';
+  }
+
+  setSavedReportEstimateRevisionEstimate(report: SavedReport, value: unknown): void {
+    const revision = this.getSavedReportEstimateRevision(report);
+    revision.currentEstimate = this.normalizeSavedReportActualEps(value);
+
+    if (revision.currentEstimate === null) {
+      revision.checkedOn = '';
+      revision.note = '';
+    }
+
+    this.updateSavedReportEstimateRevision(report, revision);
+    this.savedReportMessage = revision.currentEstimate === null
+      ? `${report.ticker} consensus estimate check cleared.`
+      : `${report.ticker} consensus EPS updated to ${revision.currentEstimate.toFixed(2)} (${this.getSavedReportEstimateRevisionLabel(this.getSavedReportEstimateRevisionStatus({...report, estimateRevision: revision})).toLowerCase()}).`;
+  }
+
+  setSavedReportEstimateRevisionCheckedOn(report: SavedReport, value: unknown): void {
+    const revision = this.getSavedReportEstimateRevision(report);
+
+    if (revision.currentEstimate === null) {
+      this.savedReportMessage = `Enter the latest consensus EPS for ${report.ticker} before recording the check date.`;
+      return;
+    }
+
+    revision.checkedOn = this.normalizeSavedReportReviewDeadline(value);
+    this.updateSavedReportEstimateRevision(report, revision);
+    this.savedReportMessage = revision.checkedOn
+      ? `${report.ticker} estimate check recorded for ${this.formatDate(revision.checkedOn) || revision.checkedOn}.`
+      : `${report.ticker} estimate check date cleared.`;
+  }
+
+  updateSavedReportEstimateRevisionNote(report: SavedReport, value: string): void {
+    const revision = this.getSavedReportEstimateRevision(report);
+
+    if (revision.currentEstimate === null) {
+      this.savedReportMessage = `Enter the latest consensus EPS for ${report.ticker} before adding revision context.`;
+      return;
+    }
+
+    revision.note = this.normalizeSavedReportJournalText(value);
+    this.updateSavedReportEstimateRevision(report, revision);
+  }
+
+  private updateSavedReportEstimateRevision(report: SavedReport, estimateRevision: SavedReportEstimateRevision): void {
+    this.savedReports = this.savedReports.map((savedReport) => (
+      savedReport.ticker === report.ticker && savedReport.reportDate === report.reportDate
+        ? {...savedReport, estimateRevision}
+        : savedReport
+    ));
+    this.persistSavedReports();
   }
 
   getSavedReportStatus(report: SavedReport): SavedReportStatus {
@@ -4843,6 +4980,7 @@ export class ReportDateTableComponent implements OnInit {
         ...report,
         ticker: report.ticker!.trim().toUpperCase(),
         reportDate: report.reportDate!.trim(),
+        estimateRevision: this.normalizeSavedReportEstimateRevision(report.estimateRevision),
         eventTiming: this.normalizeSavedReportEventTiming(report.eventTiming),
         expectedReaction: this.normalizeSavedReportReactionExpectation(report.expectedReaction),
         reactionConfidence: this.normalizeSavedReportReactionConfidence(report.reactionConfidence),
@@ -5128,6 +5266,16 @@ export class ReportDateTableComponent implements OnInit {
     return Number.isFinite(actualEps) && actualEps >= -10000 && actualEps <= 10000
       ? Math.round(actualEps * 100) / 100
       : null;
+  }
+
+  private normalizeSavedReportEstimateRevision(revision?: Partial<SavedReportEstimateRevision>): SavedReportEstimateRevision {
+    const currentEstimate = this.normalizeSavedReportActualEps(revision?.currentEstimate);
+
+    return {
+      checkedOn: currentEstimate === null ? '' : this.normalizeSavedReportReviewDeadline(revision?.checkedOn),
+      currentEstimate,
+      note: currentEstimate === null ? '' : this.normalizeSavedReportJournalText(revision?.note)
+    };
   }
 
   private normalizeSavedReportReviewDeadline(value: unknown): string {

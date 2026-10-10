@@ -1270,6 +1270,33 @@
     <small class="saved-report-desk-brief__note">The copied brief reflects the active saved research in this browser and is a planning aid, not investment advice.</small>
   </section>
 
+  <section *ngIf="getSavedReportEstimateRevisionItems().length > 0" class="saved-report-move-review" aria-labelledby="saved-report-estimate-revision-title">
+    <div class="saved-report-move-review__header">
+      <div>
+        <h3 id="saved-report-estimate-revision-title">Consensus Revision Watch</h3>
+        <span>Surface current EPS estimate changes before the scheduled earnings event.</span>
+      </div>
+      <strong>{{getSavedReportEstimateRevisionItems().length}} current check{{getSavedReportEstimateRevisionItems().length === 1 ? '' : 's'}}</strong>
+    </div>
+    <div class="saved-report-move-review__grid">
+      <article *ngFor="let item of getSavedReportEstimateRevisionItems()" class="saved-report-move-review__card">
+        <div class="saved-report-move-review__card-header">
+          <strong>{{item.report.ticker}}</strong>
+          <span>{{getSavedReportEstimateRevisionLabel(item.status)}}</span>
+        </div>
+        <p>{{item.report.name}} · reports {{formatDate(item.report.reportDate)}}</p>
+        <div class="saved-report-move-review__metrics">
+          <span><small>Saved EPS</small><strong>{{item.report.estimate | number:'1.2-2'}}</strong></span>
+          <span><small>Latest EPS</small><strong>{{item.currentEstimate | number:'1.2-2'}}</strong></span>
+          <span><small>Revision</small><strong>{{item.difference >= 0 ? '+' : ''}}{{item.difference | number:'1.2-2'}}</strong></span>
+          <span><small>Checked</small><strong>{{item.checkedOn ? (formatDate(item.checkedOn) || item.checkedOn) : 'Not dated'}}</strong></span>
+        </div>
+        <p *ngIf="getSavedReportEstimateRevision(item.report).note">{{getSavedReportEstimateRevision(item.report).note}}</p>
+      </article>
+    </div>
+    <small class="saved-report-move-review__note">Consensus checks are manually recorded research context; they are not forecasts or investment recommendations.</small>
+  </section>
+
   <section *ngIf="getSavedReportResearchLoad().length > 0" class="saved-report-research-load" aria-labelledby="saved-report-research-load-title">
     <div class="saved-report-research-load__header">
       <div>
@@ -2172,6 +2199,46 @@
             [ngModel]="getSavedReportSource(report).reviewedOn"
             aria-label="Research source review date"
             type="date">
+        </label>
+      </div>
+      <div class="saved-report-journal saved-report-source-log">
+        <div class="saved-report-journal-header">
+          <span>Consensus estimate check</span>
+          <strong>{{getSavedReportEstimateRevisionLabel(getSavedReportEstimateRevisionStatus(report))}}</strong>
+        </div>
+        <p>Compare the latest consensus EPS with the estimate captured when this research plan was saved.</p>
+        <label>
+          <span>Latest consensus EPS</span>
+          <input
+            (ngModelChange)="setSavedReportEstimateRevisionEstimate(report, $event)"
+            [ngModel]="getSavedReportEstimateRevision(report).currentEstimate"
+            aria-label="Latest consensus EPS estimate"
+            max="10000"
+            min="-10000"
+            placeholder="For example, 1.24"
+            step="0.01"
+            type="number">
+          <small *ngIf="getSavedReportEstimateRevision(report).currentEstimate !== null">
+            {{getSavedReportEstimateRevisionDifference(report) >= 0 ? '+' : ''}}{{getSavedReportEstimateRevisionDifference(report) | number:'1.2-2'}} versus saved {{report.estimate | number:'1.2-2'}} EPS.
+          </small>
+          <small *ngIf="getSavedReportEstimateRevision(report).currentEstimate === null">Record a fresh consensus estimate to identify an EPS revision before earnings.</small>
+        </label>
+        <label>
+          <span>Checked on</span>
+          <input
+            (ngModelChange)="setSavedReportEstimateRevisionCheckedOn(report, $event)"
+            [ngModel]="getSavedReportEstimateRevision(report).checkedOn"
+            aria-label="Consensus estimate check date"
+            type="date">
+        </label>
+        <label>
+          <span>Revision context</span>
+          <textarea
+            (ngModelChange)="updateSavedReportEstimateRevisionNote(report, $event)"
+            [ngModel]="getSavedReportEstimateRevision(report).note"
+            maxlength="280"
+            placeholder="What changed in the consensus or why does this revision matter?"
+            rows="2"></textarea>
         </label>
       </div>
       <div *ngIf="getSavedReportReadThroughOptions(report).length > 0" class="saved-report-journal saved-report-read-through-control">
