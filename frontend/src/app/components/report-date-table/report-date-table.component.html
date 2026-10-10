@@ -2133,46 +2133,90 @@
       </div>
       <div class="saved-report-journal saved-report-source-log">
         <div class="saved-report-journal-header">
-          <span>Research source log</span>
-          <strong>{{isSavedReportSourceComplete(report) ? 'Source covered' : 'Needs source'}}</strong>
+          <span>Research source trail</span>
+          <strong>{{getSavedReportSourceCount(report)}}/2 sources documented</strong>
         </div>
-        <p>Record the primary document or data point that supports the earnings setup, then note when it was reviewed.</p>
-        <label>
-          <span>Source type</span>
-          <select
-            (ngModelChange)="setSavedReportSourceKind(report, $event)"
-            [ngModel]="getSavedReportSource(report).kind">
-            <option *ngFor="let source of savedReportSources" [ngValue]="source.key">{{source.label}}</option>
-          </select>
-          <small>{{getSavedReportSourceDetail(getSavedReportSource(report).kind)}}</small>
-        </label>
-        <label>
-          <span>Source link</span>
-          <input
-            (change)="setSavedReportSourceUrl(report, $any($event.target).value)"
-            [value]="getSavedReportSource(report).url"
-            aria-label="Research source link"
-            placeholder="https://..."
-            type="url">
-          <a *ngIf="getSavedReportSource(report).url" [href]="getSavedReportSource(report).url" rel="noopener noreferrer" target="_blank">Open recorded source</a>
-        </label>
-        <label>
-          <span>Source note</span>
-          <textarea
-            (ngModelChange)="updateSavedReportSourceNote(report, $event)"
-            [ngModel]="getSavedReportSource(report).note"
-            maxlength="280"
-            placeholder="Which metric, quote, or read-through matters for this setup?"
-            rows="2"></textarea>
-        </label>
-        <label>
-          <span>Reviewed on</span>
-          <input
-            (ngModelChange)="setSavedReportSourceReviewedOn(report, $event)"
-            [ngModel]="getSavedReportSource(report).reviewedOn"
-            aria-label="Research source review date"
-            type="date">
-        </label>
+        <p>Pair a primary source with a corroborating document or data point, so the event plan is not based on one input alone.</p>
+        <div class="saved-report-source-log__entries">
+          <div class="saved-report-source-log__entry">
+            <strong>Primary source</strong>
+            <label>
+              <span>Source type</span>
+              <select
+                (ngModelChange)="setSavedReportSourceKind(report, $event)"
+                [ngModel]="getSavedReportSource(report).kind">
+                <option *ngFor="let source of savedReportSources" [ngValue]="source.key">{{source.label}}</option>
+              </select>
+              <small>{{getSavedReportSourceDetail(getSavedReportSource(report).kind)}}</small>
+            </label>
+            <label>
+              <span>Source link</span>
+              <input
+                (change)="setSavedReportSourceUrl(report, $any($event.target).value)"
+                [value]="getSavedReportSource(report).url"
+                aria-label="Primary research source link"
+                placeholder="https://..."
+                type="url">
+              <a *ngIf="getSavedReportSource(report).url" [href]="getSavedReportSource(report).url" rel="noopener noreferrer" target="_blank">Open primary source</a>
+            </label>
+            <label>
+              <span>Source note</span>
+              <textarea
+                (ngModelChange)="updateSavedReportSourceNote(report, $event)"
+                [ngModel]="getSavedReportSource(report).note"
+                maxlength="280"
+                placeholder="Which metric, quote, or read-through matters for this setup?"
+                rows="2"></textarea>
+            </label>
+            <label>
+              <span>Reviewed on</span>
+              <input
+                (ngModelChange)="setSavedReportSourceReviewedOn(report, $event)"
+                [ngModel]="getSavedReportSource(report).reviewedOn"
+                aria-label="Primary research source review date"
+                type="date">
+            </label>
+          </div>
+          <div class="saved-report-source-log__entry">
+            <strong>Supporting source</strong>
+            <label>
+              <span>Source type</span>
+              <select
+                (ngModelChange)="setSavedReportSupportingSourceKind(report, $event)"
+                [ngModel]="getSavedReportSupportingSource(report).kind">
+                <option *ngFor="let source of savedReportSources" [ngValue]="source.key">{{source.label}}</option>
+              </select>
+              <small>{{getSavedReportSourceDetail(getSavedReportSupportingSource(report).kind)}}</small>
+            </label>
+            <label>
+              <span>Source link</span>
+              <input
+                (change)="setSavedReportSupportingSourceUrl(report, $any($event.target).value)"
+                [value]="getSavedReportSupportingSource(report).url"
+                aria-label="Supporting research source link"
+                placeholder="https://..."
+                type="url">
+              <a *ngIf="getSavedReportSupportingSource(report).url" [href]="getSavedReportSupportingSource(report).url" rel="noopener noreferrer" target="_blank">Open supporting source</a>
+            </label>
+            <label>
+              <span>Source note</span>
+              <textarea
+                (ngModelChange)="updateSavedReportSupportingSourceNote(report, $event)"
+                [ngModel]="getSavedReportSupportingSource(report).note"
+                maxlength="280"
+                placeholder="Which independent metric, document, or read-through corroborates the setup?"
+                rows="2"></textarea>
+            </label>
+            <label>
+              <span>Reviewed on</span>
+              <input
+                (ngModelChange)="setSavedReportSupportingSourceReviewedOn(report, $event)"
+                [ngModel]="getSavedReportSupportingSource(report).reviewedOn"
+                aria-label="Supporting research source review date"
+                type="date">
+            </label>
+          </div>
+        </div>
       </div>
       <div *ngIf="getSavedReportReadThroughOptions(report).length > 0" class="saved-report-journal saved-report-read-through-control">
         <div class="saved-report-journal-header">

@@ -2286,6 +2286,27 @@ body { margin: 0;font-family: sans-serif, "Franklin Gothic Book", Verdana; }
   text-transform: uppercase;
 }
 
+.saved-report-source-log__entries {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.saved-report-source-log__entry {
+  display: grid;
+  align-content: start;
+  gap: 9px;
+  padding: 11px;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.saved-report-source-log__entry > strong {
+  color: #1e40af;
+  font-size: 0.8rem;
+}
+
 .saved-report-source-log select,
 .saved-report-source-log input {
   width: 100%;

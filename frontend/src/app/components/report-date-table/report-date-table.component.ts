@@ -266,6 +266,7 @@ interface SavedReport {
   conviction?: SavedReportConviction;
   catalyst?: Partial<SavedReportCatalyst>;
   source?: Partial<SavedReportSource>;
+  supportingSource?: Partial<SavedReportSource>;
   preparation?: Partial<SavedReportPreparation>;
   evidence?: Partial<SavedReportEvidence>;
   journal?: Partial<SavedReportJournal>;
@@ -1003,6 +1004,7 @@ export class ReportDateTableComponent implements OnInit {
         plannedRiskPercent: 0,
         catalyst: this.normalizeSavedReportCatalyst(),
         source: this.normalizeSavedReportSource(),
+        supportingSource: this.normalizeSavedReportSource(),
         preparation: this.normalizeSavedReportPreparation(),
         evidence: this.normalizeSavedReportEvidence(),
         scenarios: this.normalizeSavedReportScenarios(),
@@ -1196,7 +1198,7 @@ export class ReportDateTableComponent implements OnInit {
       'Ticker', 'Company', 'Report Date', 'Report Timing', 'Workflow Status', 'Research Playbook', 'Research Theme', 'Event Strategy', 'Research Hypothesis', 'Pre-event Reaction Call', 'Reaction Call Confidence (%)', 'Pre-event Guidance Call', 'Research Time (minutes)', 'Research Work Date', 'Portfolio Role', 'Conviction',
       'Implied Move (%)', 'Short Interest (%)', 'EPS Estimate', 'Market Cap', 'Risk Allocation (%)',
       'Preparation Complete', 'Evidence Reviewed', 'Journal Fields Complete', 'Upside Scenario', 'Base Scenario', 'Downside Scenario', 'Catalyst Watch Status', 'Catalyst Trigger', 'Catalyst Check Date', 'Reported EPS', 'Actual Post-Earnings Move (%)', 'Reported Guidance', 'Review Deadline', 'Review Outcome', 'Primary Outcome Driver', 'Review Reaction', 'Review Lesson',
-      'Follow-through Action', 'Follow-through Deadline', 'Follow-through Complete', 'Research Source', 'Source URL', 'Source Note', 'Source Reviewed On', 'Earnings Read-throughs'
+      'Follow-through Action', 'Follow-through Deadline', 'Follow-through Complete', 'Research Source', 'Source URL', 'Source Note', 'Source Reviewed On', 'Supporting Source', 'Supporting Source URL', 'Supporting Source Note', 'Supporting Source Reviewed On', 'Earnings Read-throughs'
     ];
     const rows = [...this.savedReports]
       .sort((first, second) => first.reportDate.localeCompare(second.reportDate) || first.ticker.localeCompare(second.ticker))
@@ -1205,6 +1207,7 @@ export class ReportDateTableComponent implements OnInit {
         const scenarios = this.getSavedReportScenarios(report);
         const catalyst = this.getSavedReportCatalyst(report);
         const source = this.getSavedReportSource(report);
+        const supportingSource = this.getSavedReportSupportingSource(report);
 
         return [
           report.ticker,
@@ -1252,6 +1255,10 @@ export class ReportDateTableComponent implements OnInit {
           source.url,
           source.note,
           source.reviewedOn,
+          this.getSavedReportSourceLabel(supportingSource.kind),
+          supportingSource.url,
+          supportingSource.note,
+          supportingSource.reviewedOn,
           this.getSavedReportReadThroughTickers(report).join(', '),
         ];
       });
@@ -1656,6 +1663,7 @@ export class ReportDateTableComponent implements OnInit {
     const scenarioCount = this.getSavedReportScenarioCount(report);
     const catalyst = this.getSavedReportCatalyst(report);
     const source = this.getSavedReportSource(report);
+    const supportingSource = this.getSavedReportSupportingSource(report);
     const readThroughTickers = this.getSavedReportReadThroughTickers(report);
     const lines = [
       `${report.ticker} earnings research brief`,
@@ -1690,6 +1698,9 @@ export class ReportDateTableComponent implements OnInit {
     }
     if (source.kind !== 'unassigned') {
       lines.push(`Research source: ${this.getSavedReportSourceLabel(source.kind)}${source.reviewedOn ? ` · reviewed ${this.formatDate(source.reviewedOn) || source.reviewedOn}` : ''}${source.url ? ` · ${source.url}` : ''}${source.note ? ` — ${source.note}` : ''}.`);
+    }
+    if (supportingSource.kind !== 'unassigned') {
+      lines.push(`Supporting source: ${this.getSavedReportSourceLabel(supportingSource.kind)}${supportingSource.reviewedOn ? ` · reviewed ${this.formatDate(supportingSource.reviewedOn) || supportingSource.reviewedOn}` : ''}${supportingSource.url ? ` · ${supportingSource.url}` : ''}${supportingSource.note ? ` — ${supportingSource.note}` : ''}.`);
     }
     if (readThroughTickers.length > 0) {
       lines.push(`Earnings read-throughs: ${readThroughTickers.join(', ')}.`);
@@ -3315,6 +3326,14 @@ export class ReportDateTableComponent implements OnInit {
     return this.normalizeSavedReportSource(report.source);
   }
 
+  getSavedReportSupportingSource(report: SavedReport): SavedReportSource {
+    return this.normalizeSavedReportSource(report.supportingSource);
+  }
+
+  getSavedReportSourceCount(report: SavedReport): number {
+    return Number(this.isSavedReportSourceComplete(report)) + Number(this.isSavedReportSupportingSourceComplete(report));
+  }
+
   getSavedReportSourceLabel(kind: SavedReportSourceKind): string {
     return this.savedReportSources.find((item) => item.key === kind)?.label || 'No source logged';
   }
@@ -3324,8 +3343,11 @@ export class ReportDateTableComponent implements OnInit {
   }
 
   isSavedReportSourceComplete(report: SavedReport): boolean {
-    const source = this.getSavedReportSource(report);
-    return source.kind !== 'unassigned' && source.reviewedOn.length > 0 && (source.url.length > 0 || source.note.length > 0);
+    return this.isSavedReportSourceRecordComplete(this.getSavedReportSource(report));
+  }
+
+  isSavedReportSupportingSourceComplete(report: SavedReport): boolean {
+    return this.isSavedReportSourceRecordComplete(this.getSavedReportSupportingSource(report));
   }
 
   setSavedReportSourceKind(report: SavedReport, kind: SavedReportSourceKind): void {
@@ -3367,10 +3389,58 @@ export class ReportDateTableComponent implements OnInit {
       : `${report.ticker} source review date cleared.`;
   }
 
+  setSavedReportSupportingSourceKind(report: SavedReport, kind: SavedReportSourceKind): void {
+    const source = this.getSavedReportSupportingSource(report);
+    source.kind = this.normalizeSavedReportSourceKind(kind);
+    this.updateSavedReportSupportingSource(report, source);
+    this.savedReportMessage = source.kind === 'unassigned'
+      ? `${report.ticker} supporting source classification cleared.`
+      : `${report.ticker} supporting source set to ${this.getSavedReportSourceLabel(source.kind).toLowerCase()}.`;
+  }
+
+  setSavedReportSupportingSourceUrl(report: SavedReport, value: unknown): void {
+    const rawValue = typeof value === 'string' ? value.trim() : '';
+    const source = this.getSavedReportSupportingSource(report);
+    const url = this.normalizeSavedReportSourceUrl(rawValue);
+
+    if (rawValue.length > 0 && url.length === 0) {
+      this.savedReportMessage = 'Supporting source links must use a valid http:// or https:// address.';
+      return;
+    }
+
+    source.url = url;
+    this.updateSavedReportSupportingSource(report, source);
+    this.savedReportMessage = url ? `${report.ticker} supporting source link saved.` : `${report.ticker} supporting source link cleared.`;
+  }
+
+  updateSavedReportSupportingSourceNote(report: SavedReport, value: string): void {
+    const source = this.getSavedReportSupportingSource(report);
+    source.note = this.normalizeSavedReportJournalText(value);
+    this.updateSavedReportSupportingSource(report, source);
+  }
+
+  setSavedReportSupportingSourceReviewedOn(report: SavedReport, value: unknown): void {
+    const source = this.getSavedReportSupportingSource(report);
+    source.reviewedOn = this.normalizeSavedReportReviewDeadline(value);
+    this.updateSavedReportSupportingSource(report, source);
+    this.savedReportMessage = source.reviewedOn
+      ? `${report.ticker} supporting source review recorded for ${this.formatDate(source.reviewedOn) || source.reviewedOn}.`
+      : `${report.ticker} supporting source review date cleared.`;
+  }
+
   private updateSavedReportSource(report: SavedReport, source: SavedReportSource): void {
     this.savedReports = this.savedReports.map((savedReport) => (
       savedReport.ticker === report.ticker && savedReport.reportDate === report.reportDate
         ? {...savedReport, source}
+        : savedReport
+    ));
+    this.persistSavedReports();
+  }
+
+  private updateSavedReportSupportingSource(report: SavedReport, supportingSource: SavedReportSource): void {
+    this.savedReports = this.savedReports.map((savedReport) => (
+      savedReport.ticker === report.ticker && savedReport.reportDate === report.reportDate
+        ? {...savedReport, supportingSource}
         : savedReport
     ));
     this.persistSavedReports();
@@ -4860,6 +4930,7 @@ export class ReportDateTableComponent implements OnInit {
         plannedRiskPercent: this.normalizeSavedReportRiskAllocation(report.plannedRiskPercent),
         catalyst: this.normalizeSavedReportCatalyst(report.catalyst),
         source: this.normalizeSavedReportSource(report.source),
+        supportingSource: this.normalizeSavedReportSource(report.supportingSource),
         preparation: this.normalizeSavedReportPreparation(report.preparation),
         evidence: this.normalizeSavedReportEvidence(report.evidence),
         journal: this.normalizeSavedReportJournal(report.journal),
@@ -5014,6 +5085,10 @@ export class ReportDateTableComponent implements OnInit {
     };
   }
 
+  private isSavedReportSourceRecordComplete(source: SavedReportSource): boolean {
+    return source.kind !== 'unassigned' && source.reviewedOn.length > 0 && (source.url.length > 0 || source.note.length > 0);
+  }
+
   private normalizeSavedReportSourceUrl(value: unknown): string {
     if (typeof value !== 'string' || value.trim().length === 0) {
       return '';
@@ -5149,6 +5224,7 @@ export class ReportDateTableComponent implements OnInit {
     const review = this.getSavedReportReview(report);
     const catalyst = this.getSavedReportCatalyst(report);
     const source = this.getSavedReportSource(report);
+    const supportingSource = this.getSavedReportSupportingSource(report);
 
     return [
       report.ticker,
@@ -5174,6 +5250,10 @@ export class ReportDateTableComponent implements OnInit {
       source.url,
       source.note,
       source.reviewedOn,
+      this.getSavedReportSourceLabel(supportingSource.kind),
+      supportingSource.url,
+      supportingSource.note,
+      supportingSource.reviewedOn,
       journal.thesis,
       journal.risk,
       journal.decision,
